@@ -40,6 +40,12 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
   }
 });
 
+//LOGOUT
+function logout() {
+  localStorage.removeItem("username");
+  window.location.href = "login.html";
+}
+
 // SOCKET
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
 
