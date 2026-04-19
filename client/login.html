@@ -8,4 +8,12 @@
 
 <p><a href="register.html">Register</a></p>
 
+<script>
+  const user = localStorage.getItem("username");
+
+  if (user) {
+    window.location.href = "chat.html";
+  }
+</script>
+
 <script src="script.js"></script>
