@@ -1,4 +1,4 @@
-const BACKEND = "https://YOUR_BACKEND_URL";
+const BACKEND = "https://chat-backend-gtg5.onrender.com";
 
 // REGISTER
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
