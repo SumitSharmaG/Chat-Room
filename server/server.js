@@ -19,6 +19,11 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
+// 🔥 Home route (IMPORTANT)
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
+
 // Routes
 app.use("/api", authRoutes);
 
@@ -30,6 +35,6 @@ const io = new Server(server, {
 socketHandler(io);
 
 // Server start
-server.listen(process.env.PORT, () => {
+server.listen(process.env.PORT || 5000, () => {
   console.log("Server running");
 });
