@@ -6,4 +6,14 @@
 <button onclick="sendMsg()">Send</button>
 
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+<script>
+  const user = localStorage.getItem("username");
+
+  if (!user) {
+    alert("Please login first");
+    window.location.href = "login.html";
+  }
+</script>
+
 <script src="script.js"></script>
