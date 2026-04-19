@@ -6,4 +6,12 @@
   <button>Register</button>
 </form>
 
+<script>
+  const user = localStorage.getItem("username");
+
+  if (user) {
+    window.location.href = "chat.html";
+  }
+</script>
+
 <script src="script.js"></script>
