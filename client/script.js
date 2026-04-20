@@ -1,41 +1,7 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
 
-// --- 1. REGISTER & LOGIN LOGIC ---
-document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-    try {
-        const res = await fetch(BACKEND + "/api/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
-        });
-        if (res.ok) { alert("Registered successfully!"); window.location.href = "login.html"; }
-        else { alert("Registration failed."); }
-    } catch (err) { alert("Server error."); }
-});
-
-document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-    try {
-        const res = await fetch(BACKEND + "/api/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (data.success) {
-            localStorage.setItem("username", username);
-            window.location.href = "chat.html";
-        } else { alert("Login failed."); }
-    } catch (err) { alert("Server error."); }
-});
-
-// --- 2. UTILITY FUNCTIONS ---
+// --- 1. CORE UTILS ---
 function getCurrentTime() {
     const now = new Date();
     let hours = now.getHours();
@@ -46,11 +12,13 @@ function getCurrentTime() {
     return `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
 }
 
-// --- 3. ADVANCED SCREENSHOT DETECTION ---
+// --- 2. ADVANCED SCREENSHOT & GESTURE DETECTION (1.5s Timer) ---
+let gestureTimer = null;
 let lastAlertTime = 0;
+
 function sendScreenshotAlert(reason = "took a screenshot") {
     const now = Date.now();
-    if (now - lastAlertTime < 3000) return; // 3 second gap to avoid spam
+    if (now - lastAlertTime < 2000) return; // Prevent spam
     lastAlertTime = now;
 
     const username = localStorage.getItem("username") || "Someone";
@@ -64,47 +32,53 @@ function sendScreenshotAlert(reason = "took a screenshot") {
     }
 }
 
-// PC Shortcuts
-window.addEventListener('keyup', (e) => {
-    if (e.key === 'PrintScreen' || e.key === 'PrtSc') sendScreenshotAlert("pressed PrintScreen");
-});
+// Mobile Three-Finger Swipe with 1.5s Gesture Duration Logic
+document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 3) {
+        // Agar 3 ungliyan touch hui, timer shuru karo (1.5 seconds)
+        gestureTimer = setTimeout(() => {
+            sendScreenshotAlert("performed a 1.5s screenshot gesture");
+        }, 1500);
+    }
+}, { passive: false });
 
-// Mobile/Desktop Focus Detection (Jugad for mobile screenshots)
-window.addEventListener('blur', () => {
-    sendScreenshotAlert("possible screenshot/tab switch");
-});
-
-document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === 'hidden') {
-        sendScreenshotAlert("screen hidden/screenshot");
+document.addEventListener('touchend', () => {
+    // Agar user ne 1.5s se pehle ungli hata li, timer cancel kar do
+    if (gestureTimer) {
+        clearTimeout(gestureTimer);
+        gestureTimer = null;
     }
 });
 
-// --- 4. CHAT LOGIC ---
+document.addEventListener('touchcancel', () => {
+    if (gestureTimer) {
+        clearTimeout(gestureTimer);
+        gestureTimer = null;
+    }
+});
+
+// PC & Focus Detection
+window.addEventListener('keyup', (e) => {
+    if (e.key === 'PrintScreen' || e.key === 'PrtSc') sendScreenshotAlert("pressed PrintScreen");
+});
+window.addEventListener('blur', () => sendScreenshotAlert("lost focus (possible screenshot)"));
+
+// --- 3. CHAT LOGIC ---
 document.addEventListener("DOMContentLoaded", () => {
     const savedChat = localStorage.getItem("chat_history");
     const messagesUl = document.getElementById("messages");
     if (savedChat && messagesUl) {
         messagesUl.innerHTML = savedChat;
-        messagesUl.scrollTop = messagesUl.scrollHeight;
+        messagesUl.scrollTo(0, messagesUl.scrollHeight);
     }
 });
 
 if (socket) {
-    socket.on("loadHistory", (history) => {
-        const messagesUl = document.getElementById("messages");
-        if (messagesUl && messagesUl.innerHTML.trim() === "") {
-            history.forEach(data => displayMessage(data));
-        }
-    });
-
     socket.on("receiveMessage", (data) => displayMessage(data));
-
     socket.on("updateUserCount", (count) => {
         const el = document.getElementById("online-count");
         if (el) el.innerText = count;
     });
-
     socket.on("chatCleared", () => {
         document.getElementById("messages").innerHTML = "";
         localStorage.removeItem("chat_history");
@@ -122,7 +96,7 @@ function displayMessage(data) {
     } else {
         li.innerHTML = `
             <span><strong>${data.username}:</strong> ${data.text}</span>
-            <span class="msg-time">${data.time || getCurrentTime()}</span>
+            <span style="font-size: 0.6rem; color: #b59461; align-self: flex-end; margin-top: 4px;">${data.time || getCurrentTime()}</span>
         `;
     }
     messagesUl.appendChild(li);
@@ -130,15 +104,14 @@ function displayMessage(data) {
     localStorage.setItem("chat_history", messagesUl.innerHTML);
 }
 
-// --- GLOBAL ACTIONS ---
+// --- 4. GLOBAL ACTIONS ---
 window.handleSend = function() {
     const input = document.getElementById("msg");
     const text = input.value.trim();
     if (text !== "" && socket) {
         socket.emit("sendMessage", { 
             username: localStorage.getItem("username"), 
-            text, 
-            time: getCurrentTime() 
+            text, time: getCurrentTime() 
         });
         input.value = "";
         input.focus();
@@ -146,7 +119,7 @@ window.handleSend = function() {
 };
 
 window.clearChat = function() {
-    if (confirm("Delete all chat history for everyone?")) {
+    if (confirm("Clear chat for everyone?")) {
         socket?.emit("clearAllChat");
         document.getElementById("messages").innerHTML = "";
         localStorage.removeItem("chat_history");
@@ -161,3 +134,4 @@ window.logout = function() {
 document.getElementById("msg")?.addEventListener("keypress", (e) => {
     if (e.key === "Enter") window.handleSend();
 });
+              
