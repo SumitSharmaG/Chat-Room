@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Secure Persistent Chat</title>
+    <title>Secure Premium Chat</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,10 +14,17 @@
             --text-main: #e0e0e0;
         }
 
-        /* Security: No selection/copy */
+        /* --- ANTI-SCREENSHOT & SECURITY CSS --- */
         * { 
             margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif;
-            -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+            -webkit-user-select: none; 
+            user-select: none; 
+            -webkit-touch-callout: none; 
+        }
+
+        /* Screen capture/print ke waqt content hide karne ki koshish */
+        @media print {
+            body { display: none !important; }
         }
 
         body {
@@ -54,9 +61,10 @@
         }
 
         .alert-msg {
-            align-self: center !important; background: rgba(255, 77, 77, 0.15) !important;
+            align-self: center !important; background: rgba(255, 77, 77, 0.2) !important;
             border: 1px solid var(--accent-red) !important; color: var(--accent-red);
             font-size: 0.75rem; font-weight: bold; border-radius: 8px !important; text-align: center;
+            padding: 8px 12px !important; margin: 5px 0;
         }
 
         .msg-time { font-size: 0.6rem; color: var(--accent-gold); align-self: flex-end; margin-top: 4px; }
@@ -68,7 +76,8 @@
 
         #msg {
             flex: 1; min-width: 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(181, 148, 97, 0.3);
-            padding: 12px 18px; border-radius: 25px; color: #fff; outline: none; user-select: text !important;
+            padding: 12px 18px; border-radius: 25px; color: #fff; outline: none; 
+            user-select: text !important; /* Sirf typing box me text allow hai */
         }
 
         .send-btn {
@@ -84,8 +93,8 @@
         <div class="header-right">
             <div style="color: var(--accent-gold); font-size: 0.8rem; margin-right: 5px;">👁️ <span id="online-count">0</span></div>
             <div class="btn-group">
-                <button class="clear-btn" onclick="clearChat()">Clear</button>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <button class="clear-btn" onclick="window.clearChat()">Clear</button>
+                <button class="logout-btn" onclick="window.logout()">Logout</button>
             </div>
         </div>
     </header>
@@ -94,7 +103,7 @@
 
     <div class="input-area">
         <input id="msg" placeholder="Type a message..." autocomplete="off" />
-        <button class="send-btn" onclick="handleSend()">
+        <button class="send-btn" onclick="window.handleSend()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         </button>
     </div>
@@ -102,5 +111,4 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>
-    </html>
-    
+</html>
