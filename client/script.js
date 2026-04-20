@@ -59,26 +59,19 @@ function handleSend() {
   const username = localStorage.getItem("username");
 
   if (text !== "" && socket) {
-    // 1. Socket par message bhejna
+    // Socket par message bhejna
     socket.emit("sendMessage", { username, text: text });
 
-    // 2. Input box ko turant khali karna
+    // Input box ko turant khali karna aur focus wapas lana
     input.value = "";
-
-    // 3. Wapas focus rakhna (Mobile keyboard up rakhne ke liye)
     input.focus();
 
-    // 4. Manual Scroll (Sending ke waqt)
+    // Manual Scroll (Sending ke waqt turant niche le jaye)
     const messagesUl = document.getElementById('messages');
     if (messagesUl) {
       messagesUl.scrollTop = messagesUl.scrollHeight;
     }
   }
-}
-
-// Ye purane 'sendMsg' function ka alias hai agar aapne HTML me sendMsg use kiya ho
-function sendMsg() {
-    handleSend();
 }
 
 // Enter Key Support
@@ -90,12 +83,24 @@ document.getElementById("msg")?.addEventListener("keypress", (e) => {
 
 // --- REAL-TIME UPDATES ---
 if (socket) {
-  // 1. Receive Message Logic
+  // 1. Receive Message Logic with Time Stamp
   socket.on("receiveMessage", (data) => {
     const messagesUl = document.getElementById("messages");
     if (messagesUl) {
       const li = document.createElement("li");
-      li.innerHTML = `<strong>${data.username}:</strong> ${data.text}`;
+      
+      // Current Time nikalne ka logic (HH:MM:SS)
+      const now = new Date();
+      const timeStr = now.getHours().toString().padStart(2, '0') + ":" + 
+                      now.getMinutes().toString().padStart(2, '0') + ":" + 
+                      now.getSeconds().toString().padStart(2, '0');
+
+      // Message content with Time span
+      li.innerHTML = `
+        <span><strong>${data.username}:</strong> ${data.text}</span>
+        <span class="msg-time" style="font-size: 0.65rem; color: #b59461; align-self: flex-end; margin-top: 4px; opacity: 0.8;">${timeStr}</span>
+      `;
+      
       messagesUl.appendChild(li);
 
       // Smooth Auto-scroll to bottom
@@ -106,7 +111,7 @@ if (socket) {
     }
   });
 
-  // 2. Online User Counter (👁️ Symbol update)
+  // 2. Online User Counter (👁️ Update)
   socket.on("updateUserCount", (count) => {
     const countElement = document.getElementById("online-count");
     if (countElement) {
@@ -115,13 +120,15 @@ if (socket) {
   });
 }
 
-// Mobile Keyboard fix: Input par click karte hi screen scroll ho jaye
+// Mobile Keyboard fix: Jab user type karne ke liye click kare to last message dikhe
 document.getElementById("msg")?.addEventListener("focus", () => {
     setTimeout(() => {
         const messagesUl = document.getElementById('messages');
         if (messagesUl) {
-            messagesUl.scrollTop = messagesUl.scrollHeight;
+            messagesUl.scrollTo({
+                top: messagesUl.scrollHeight,
+                behavior: 'smooth'
+            });
         }
     }, 300);
 });
-      
