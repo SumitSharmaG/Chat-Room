@@ -3,7 +3,6 @@ const BACKEND = "https://chat-backend-gtg5.onrender.com";
 // --- REGISTER ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
-
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
 
@@ -23,7 +22,6 @@ document.getElementById("registerForm")?.addEventListener("submit", async (e) =>
 // --- LOGIN ---
 document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
-
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
 
@@ -33,9 +31,7 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({ username, password })
     });
-
     const data = await res.json();
-
     if (data.success) {
       localStorage.setItem("username", username);
       window.location.href = "chat.html";
@@ -56,8 +52,8 @@ function logout() {
 // --- SOCKET & CHAT LOGIC ---
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
 
-// Message bhejne aur box clear karne ka main function
-function sendMsg() {
+// Handle Sending Messages (WhatsApp Style)
+function handleSend() {
   const input = document.getElementById("msg");
   const text = input.value.trim();
   const username = localStorage.getItem("username");
@@ -66,35 +62,66 @@ function sendMsg() {
     // 1. Socket par message bhejna
     socket.emit("sendMessage", { username, text: text });
 
-    // 2. MAGIC: Input box ko turant khali karna
+    // 2. Input box ko turant khali karna
     input.value = "";
 
-    // 3. Wapas box par focus lana (taaki user typing jari rakh sake)
+    // 3. Wapas focus rakhna (Mobile keyboard up rakhne ke liye)
     input.focus();
+
+    // 4. Manual Scroll (Sending ke waqt)
+    const messagesUl = document.getElementById('messages');
+    if (messagesUl) {
+      messagesUl.scrollTop = messagesUl.scrollHeight;
+    }
   }
 }
 
-// Enter Key dabane par message send ho jaye
+// Ye purane 'sendMsg' function ka alias hai agar aapne HTML me sendMsg use kiya ho
+function sendMsg() {
+    handleSend();
+}
+
+// Enter Key Support
 document.getElementById("msg")?.addEventListener("keypress", (e) => {
   if (e.key === "Enter") {
-    sendMsg();
+    handleSend();
   }
 });
 
-// Message receive hone par screen par dikhana
+// --- REAL-TIME UPDATES ---
 if (socket) {
+  // 1. Receive Message Logic
   socket.on("receiveMessage", (data) => {
     const messagesUl = document.getElementById("messages");
     if (messagesUl) {
       const li = document.createElement("li");
-      
-      // Ise premium look dene ke liye formatting
       li.innerHTML = `<strong>${data.username}:</strong> ${data.text}`;
-      
       messagesUl.appendChild(li);
 
-      // Auto-scroll to bottom: Naya message aate hi screen niche chali jayegi
-      messagesUl.scrollTop = messagesUl.scrollHeight;
+      // Smooth Auto-scroll to bottom
+      messagesUl.scrollTo({
+        top: messagesUl.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   });
+
+  // 2. Online User Counter (👁️ Symbol update)
+  socket.on("updateUserCount", (count) => {
+    const countElement = document.getElementById("online-count");
+    if (countElement) {
+      countElement.innerText = count;
     }
+  });
+}
+
+// Mobile Keyboard fix: Input par click karte hi screen scroll ho jaye
+document.getElementById("msg")?.addEventListener("focus", () => {
+    setTimeout(() => {
+        const messagesUl = document.getElementById('messages');
+        if (messagesUl) {
+            messagesUl.scrollTop = messagesUl.scrollHeight;
+        }
+    }, 300);
+});
+      
