@@ -1,4 +1,4 @@
-# 💬 Private Chat Website
+ 💬 Private Chat Website
 
 A simple **private chat web application** built using Node.js, MongoDB, and Socket.IO.  
 Users can register, login securely, and chat in real-time.
@@ -18,16 +18,19 @@ Users can register, login securely, and chat in real-time.
 ## 🛠️ Tech Stack
 
 ### Frontend
+• [GitHub]
 - HTML
 - CSS
 - JavaScript
 
 ### Backend
+• [Render]
+• [Versel]
 - Node.js
 - Express.js
 
 ### Database
-- MongoDB Atlas
+• [MongoDB Atlas]
 
 ### Realtime
 - Socket.IO
