@@ -1,35 +1,26 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
 
-// --- 1. REGISTER LOGIC ---
+// --- 1. REGISTER & LOGIN LOGIC ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-
     try {
         const res = await fetch(BACKEND + "/api/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password })
         });
-        if (res.ok) {
-            alert("Registered successfully!");
-            window.location.href = "login.html";
-        } else {
-            alert("Registration failed. User might already exist.");
-        }
-    } catch (err) {
-        alert("Server error. Try again.");
-    }
+        if (res.ok) { alert("Registered successfully!"); window.location.href = "login.html"; }
+        else { alert("Registration failed."); }
+    } catch (err) { alert("Server error."); }
 });
 
-// --- 2. LOGIN LOGIC ---
 document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-
     try {
         const res = await fetch(BACKEND + "/api/login", {
             method: "POST",
@@ -40,26 +31,11 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
         if (data.success) {
             localStorage.setItem("username", username);
             window.location.href = "chat.html";
-        } else {
-            alert("Login failed: " + (data.message || "Invalid credentials"));
-        }
-    } catch (err) {
-        alert("Server error. Please try again later.");
-    }
+        } else { alert("Login failed."); }
+    } catch (err) { alert("Server error."); }
 });
 
-// --- 3. CHAT & PERSISTENCE LOGIC ---
-
-// Page load par LocalStorage se chat dikhao
-document.addEventListener("DOMContentLoaded", () => {
-    const savedChat = localStorage.getItem("chat_history");
-    const messagesUl = document.getElementById("messages");
-    if (savedChat && messagesUl) {
-        messagesUl.innerHTML = savedChat;
-        messagesUl.scrollTop = messagesUl.scrollHeight;
-    }
-});
-
+// --- 2. UTILITY FUNCTIONS ---
 function getCurrentTime() {
     const now = new Date();
     let hours = now.getHours();
@@ -70,45 +46,67 @@ function getCurrentTime() {
     return `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
 }
 
-// --- SCREENSHOT DETECTION ---
-function sendScreenshotAlert() {
+// --- 3. ADVANCED SCREENSHOT DETECTION ---
+let lastAlertTime = 0;
+function sendScreenshotAlert(reason = "took a screenshot") {
+    const now = Date.now();
+    if (now - lastAlertTime < 3000) return; // 3 second gap to avoid spam
+    lastAlertTime = now;
+
     const username = localStorage.getItem("username") || "Someone";
     if (socket) {
         socket.emit("sendMessage", { 
             username: "SYSTEM ALERT", 
-            text: `📸 ${username} took a screenshot!`, 
+            text: `📸 ${username} ${reason}!`, 
             isAlert: true, 
             time: getCurrentTime() 
         });
     }
 }
 
+// PC Shortcuts
 window.addEventListener('keyup', (e) => {
-    if (e.key === 'PrintScreen' || e.key === 'PrtSc') sendScreenshotAlert();
+    if (e.key === 'PrintScreen' || e.key === 'PrtSc') sendScreenshotAlert("pressed PrintScreen");
 });
 
-// --- SOCKET EVENTS ---
+// Mobile/Desktop Focus Detection (Jugad for mobile screenshots)
+window.addEventListener('blur', () => {
+    sendScreenshotAlert("possible screenshot/tab switch");
+});
+
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === 'hidden') {
+        sendScreenshotAlert("screen hidden/screenshot");
+    }
+});
+
+// --- 4. CHAT LOGIC ---
+document.addEventListener("DOMContentLoaded", () => {
+    const savedChat = localStorage.getItem("chat_history");
+    const messagesUl = document.getElementById("messages");
+    if (savedChat && messagesUl) {
+        messagesUl.innerHTML = savedChat;
+        messagesUl.scrollTop = messagesUl.scrollHeight;
+    }
+});
+
 if (socket) {
     socket.on("loadHistory", (history) => {
         const messagesUl = document.getElementById("messages");
-        // Sirf tab load karein jab screen khali ho
         if (messagesUl && messagesUl.innerHTML.trim() === "") {
             history.forEach(data => displayMessage(data));
         }
     });
 
-    socket.on("receiveMessage", (data) => {
-        displayMessage(data);
-    });
+    socket.on("receiveMessage", (data) => displayMessage(data));
 
     socket.on("updateUserCount", (count) => {
-        const countEl = document.getElementById("online-count");
-        if (countEl) countEl.innerText = count;
+        const el = document.getElementById("online-count");
+        if (el) el.innerText = count;
     });
 
     socket.on("chatCleared", () => {
-        const messagesUl = document.getElementById("messages");
-        if (messagesUl) messagesUl.innerHTML = "";
+        document.getElementById("messages").innerHTML = "";
         localStorage.removeItem("chat_history");
     });
 }
@@ -119,21 +117,20 @@ function displayMessage(data) {
 
     const li = document.createElement("li");
     if (data.isAlert || data.username === "SYSTEM ALERT") {
-        li.style.cssText = "align-self: center; background: rgba(255, 77, 77, 0.15); border: 1px solid #ff4d4d; color: #ff4d4d; font-size: 0.75rem; font-weight: bold; border-radius: 8px; padding: 5px 10px; margin: 5px 0;";
+        li.className = "alert-msg";
         li.innerHTML = `<span>${data.text} - ${data.time}</span>`;
     } else {
         li.innerHTML = `
             <span><strong>${data.username}:</strong> ${data.text}</span>
-            <span style="font-size: 0.6rem; color: #b59461; align-self: flex-end; margin-top: 4px;">${data.time || getCurrentTime()}</span>
+            <span class="msg-time">${data.time || getCurrentTime()}</span>
         `;
     }
-    
     messagesUl.appendChild(li);
     messagesUl.scrollTo({ top: messagesUl.scrollHeight, behavior: 'smooth' });
     localStorage.setItem("chat_history", messagesUl.innerHTML);
 }
 
-// Global functions for HTML
+// --- GLOBAL ACTIONS ---
 window.handleSend = function() {
     const input = document.getElementById("msg");
     const text = input.value.trim();
@@ -149,7 +146,7 @@ window.handleSend = function() {
 };
 
 window.clearChat = function() {
-    if (confirm("Clear all chat for everyone?")) {
+    if (confirm("Delete all chat history for everyone?")) {
         socket?.emit("clearAllChat");
         document.getElementById("messages").innerHTML = "";
         localStorage.removeItem("chat_history");
@@ -161,8 +158,6 @@ window.logout = function() {
     window.location.href = "login.html";
 };
 
-// Enter Key
 document.getElementById("msg")?.addEventListener("keypress", (e) => {
     if (e.key === "Enter") window.handleSend();
 });
-    
