@@ -11,6 +11,7 @@
             --bg-card: #141414;
             --accent-gold: #b59461;
             --text-main: #e0e0e0;
+            --text-muted: #888;
             --transition-smooth: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
@@ -20,11 +21,11 @@
             background-color: var(--bg-base);
             background-image: radial-gradient(at 0% 0%, rgba(30, 20, 16, 0.4) 0px, transparent 50%);
             color: var(--text-main);
-            height: 100dvh; /* Dynamic viewport height for mobile keyboard */
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            position: fixed; /* Prevents unwanted scrolling on mobile */
+            position: fixed;
             width: 100%;
         }
 
@@ -40,11 +41,7 @@
 
         h2 { font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1.2rem; }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .header-right { display: flex; align-items: center; gap: 15px; }
 
         .online-status {
             display: flex;
@@ -52,7 +49,6 @@
             gap: 5px;
             color: var(--accent-gold);
             font-size: 0.9rem;
-            font-weight: 600;
         }
 
         .logout-btn {
@@ -62,7 +58,6 @@
             padding: 5px 12px;
             border-radius: 5px;
             cursor: pointer;
-            font-weight: 600;
             font-size: 0.8rem;
             transition: var(--transition-smooth);
         }
@@ -75,93 +70,79 @@
             padding: 15px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            background: rgba(0,0,0,0.2);
+            gap: 12px;
         }
 
         #messages li {
             list-style: none;
-            padding: 8px 15px;
+            padding: 10px 15px;
             background: rgba(255, 255, 255, 0.07);
             border-radius: 15px 15px 15px 2px;
             max-width: 85%;
             width: fit-content;
             border: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.95rem;
-            word-wrap: break-word;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease;
         }
 
-        /* --- WhatsApp Style Sticky Input --- */
+        .msg-time {
+            font-size: 0.65rem;
+            color: var(--accent-gold);
+            align-self: flex-end;
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        /* --- WhatsApp Style Input --- */
         .input-area {
             background: var(--bg-card);
-            padding: 10px 15px;
+            padding: 12px 15px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             border-top: 1px solid rgba(181, 148, 97, 0.1);
-            padding-bottom: env(safe-area-inset-bottom, 10px); /* For iPhone notch */
         }
 
         #msg {
             flex: 1;
             background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(181, 148, 97, 0.3);
+            border: 1px solid rgba(181, 148, 97, 0.2);
             padding: 12px 18px;
             border-radius: 25px;
             color: #fff;
             outline: none;
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
-
-        #msg:focus { border-color: var(--accent-gold); background: rgba(255,255,255,0.1); }
 
         .send-btn {
             background: var(--accent-gold);
             border: none;
-            width: 45px;
-            height: 45px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             transition: var(--transition-smooth);
         }
 
         .send-btn:active { transform: scale(0.9); }
 
-        footer { 
-            text-align: center; 
-            font-size: 0.6rem; 
-            padding: 2px; 
-            color: #444; 
-            background: var(--bg-card);
-        }
+        footer { text-align: center; font-size: 0.6rem; padding: 2px; color: #444; }
 
-        /* Desktop View Adjustments */
-        @media (min-width: 768px) {
-            h2 { font-size: 1.5rem; }
-            #messages { padding: 20px 20% ; } /* Side spacing for desktop */
-            .input-area { padding: 15px 20%; }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } }
     </style>
 </head>
 <body>
 
-    <script>
-        if (!localStorage.getItem("username")) {
-            window.location.href = "login.html";
-        }
-    </script>
-
     <header>
         <h2>Chat Room</h2>
         <div class="header-right">
-            <div class="online-status">
-                <span id="online-icon">👁️</span>
-                <span id="online-count">0</span>
-            </div>
+            <div class="online-status">👁️ <span id="online-count">0</span></div>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </header>
@@ -169,9 +150,9 @@
     <ul id="messages"></ul>
 
     <div class="input-area">
-        <input id="msg" placeholder="Type a message..." autocomplete="off" onfocus="scrollToBottom()" />
+        <input id="msg" placeholder="Type a message..." autocomplete="off" />
         <button class="send-btn" onclick="handleSend()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         </button>
     </div>
 
@@ -179,15 +160,5 @@
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>
-    
-    <script>
-        // Smooth scroll for mobile typing
-        function scrollToBottom() {
-            setTimeout(() => {
-                const msgs = document.getElementById('messages');
-                msgs.scrollTop = msgs.scrollHeight;
-            }, 300);
-        }
-    </script>
 </body>
 </html>
