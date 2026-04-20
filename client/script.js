@@ -1,35 +1,26 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
 
-// --- 1. REGISTER LOGIC ---
+// --- 1. REGISTER & LOGIN LOGIC ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-
     try {
         const res = await fetch(BACKEND + "/api/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password })
         });
-        if (res.ok) {
-            alert("Registered successfully!");
-            window.location.href = "login.html";
-        } else {
-            alert("Registration failed. User might already exist.");
-        }
-    } catch (err) {
-        alert("Server error during registration.");
-    }
+        if (res.ok) { alert("Registered successfully!"); window.location.href = "login.html"; }
+        else { alert("Registration failed."); }
+    } catch (err) { alert("Server error."); }
 });
 
-// --- 2. LOGIN LOGIC ---
 document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-
     try {
         const res = await fetch(BACKEND + "/api/login", {
             method: "POST",
@@ -40,15 +31,11 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
         if (data.success) {
             localStorage.setItem("username", username);
             window.location.href = "chat.html";
-        } else {
-            alert("Login failed: " + (data.message || "Invalid credentials"));
-        }
-    } catch (err) {
-        alert("Server error during login.");
-    }
+        } else { alert("Login failed."); }
+    } catch (err) { alert("Server error."); }
 });
 
-// --- 3. UTILITY & TIME ---
+// --- 2. UTILS ---
 function getCurrentTime() {
     const now = new Date();
     let hours = now.getHours();
@@ -59,20 +46,20 @@ function getCurrentTime() {
     return `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
 }
 
-// --- 4. ADVANCED SCREENSHOT & 1.5s GESTURE DETECTION ---
+// --- 3. SCREENSHOT & GESTURE DETECTION (Cleaned) ---
 let gestureTimer = null;
 let lastAlertTime = 0;
 
-function sendScreenshotAlert(reason = "took a screenshot") {
+function sendScreenshotAlert(reason = "Screenshot") {
     const now = Date.now();
     if (now - lastAlertTime < 2000) return; 
     lastAlertTime = now;
 
-    const username = localStorage.getItem("username") || "Someone";
+    const username = localStorage.getItem("username") || "User";
     if (socket) {
         socket.emit("sendMessage", { 
-            username: "SYSTEM ALERT", 
-            text: `📸 ${username} ${reason}!`, 
+            username: "SYSTEM", 
+            text: `📸 ${username} ${reason}`, 
             isAlert: true, 
             time: getCurrentTime() 
         });
@@ -83,7 +70,7 @@ function sendScreenshotAlert(reason = "took a screenshot") {
 document.addEventListener('touchstart', (e) => {
     if (e.touches.length === 3) {
         gestureTimer = setTimeout(() => {
-            sendScreenshotAlert("performed a 1.5s screenshot gesture");
+            sendScreenshotAlert("captured screen");
         }, 1500);
     }
 }, { passive: false });
@@ -92,13 +79,12 @@ document.addEventListener('touchend', () => {
     if (gestureTimer) { clearTimeout(gestureTimer); gestureTimer = null; }
 });
 
-// PC & Blur detection
+// PrintScreen Key detection
 window.addEventListener('keyup', (e) => {
-    if (e.key === 'PrintScreen' || e.key === 'PrtSc') sendScreenshotAlert("pressed PrintScreen");
+    if (e.key === 'PrintScreen' || e.key === 'PrtSc') sendScreenshotAlert("captured screen");
 });
-window.addEventListener('blur', () => sendScreenshotAlert("lost focus (possible screenshot)"));
 
-// --- 5. CHAT LOGIC ---
+// --- 4. CHAT LOGIC ---
 document.addEventListener("DOMContentLoaded", () => {
     const savedChat = localStorage.getItem("chat_history");
     const messagesUl = document.getElementById("messages");
@@ -125,10 +111,13 @@ function displayMessage(data) {
     if (!messagesUl) return;
 
     const li = document.createElement("li");
-    if (data.isAlert || data.username === "SYSTEM ALERT") {
-        li.style.cssText = "align-self: center; background: rgba(255, 77, 77, 0.15); border: 1px solid #ff4d4d; color: #ff4d4d; font-size: 0.75rem; font-weight: bold; border-radius: 8px; padding: 5px 10px; margin: 5px 0;";
-        li.innerHTML = `<span>${data.text} - ${data.time}</span>`;
+    
+    if (data.isAlert || data.username === "SYSTEM") {
+        // --- CHOTA YELLOW ALERT LOGIC ---
+        li.style.cssText = "align-self: center; background: transparent; border: none; color: #ffff00; font-size: 0.6rem; padding: 2px; margin: 2px 0; list-style: none;";
+        li.innerHTML = `<span>${data.text} • ${data.time}</span>`;
     } else {
+        li.style.listStyle = "none";
         li.innerHTML = `
             <span><strong>${data.username}:</strong> ${data.text}</span>
             <span style="font-size: 0.6rem; color: #b59461; align-self: flex-end; margin-top: 4px;">${data.time || getCurrentTime()}</span>
@@ -139,15 +128,14 @@ function displayMessage(data) {
     localStorage.setItem("chat_history", messagesUl.innerHTML);
 }
 
-// --- 6. GLOBAL FUNCTIONS ---
+// --- GLOBAL ACTIONS ---
 window.handleSend = function() {
     const input = document.getElementById("msg");
     const text = input.value.trim();
     if (text !== "" && socket) {
         socket.emit("sendMessage", { 
             username: localStorage.getItem("username"), 
-            text, 
-            time: getCurrentTime() 
+            text, time: getCurrentTime() 
         });
         input.value = "";
         input.focus();
@@ -155,7 +143,7 @@ window.handleSend = function() {
 };
 
 window.clearChat = function() {
-    if (confirm("Clear all chat for everyone?")) {
+    if (confirm("Clear chat history?")) {
         socket?.emit("clearAllChat");
         document.getElementById("messages").innerHTML = "";
         localStorage.removeItem("chat_history");
@@ -170,4 +158,4 @@ window.logout = function() {
 document.getElementById("msg")?.addEventListener("keypress", (e) => {
     if (e.key === "Enter") window.handleSend();
 });
-                                                       
+    
