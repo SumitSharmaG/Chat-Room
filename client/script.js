@@ -52,83 +52,69 @@ function logout() {
 // --- SOCKET & CHAT LOGIC ---
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
 
-// Handle Sending Messages (WhatsApp Style)
+// Handle Sending Messages
 function handleSend() {
   const input = document.getElementById("msg");
   const text = input.value.trim();
   const username = localStorage.getItem("username");
 
   if (text !== "" && socket) {
-    // Socket par message bhejna
     socket.emit("sendMessage", { username, text: text });
-
-    // Input box ko turant khali karna aur focus wapas lana
-    input.value = "";
-    input.focus();
-
-    // Manual Scroll (Sending ke waqt turant niche le jaye)
-    const messagesUl = document.getElementById('messages');
-    if (messagesUl) {
-      messagesUl.scrollTop = messagesUl.scrollHeight;
-    }
+    input.value = ""; // Clear box after send
+    input.focus(); // Keep keyboard open
   }
 }
 
+// Backwards compatibility for HTML onclick
+function sendMsg() { handleSend(); }
+
 // Enter Key Support
 document.getElementById("msg")?.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    handleSend();
-  }
+  if (e.key === "Enter") handleSend();
 });
 
 // --- REAL-TIME UPDATES ---
 if (socket) {
-  // 1. Receive Message Logic with Time Stamp
+  // 1. Receive Message Logic with 12hr AM/PM Time
   socket.on("receiveMessage", (data) => {
     const messagesUl = document.getElementById("messages");
     if (messagesUl) {
       const li = document.createElement("li");
       
-      // Current Time nikalne ka logic (HH:MM:SS)
+      // --- Time Formatting Logic ---
       const now = new Date();
-      const timeStr = now.getHours().toString().padStart(2, '0') + ":" + 
-                      now.getMinutes().toString().padStart(2, '0') + ":" + 
-                      now.getSeconds().toString().padStart(2, '0');
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const seconds = now.getSeconds().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12; // Convert 24h to 12h
+      const hoursStr = hours.toString().padStart(2, '0');
+      const timeStr = `${hoursStr}:${minutes}:${seconds} ${ampm}`;
 
-      // Message content with Time span
       li.innerHTML = `
         <span><strong>${data.username}:</strong> ${data.text}</span>
-        <span class="msg-time" style="font-size: 0.65rem; color: #b59461; align-self: flex-end; margin-top: 4px; opacity: 0.8;">${timeStr}</span>
+        <span class="msg-time" style="font-size: 0.65rem; color: #b59461; align-self: flex-end; margin-top: 4px;">${timeStr}</span>
       `;
       
       messagesUl.appendChild(li);
 
-      // Smooth Auto-scroll to bottom
-      messagesUl.scrollTo({
-        top: messagesUl.scrollHeight,
-        behavior: 'smooth'
-      });
+      // Auto-scroll to latest message
+      messagesUl.scrollTo({ top: messagesUl.scrollHeight, behavior: 'smooth' });
     }
   });
 
-  // 2. Online User Counter (👁️ Update)
+  // 2. Online User Counter
   socket.on("updateUserCount", (count) => {
     const countElement = document.getElementById("online-count");
-    if (countElement) {
-      countElement.innerText = count;
-    }
+    if (countElement) countElement.innerText = count;
   });
 }
 
-// Mobile Keyboard fix: Jab user type karne ke liye click kare to last message dikhe
+// Mobile Keyboard fix: Prevent chat occlusion
 document.getElementById("msg")?.addEventListener("focus", () => {
     setTimeout(() => {
         const messagesUl = document.getElementById('messages');
-        if (messagesUl) {
-            messagesUl.scrollTo({
-                top: messagesUl.scrollHeight,
-                behavior: 'smooth'
-            });
-        }
+        if (messagesUl) messagesUl.scrollTop = messagesUl.scrollHeight;
     }, 300);
 });
+  
