@@ -1,7 +1,54 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
 
-// --- 1. CORE UTILS ---
+// --- 1. REGISTER LOGIC ---
+document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    try {
+        const res = await fetch(BACKEND + "/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+        if (res.ok) {
+            alert("Registered successfully!");
+            window.location.href = "login.html";
+        } else {
+            alert("Registration failed. User might already exist.");
+        }
+    } catch (err) {
+        alert("Server error during registration.");
+    }
+});
+
+// --- 2. LOGIN LOGIC ---
+document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    try {
+        const res = await fetch(BACKEND + "/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+            localStorage.setItem("username", username);
+            window.location.href = "chat.html";
+        } else {
+            alert("Login failed: " + (data.message || "Invalid credentials"));
+        }
+    } catch (err) {
+        alert("Server error during login.");
+    }
+});
+
+// --- 3. UTILITY & TIME ---
 function getCurrentTime() {
     const now = new Date();
     let hours = now.getHours();
@@ -12,13 +59,13 @@ function getCurrentTime() {
     return `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
 }
 
-// --- 2. ADVANCED SCREENSHOT & GESTURE DETECTION (1.5s Timer) ---
+// --- 4. ADVANCED SCREENSHOT & 1.5s GESTURE DETECTION ---
 let gestureTimer = null;
 let lastAlertTime = 0;
 
 function sendScreenshotAlert(reason = "took a screenshot") {
     const now = Date.now();
-    if (now - lastAlertTime < 2000) return; // Prevent spam
+    if (now - lastAlertTime < 2000) return; 
     lastAlertTime = now;
 
     const username = localStorage.getItem("username") || "Someone";
@@ -32,10 +79,9 @@ function sendScreenshotAlert(reason = "took a screenshot") {
     }
 }
 
-// Mobile Three-Finger Swipe with 1.5s Gesture Duration Logic
+// Mobile 3-Finger Gesture (1.5s Timer)
 document.addEventListener('touchstart', (e) => {
     if (e.touches.length === 3) {
-        // Agar 3 ungliyan touch hui, timer shuru karo (1.5 seconds)
         gestureTimer = setTimeout(() => {
             sendScreenshotAlert("performed a 1.5s screenshot gesture");
         }, 1500);
@@ -43,33 +89,22 @@ document.addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 document.addEventListener('touchend', () => {
-    // Agar user ne 1.5s se pehle ungli hata li, timer cancel kar do
-    if (gestureTimer) {
-        clearTimeout(gestureTimer);
-        gestureTimer = null;
-    }
+    if (gestureTimer) { clearTimeout(gestureTimer); gestureTimer = null; }
 });
 
-document.addEventListener('touchcancel', () => {
-    if (gestureTimer) {
-        clearTimeout(gestureTimer);
-        gestureTimer = null;
-    }
-});
-
-// PC & Focus Detection
+// PC & Blur detection
 window.addEventListener('keyup', (e) => {
     if (e.key === 'PrintScreen' || e.key === 'PrtSc') sendScreenshotAlert("pressed PrintScreen");
 });
 window.addEventListener('blur', () => sendScreenshotAlert("lost focus (possible screenshot)"));
 
-// --- 3. CHAT LOGIC ---
+// --- 5. CHAT LOGIC ---
 document.addEventListener("DOMContentLoaded", () => {
     const savedChat = localStorage.getItem("chat_history");
     const messagesUl = document.getElementById("messages");
     if (savedChat && messagesUl) {
         messagesUl.innerHTML = savedChat;
-        messagesUl.scrollTo(0, messagesUl.scrollHeight);
+        messagesUl.scrollTop = messagesUl.scrollHeight;
     }
 });
 
@@ -91,7 +126,7 @@ function displayMessage(data) {
 
     const li = document.createElement("li");
     if (data.isAlert || data.username === "SYSTEM ALERT") {
-        li.className = "alert-msg";
+        li.style.cssText = "align-self: center; background: rgba(255, 77, 77, 0.15); border: 1px solid #ff4d4d; color: #ff4d4d; font-size: 0.75rem; font-weight: bold; border-radius: 8px; padding: 5px 10px; margin: 5px 0;";
         li.innerHTML = `<span>${data.text} - ${data.time}</span>`;
     } else {
         li.innerHTML = `
@@ -104,14 +139,15 @@ function displayMessage(data) {
     localStorage.setItem("chat_history", messagesUl.innerHTML);
 }
 
-// --- 4. GLOBAL ACTIONS ---
+// --- 6. GLOBAL FUNCTIONS ---
 window.handleSend = function() {
     const input = document.getElementById("msg");
     const text = input.value.trim();
     if (text !== "" && socket) {
         socket.emit("sendMessage", { 
             username: localStorage.getItem("username"), 
-            text, time: getCurrentTime() 
+            text, 
+            time: getCurrentTime() 
         });
         input.value = "";
         input.focus();
@@ -119,7 +155,7 @@ window.handleSend = function() {
 };
 
 window.clearChat = function() {
-    if (confirm("Clear chat for everyone?")) {
+    if (confirm("Clear all chat for everyone?")) {
         socket?.emit("clearAllChat");
         document.getElementById("messages").innerHTML = "";
         localStorage.removeItem("chat_history");
@@ -134,4 +170,4 @@ window.logout = function() {
 document.getElementById("msg")?.addEventListener("keypress", (e) => {
     if (e.key === "Enter") window.handleSend();
 });
-              
+                                                       
