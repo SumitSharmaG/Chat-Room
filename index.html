@@ -11,8 +11,8 @@
             --dark-brown: #4e342e;
             --accent-gold: #d4a373;
             --bg-black: #121212;
-            --card-bg: #1e1e1e;
             --text-light: #f5f5f5;
+            --glow-color: rgba(212, 163, 115, 0.6);
         }
 
         * {
@@ -25,41 +25,75 @@
         body {
             background-color: var(--bg-black);
             color: var(--text-light);
-            line-height: 1.6;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
         }
 
-        /* Container styling */
         .container {
             width: 90%;
             max-width: 800px;
             margin: 40px auto;
-            padding: 20px;
-            background: rgba(46, 34, 30, 0.3);
+            padding: 30px;
+            background: rgba(30, 30, 30, 0.6);
             border-radius: 20px;
             border: 1px solid rgba(141, 110, 99, 0.2);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
             text-align: center;
         }
 
         h1 {
             font-size: 2.5rem;
             color: var(--accent-gold);
-            margin-bottom: 20px;
-            font-weight: 600;
-            letter-spacing: 1px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(212, 163, 115, 0.3);
         }
 
-        /* Buttons styling */
+        /* --- Updated Glowing & Blinking Link Section --- */
+        .chat-link-container {
+            margin: 30px 0;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .chat-link {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            display: block;
+            text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color);
+            transition: transform 0.3s ease;
+        }
+
+        .click-here {
+            display: block;
+            font-size: 1rem;
+            color: var(--accent-gold);
+            margin-top: 5px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            /* Blinking Animation */
+            animation: blinker 1.5s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0.2; transform: scale(0.95); }
+        }
+
+        .chat-link-container:hover .chat-link {
+            transform: scale(1.05);
+            color: var(--accent-gold);
+        }
+        /* --------------------------------------------- */
+
         .btn-group {
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin: 30px 0;
+            margin-bottom: 30px;
         }
 
         .btn {
@@ -70,7 +104,6 @@
             font-weight: 600;
             transition: all 0.3s ease;
             text-decoration: none;
-            display: inline-block;
             font-size: 1rem;
         }
 
@@ -87,108 +120,65 @@
 
         .btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(141, 110, 99, 0.4);
-            filter: brightness(1.2);
+            box-shadow: 0 5px 15px var(--glow-color);
         }
 
-        /* Feature Section */
         .features {
             text-align: left;
-            background: #1a1a1a;
+            background: rgba(0, 0, 0, 0.3);
             padding: 25px;
             border-radius: 15px;
-            margin: 30px 0;
             border-left: 4px solid var(--accent-gold);
         }
 
-        .features h2 {
-            color: var(--accent-gold);
-            margin-bottom: 15px;
-            font-size: 1.5rem;
-        }
-
-        ul {
-            list-style: none;
-        }
-
-        ul li {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        ul li::before {
-            content: "✦";
-            color: var(--accent-gold);
-            margin-right: 10px;
-        }
-
-        /* Chat Link */
-        .chat-link {
-            display: block;
-            margin: 20px 0;
-            color: var(--accent-gold);
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.2rem;
-            transition: color 0.3s;
-        }
-
-        .chat-link:hover {
-            color: #fff;
-        }
+        ul { list-style: none; margin-top: 10px; }
+        ul li { margin-bottom: 8px; font-size: 0.95rem; }
+        ul li::before { content: "✔"; color: var(--accent-gold); margin-right: 10px; }
 
         footer {
             margin-top: auto;
             padding: 20px;
-            font-size: 0.9rem;
-            color: #777;
+            color: #555;
+            font-size: 0.8rem;
         }
 
-        /* Mobile Responsive */
         @media (max-width: 600px) {
-            h1 { font-size: 1.8rem; }
             .btn-group { flex-direction: column; }
-            .container { width: 95%; margin: 20px auto; }
+            h1 { font-size: 1.8rem; }
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>💬 Private Chat</h1>
-        <p style="color: #bbb;">Secure, Fast, and Elegant Communication</p>
+        <h1>Welcome to Chat App</h1>
+        <p style="color: #888; margin-bottom: 20px;">Secure • Real-time • Private</p>
 
         <div class="btn-group">
-            <a href="login.html" class="btn btn-login">Login Now</a>
-            <a href="register.html" class="btn btn-register">Create Account</a>
+            <a href="login.html" class="btn btn-login">Login</a>
+            <a href="register.html" class="btn btn-register">Register</a>
         </div>
 
-        <a href="https://chat-room-three-pied.vercel.app/" class="chat-link">
-            🚀 Open Web Chat Application
+        <a href="https://chat-room-three-pied.vercel.app/" class="chat-link-container">
+            <span class="chat-link">🚀 Open Web Chat Application</span>
+            <span class="click-here">Click here !!!</span>
         </a>
 
-        <hr style="border: 0; border-top: 1px solid #333; margin: 30px 0;">
-
         <div class="features">
-            <h2>🚀 App Features</h2>
-            <ul>
-                <li><strong>Real-time Messaging:</strong> Powered by Socket.IO</li>
-                <li><strong>Secure Access:</strong> Bcrypt password hashing</li>
-                <li><strong>Database:</strong> Reliable MongoDB Cloud storage</li>
-                <li><strong>Responsive:</strong> Smooth experience on Mobile & PC</li>
-            </ul>
-        </div>
-
-        <div class="tech-stack">
-            <p style="font-size: 0.8rem; color: #666;">
-                Built with: Node.js • Express • MongoDB • Socket.io
+            <h3 style="color: var(--accent-gold);">Project Overview</h3>
+            <p style="font-size: 0.9rem; margin-top: 5px; color: #bbb;">
+                A simple private chat application built with Node.js, MongoDB, and Socket.IO.
             </p>
+            <ul>
+                <li>User Authentication (bcrypt)</li>
+                <li>Real-time Chat (Socket.IO)</li>
+                <li>Cloud Database (MongoDB Atlas)</li>
+            </ul>
         </div>
     </div>
 
     <footer>
-        &copy; 2026 SumitSharma.in | All Rights Reserved.
+        ©2026 SumitSharma.in All Rights Reserved.
     </footer>
 
 </body>
