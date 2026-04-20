@@ -51,9 +51,47 @@
             text-shadow: 0 0 10px rgba(212, 163, 115, 0.3);
         }
 
-        /* --- Updated Glowing & Blinking Link Section --- */
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .btn {
+            padding: 12px 35px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 1rem;
+            display: inline-block;
+        }
+
+        /* Login Button - Solid Brown */
+        .btn-login {
+            background-color: var(--primary-brown);
+            color: white;
+        }
+
+        /* Register Button - Gold Border */
+        .btn-register {
+            background-color: transparent;
+            color: var(--accent-gold);
+            border: 2px solid var(--primary-brown);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px var(--glow-color);
+            filter: brightness(1.1);
+        }
+
+        /* Glowing & Blinking Link Section */
         .chat-link-container {
-            margin: 30px 0;
+            margin: 20px 0;
             text-decoration: none;
             display: inline-block;
         }
@@ -75,7 +113,6 @@
             margin-top: 5px;
             font-weight: 400;
             letter-spacing: 2px;
-            /* Blinking Animation */
             animation: blinker 1.5s linear infinite;
         }
 
@@ -87,41 +124,6 @@
             transform: scale(1.05);
             color: var(--accent-gold);
         }
-        /* --------------------------------------------- */
-
-        .btn-group {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .btn {
-            padding: 12px 30px;
-            border-radius: 30px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            font-size: 1rem;
-        }
-
-        .btn-login {
-            background-color: var(--primary-brown);
-            color: white;
-        }
-
-        .btn-register {
-            background-color: transparent;
-            color: var(--accent-gold);
-            border: 2px solid var(--primary-brown);
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px var(--glow-color);
-        }
 
         .features {
             text-align: left;
@@ -129,10 +131,11 @@
             padding: 25px;
             border-radius: 15px;
             border-left: 4px solid var(--accent-gold);
+            margin-top: 20px;
         }
 
         ul { list-style: none; margin-top: 10px; }
-        ul li { margin-bottom: 8px; font-size: 0.95rem; }
+        ul li { margin-bottom: 8px; font-size: 0.95rem; color: #ddd; }
         ul li::before { content: "✔"; color: var(--accent-gold); margin-right: 10px; }
 
         footer {
@@ -145,6 +148,7 @@
         @media (max-width: 600px) {
             .btn-group { flex-direction: column; }
             h1 { font-size: 1.8rem; }
+            .btn { width: 100%; }
         }
     </style>
 </head>
@@ -152,11 +156,11 @@
 
     <div class="container">
         <h1>Welcome to Chat App</h1>
-        <p style="color: #888; margin-bottom: 20px;">Secure • Real-time • Private</p>
+        <p style="color: #888; margin-bottom: 5px;">Secure • Real-time • Private</p>
 
         <div class="btn-group">
-            <a href="login.html" class="btn btn-login">Login</a>
-            <a href="register.html" class="btn btn-register">Register</a>
+            <a href="https://chat-room-three-pied.vercel.app/login.html" class="btn btn-login">Login</a>
+            <a href="https://chat-room-three-pied.vercel.app/register.html" class="btn btn-register">Register</a>
         </div>
 
         <a href="https://chat-room-three-pied.vercel.app/" class="chat-link-container">
