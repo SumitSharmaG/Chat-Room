@@ -66,12 +66,12 @@ function sendScreenshotAlert(reason = "Screenshot") {
     }
 }
 
-// Mobile 3-Finger Gesture (1.5s Timer)
+// Mobile 3-Finger Gesture (1s Timer)
 document.addEventListener('touchstart', (e) => {
     if (e.touches.length === 3) {
         gestureTimer = setTimeout(() => {
             sendScreenshotAlert("captured screen");
-        }, 1500);
+        }, 1000);
     }
 }, { passive: false });
 
