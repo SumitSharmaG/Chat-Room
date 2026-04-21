@@ -114,10 +114,6 @@
             filter: brightness(1.1);
         }
 
-        button:active {
-            transform: translateY(-1px);
-        }
-
         /* --- Footer Link --- */
         .footer-text {
             margin-top: 25px;
@@ -130,19 +126,24 @@
             text-decoration: none;
             font-weight: 600;
             transition: var(--transition-smooth);
-            border-bottom: 1px solid transparent;
         }
 
-        .footer-text a:hover {
-            border-bottom: 1px solid var(--accent-gold);
-            opacity: 0.8;
+        /* --- Registration Note with Black Outline --- */
+        .reg-note {
+            margin-top: 25px;
+            font-size: 0.75rem;
+            color: var(--accent-gold);
+            line-height: 1.5;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #000000; 
+            background: rgba(0, 0, 0, 0.2);
+            font-style: italic;
+            text-align: center;
         }
 
-        /* Responsive Fix */
         @media (max-width: 480px) {
-            .login-card {
-                padding: 30px 20px;
-            }
+            .login-card { padding: 30px 20px; }
             h2 { font-size: 1.8rem; }
         }
     </style>
@@ -151,9 +152,7 @@
 
     <script>
         const user = localStorage.getItem("username");
-        if (user) {
-            window.location.href = "chat.html";
-        }
+        if (user) { window.location.href = "chat.html"; }
     </script>
 
     <div class="login-card">
@@ -168,6 +167,10 @@
         <p class="footer-text">
             Don't have an account? <a href="register.html">Register Now</a>
         </p>
+
+        <div class="reg-note">
+            <strong>Note :-</strong> When You Click "ACCESS CHAT" Please Wait For 7-14 Sec For Connecting the Chat Server :)
+        </div>
     </div>
 
     <script src="script.js"></script>
