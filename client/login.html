@@ -37,6 +37,33 @@
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            position: relative; /* Home button ke liye */
+        }
+
+        /* --- Home Button Styling --- */
+        .home-btn {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            text-decoration: none;
+            color: var(--accent-gold);
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border: 1px solid rgba(181, 148, 97, 0.3);
+            border-radius: 50px;
+            background: rgba(20, 20, 20, 0.5);
+            transition: var(--transition-smooth);
+            z-index: 100;
+        }
+
+        .home-btn:hover {
+            background: var(--accent-gold);
+            color: #000;
+            transform: scale(1.05);
         }
 
         /* --- Login Card --- */
@@ -145,10 +172,16 @@
         @media (max-width: 480px) {
             .login-card { padding: 30px 20px; }
             h2 { font-size: 1.8rem; }
+            .home-btn { top: 15px; left: 15px; font-size: 0.8rem; }
         }
     </style>
 </head>
 <body>
+
+    <a href="https://chat-room-three-pied.vercel.app/" class="home-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        Home
+    </a>
 
     <script>
         const user = localStorage.getItem("username");
