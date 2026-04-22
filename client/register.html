@@ -40,7 +40,67 @@
             position: relative;
         }
 
-        /* --- Home Button Styling --- */
+        /* --- Updated Pop-up Styles --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Light darkness */
+            backdrop-filter: blur(2px); /* Blur bahut kam kar diya hai */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            cursor: pointer; /* Indicaites you can click to close */
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--accent-gold);
+            padding: 30px;
+            max-width: 350px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+            animation: popIn 0.5s ease;
+            cursor: default; /* Box ke andar click karne se close nahi hoga */
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 26px;
+            color: var(--accent-gold);
+            cursor: pointer;
+            font-weight: 300;
+        }
+
+        .modal-box h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--accent-gold);
+            margin-bottom: 12px;
+            font-size: 1.5rem;
+        }
+
+        .modal-box p {
+            color: var(--text-main);
+            line-height: 1.5;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* --- Home Button --- */
         .home-btn {
             position: absolute;
             top: 25px;
@@ -60,11 +120,7 @@
             z-index: 10;
         }
 
-        .home-btn:hover {
-            background: var(--accent-gold);
-            color: #000;
-            transform: scale(1.05);
-        }
+        .home-btn:hover { background: var(--accent-gold); color: #000; transform: scale(1.05); }
 
         /* --- Register Card --- */
         .register-card {
@@ -86,86 +142,15 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            color: var(--accent-gold);
-            margin-bottom: 10px;
-        }
-
-        .desc {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 30px;
-        }
-
-        #registerForm {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        input {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(181, 148, 97, 0.2);
-            padding: 14px 18px;
-            border-radius: 6px;
-            color: var(--text-main);
-            font-size: 0.95rem;
-            outline: none;
-            transition: var(--transition-smooth);
-        }
-
-        input:focus {
-            background: rgba(255, 255, 255, 0.07);
-            border-color: var(--accent-gold);
-            box-shadow: 0 0 15px rgba(181, 148, 97, 0.1);
-        }
-
-        button {
-            background-color: var(--accent-gold);
-            color: #000;
-            border: none;
-            padding: 14px;
-            font-size: 1rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: var(--transition-smooth);
-            margin-top: 10px;
-        }
-
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(181, 148, 97, 0.3);
-        }
-
-        .footer-text {
-            margin-top: 25px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        .footer-text a {
-            color: var(--accent-gold);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .reg-note {
-            margin-top: 25px;
-            font-size: 0.75rem;
-            color: var(--accent-gold);
-            line-height: 1.5;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #000000; 
-            background: rgba(0, 0, 0, 0.2);
-            font-style: italic;
-            text-align: center;
-        }
+        h2 { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--accent-gold); margin-bottom: 10px; }
+        .desc { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px; }
+        #registerForm { display: flex; flex-direction: column; gap: 20px; }
+        input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(181, 148, 97, 0.2); padding: 14px 18px; border-radius: 6px; color: var(--text-main); font-size: 0.95rem; outline: none; transition: var(--transition-smooth); }
+        input:focus { background: rgba(255, 255, 255, 0.07); border-color: var(--accent-gold); box-shadow: 0 0 15px rgba(181, 148, 97, 0.1); }
+        button { background-color: var(--accent-gold); color: #000; border: none; padding: 14px; font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 6px; cursor: pointer; transition: var(--transition-smooth); margin-top: 10px; }
+        .footer-text { margin-top: 25px; font-size: 0.9rem; color: var(--text-muted); }
+        .footer-text a { color: var(--accent-gold); text-decoration: none; font-weight: 600; }
+        .reg-note { margin-top: 25px; font-size: 0.75rem; color: var(--accent-gold); line-height: 1.5; padding: 12px; border-radius: 8px; border: 1px solid #000000; background: rgba(0, 0, 0, 0.2); font-style: italic; text-align: center; }
 
         @media (max-width: 480px) {
             .register-card { padding: 30px 20px; }
@@ -176,6 +161,14 @@
 </head>
 <body>
 
+    <div class="modal-overlay" id="noticeModal" onclick="closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3>Notice:-</h3>
+            <p>Registration Is Currently Closed. You Will Be Notified As Soon As Registrations Are Open Again (:</p>
+        </div>
+    </div>
+
     <a href="https://chat-room-three-pied.vercel.app/" class="home-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         Home
@@ -184,6 +177,10 @@
     <script>
         const user = localStorage.getItem("username");
         if (user) { window.location.href = "chat.html"; }
+
+        function closeModal() {
+            document.getElementById('noticeModal').style.display = 'none';
+        }
     </script>
 
     <div class="register-card">
@@ -208,5 +205,5 @@
     <script src="script.js"></script>
 
 </body>
-        </html>
-    
+            </html>
+            
