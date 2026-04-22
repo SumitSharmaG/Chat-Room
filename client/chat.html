@@ -1,102 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Secure Ultra Chat</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-base: #0a0a0a;
-            --bg-card: #141414;
-            --accent-gold: #b59461;
-            --accent-red: #ff4d4d;
-            --text-main: #e0e0e0;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secure Ultra Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0a0a0a;
+            --bg-card: #141414;
+            --accent-gold: #b59461;
+            --accent-red: #ff4d4d;
+            --text-main: #e0e0e0;
+            --msg-bg: rgba(255, 255, 255, 0.07);
+        }
 
-        /* --- SECURITY & ANTI-SCREENSHOT --- */
-        * { 
-            margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif;
-            -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
-        }
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif;
+            -webkit-user-select: none; user-select: none;
+        }
 
-        @media print { body { display: none !important; } }
+        body {
+            background-color: var(--bg-base);
+            background-image: radial-gradient(at 0% 0%, rgba(181, 148, 97, 0.1) 0px, transparent 50%);
+            color: var(--text-main);
+            height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
+        }
 
-        body {
-            background-color: var(--bg-base);
-            background-image: radial-gradient(at 0% 0%, rgba(30, 20, 16, 0.4) 0px, transparent 50%);
-            color: var(--text-main);
-            height: 100dvh; display: flex; flex-direction: column; overflow: hidden; position: fixed; width: 100%;
-        }
+        header {
+            background: var(--bg-card); padding: 0 20px; display: flex;
+            justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid rgba(181, 148, 97, 0.2); min-height: 65px;
+        }
 
-        header {
-            background: var(--bg-card); padding: 10px 20px; display: flex;
-            justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(181, 148, 97, 0.2); height: 65px;
-        }
+        .header-right { display: flex; align-items: center; gap: 12px; }
 
-        .header-right { display: flex; align-items: center; gap: 12px; }
+        .btn-group { display: flex; gap: 8px; }
 
-        .logout-btn, .clear-btn {
-            border: 1px solid var(--accent-gold); padding: 4px 10px; border-radius: 5px;
-            cursor: pointer; font-size: 0.7rem; font-weight: 600; background: transparent; color: var(--accent-gold);
-        }
+        .logout-btn, .clear-btn {
+            border: 1px solid var(--accent-gold); padding: 5px 12px; border-radius: 6px;
+            cursor: pointer; font-size: 0.75rem; font-weight: 600; background: transparent; color: var(--accent-gold);
+            transition: 0.3s;
+        }
 
-        .clear-btn { border-color: var(--accent-red); color: var(--accent-red); }
+        .clear-btn { border-color: var(--accent-red); color: var(--accent-red); }
+        .clear-btn:hover { background: rgba(255, 77, 77, 0.1); }
+        .logout-btn:hover { background: rgba(181, 148, 97, 0.1); }
 
-        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        #messages { 
+            flex: 1; overflow-y: auto; padding: 20px; 
+            display: flex; flex-direction: column; gap: 12px;
+            scroll-behavior: smooth;
+        }
 
-        #messages li {
-            list-style: none; padding: 10px 15px; background: rgba(255, 255, 255, 0.07);
-            border-radius: 15px 15px 15px 2px; max-width: 85%; width: fit-content;
-            border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;
-        }
+        /* Message Styling */
+        .chat-li {
+            list-style: none; padding: 10px 15px; background: var(--msg-bg);
+            border-radius: 15px 15px 15px 2px; max-width: 85%; width: fit-content;
+            border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;
+        }
 
-        .alert-msg {
-            align-self: center !important; background: rgba(255, 77, 77, 0.2) !important;
-            border: 1px solid var(--accent-red) !important; color: var(--accent-red);
-            font-size: 0.75rem; font-weight: bold; border-radius: 8px !important; text-align: center;
-            padding: 8px 12px !important; margin: 5px 0;
-        }
+        /* System Alert Styling */
+        .system-alert {
+            align-self: center !important; background: transparent !important;
+            border: none !important; color: #ffff00 !important;
+            font-size: 0.65rem !important; font-weight: 500; text-align: center;
+            margin: 5px 0; opacity: 0.8;
+        }
 
-        .input-area {
-            background: var(--bg-card); padding: 10px 12px; display: flex; align-items: center; gap: 10px;
-            border-top: 1px solid rgba(181, 148, 97, 0.1);
-        }
+        .input-area {
+            background: var(--bg-card); padding: 15px; display: flex; align-items: center; gap: 10px;
+            border-top: 1px solid rgba(181, 148, 97, 0.1);
+        }
 
-        #msg {
-            flex: 1; min-width: 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(181, 148, 97, 0.3);
-            padding: 12px 18px; border-radius: 25px; color: #fff; outline: none; user-select: text !important;
-        }
+        #msg {
+            flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(181, 148, 97, 0.3);
+            padding: 12px 18px; border-radius: 25px; color: #fff; outline: none;
+            user-select: text !important; /* Message type karne ke liye allow karein */
+        }
 
-        .send-btn {
-            background: var(--accent-gold); border: none; width: 45px; height: 45px;
-            border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-    </style>
+        .send-btn {
+            background: var(--accent-gold); border: none; width: 45px; height: 45px;
+            border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.2s;
+        }
+        .send-btn:active { transform: scale(0.9); }
+    </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <header>
-        <h2 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1rem;">Secure Chat</h2>
-        <div class="header-right">
-            <div style="color: var(--accent-gold); font-size: 0.8rem; margin-right: 5px;">👁️ <span id="online-count">0</span></div>
-            <div class="btn-group">
-                <button class="clear-btn" onclick="window.clearChat()">Clear</button>
-                <button class="logout-btn" onclick="window.logout()">Logout</button>
-            </div>
-        </div>
-    </header>
+    <header>
+        <h2 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1rem;">Secure Chat</h2>
+        <div class="header-right">
+            <div style="color: var(--accent-gold); font-size: 0.85rem; font-weight: 600;">👁️ <span id="online-count">0</span></div>
+            <div class="btn-group">
+                <button class="clear-btn" onclick="window.clearChat()">Clear</button>
+                <button class="logout-btn" onclick="window.logout()">Logout</button>
+            </div>
+        </div>
+    </header>
 
-    <ul id="messages"></ul>
+    <ul id="messages"></ul>
 
-    <div class="input-area">
-        <input id="msg" placeholder="Type a message..." autocomplete="off" />
-        <button class="send-btn" onclick="window.handleSend()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-        </button>
-    </div>
+    <div class="input-area">
+        <input id="msg" placeholder="Type a message..." autocomplete="off">
+        <button class="send-btn" onclick="window.handleSend()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </button>
+    </div>
 
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <script src="script.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="script.js"></script>
 </body>
-    </html>
+</html>
