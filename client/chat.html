@@ -12,7 +12,7 @@
             --accent-gold: #b59461;
             --accent-red: #ff4d4d;
             --text-main: #e0e0e0;
-            --my-chat-bg: rgba(181, 148, 97, 0.15); /* New for self messages */
+            --my-chat-bg: rgba(181, 148, 97, 0.15);
         }
 
         /* SECURITY & UI RESET */
@@ -36,11 +36,16 @@
         header {
             background: var(--bg-card); padding: 10px 20px; 
             display: flex; justify-content: space-between; align-items: center; 
-            border-bottom: 1px solid rgba(181, 148, 97, 0.2); height: 65px;
+            border-bottom: 1px solid rgba(181, 148, 97, 0.2); height: 75px;
             z-index: 10;
         }
 
         .header-right { display: flex; align-items: center; gap: 12px; }
+        
+        .user-profile-section {
+            display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+        }
+
         .btn-group { display: flex; gap: 8px; }
 
         .logout-btn, .clear-btn {
@@ -66,7 +71,6 @@
             word-wrap: break-word;
         }
 
-        /* NEW: Style for your own messages */
         #messages li.my-message {
             align-self: flex-end;
             background: var(--my-chat-bg);
@@ -92,10 +96,8 @@
             background: var(--accent-gold); border: none; 
             width: 45px; height: 45px; border-radius: 50%; 
             cursor: pointer; display: flex; align-items: center; 
-            justify-content: center; transition: 0.2s;
+            justify-content: center;
         }
-        
-        .send-btn:active { transform: scale(0.9); }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -106,9 +108,12 @@
             <div style="color: var(--accent-gold); font-size: 0.8rem; margin-right: 5px;">
                 👁️ <span id="online-count">0</span>
             </div>
-            <div class="btn-group">
-                <button class="clear-btn" onclick="window.clearChat()">Clear</button>
-                <button class="logout-btn" onclick="window.logout()">Logout</button>
+            <div class="user-profile-section">
+                <div class="btn-group">
+                    <button class="clear-btn" onclick="window.clearChat()">Clear</button>
+                    <button class="logout-btn" onclick="window.logout()">Logout</button>
+                </div>
+                <span id="display-username" style="color: var(--accent-gold); font-size: 0.7rem; font-weight: 600;"></span>
             </div>
         </div>
     </header>
@@ -128,5 +133,4 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>
-  </html>
-      
+</html>
