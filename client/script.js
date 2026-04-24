@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const myUser = localStorage.getItem("username");
     const userDisplayEl = document.getElementById("display-username");
     if (userDisplayEl && myUser) {
-        userDisplayEl.innerText = `@${myUser.toLowerCase()}`;
+        userDisplayEl.innerText = `@${myUser}`;
     }
 
     const savedChat = localStorage.getItem("chat_history");
