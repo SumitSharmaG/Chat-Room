@@ -2,7 +2,6 @@ const BACKEND = "https://chat-backend-gtg5.onrender.com";
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
 
 // --- 1. REGISTER & LOGIN LOGIC ---
-// (Purana logic waise hi hai)
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = document.getElementById("username").value;
@@ -93,6 +92,13 @@ function scrollToBottom() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Header mein username dikhana
+    const myUser = localStorage.getItem("username");
+    const userDisplayEl = document.getElementById("display-username");
+    if (userDisplayEl && myUser) {
+        userDisplayEl.innerText = `@${myUser.toLowerCase()}`;
+    }
+
     const savedChat = localStorage.getItem("chat_history");
     if (savedChat && messagesUl) {
         messagesUl.innerHTML = savedChat;
@@ -100,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Auto-scroll on keyboard open (Mobile fix)
+// Keyboard open hone par auto-scroll
 window.addEventListener('resize', () => {
     if (document.activeElement.tagName === 'INPUT') {
         setTimeout(scrollToBottom, 100);
@@ -129,13 +135,12 @@ function displayMessage(data) {
         li.style.cssText = "align-self: center; background: transparent; border: none; color: #ffff00; font-size: 0.6rem; padding: 2px; margin: 2px 0; list-style: none;";
         li.innerHTML = `<span>${data.text} • ${data.time}</span>`;
     } else {
-        // Feature: Add class if the message is mine
         if (data.username === myUser) {
             li.classList.add("my-message");
         }
         
         li.innerHTML = `
-            <span><strong>${data.username === myUser ? "You" : data.username}:</strong> ${data.text}</span>
+            <span><strong style="color: var(--accent-gold)">${data.username}:</strong> ${data.text}</span>
             <span style="font-size: 0.6rem; color: #b59461; align-self: flex-end; margin-top: 4px;">${data.time || getCurrentTime()}</span>
         `;
     }
@@ -145,7 +150,7 @@ function displayMessage(data) {
     localStorage.setItem("chat_history", messagesUl.innerHTML);
 }
 
-// --- GLOBAL ACTIONS (Updated) ---
+// --- GLOBAL ACTIONS ---
 window.handleSend = function() {
     const input = document.getElementById("msg");
     const text = input.value.trim();
@@ -161,18 +166,11 @@ window.handleSend = function() {
 };
 
 window.clearChat = function() {
-    if (confirm("Sabke liye chat clear karni hai?")) {
-        // 1. Server ko bolo ki sabka clear kare
+    if (confirm("Clear chat history?")) {
         socket?.emit("clearAllChat");
-        
-        // 2. Apne browser ka local storage saaf karo
+        // Local cleanup
+        if (messagesUl) messagesUl.innerHTML = "";
         localStorage.removeItem("chat_history");
-        
-        // 3. Apni screen se messages gayab karo
-        const messagesUl = document.getElementById("messages");
-        if (messagesUl) {
-            messagesUl.innerHTML = "";
-        }
     }
 };
 
@@ -181,11 +179,10 @@ window.logout = function() {
     window.location.href = "login.html";
 };
 
-// Enter key support
 document.getElementById("msg")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
         e.preventDefault();
         window.handleSend();
     }
 });
-        
+                   
