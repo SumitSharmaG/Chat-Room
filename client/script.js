@@ -145,7 +145,7 @@ function displayMessage(data) {
     localStorage.setItem("chat_history", messagesUl.innerHTML);
 }
 
-// --- GLOBAL ACTIONS ---
+// --- GLOBAL ACTIONS (Updated) ---
 window.handleSend = function() {
     const input = document.getElementById("msg");
     const text = input.value.trim();
@@ -161,8 +161,18 @@ window.handleSend = function() {
 };
 
 window.clearChat = function() {
-    if (confirm("Clear chat history for everyone?")) {
+    if (confirm("Sabke liye chat clear karni hai?")) {
+        // 1. Server ko bolo ki sabka clear kare
         socket?.emit("clearAllChat");
+        
+        // 2. Apne browser ka local storage saaf karo
+        localStorage.removeItem("chat_history");
+        
+        // 3. Apni screen se messages gayab karo
+        const messagesUl = document.getElementById("messages");
+        if (messagesUl) {
+            messagesUl.innerHTML = "";
+        }
     }
 };
 
