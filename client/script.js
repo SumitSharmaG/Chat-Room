@@ -21,38 +21,21 @@ let lastAlertTime = 0;
 
 function sendScreenshotAlert(reason = "captured screen") {
     const now = Date.now();
-    if (data.isAlert || data.username === "SYSTEM") {
-    li.style.cssText = `
-        align-self: center;
-        background: transparent;
-        border: none;
-        color: yellow;
-        font-size: 0.6rem;
-        padding: 2px;
-        margin: 2px 0;
-        text-align: center;
-    `;
+    if (now - lastAlertTime < 2000) return;
 
-    li.innerHTML = `<span>${data.text} • ${data.time}</span>`;
-} 
-else {
-    if (data.username === myUser) {
-        li.classList.add("my-message");
-    }
+    lastAlertTime = now;
 
-    const messageId = data._id || Math.random();
+    const username = localStorage.getItem("username") || "User";
 
-    li.innerHTML = `
-        <span><strong>${data.username}:</strong> ${data.text}</span>
-        <span style="font-size: 0.6rem;">
-            ${data.time || getCurrentTime()}
-            <button onclick="showSeen('${messageId}')">ⓘ</button>
-        </span>
-    `;
-
+    socket?.emit("sendMessage", {
+        username: "SYSTEM",
+        text: `📸 ${username} ${reason}`,
+        isAlert: true,
+        time: getCurrentTime()
+    });
 }
 
-// 📱 3 finger mobile detection
+// 📱 Mobile (3 finger)
 document.addEventListener("touchstart", (e) => {
     if (e.touches.length === 3) {
         gestureTimer = setTimeout(() => {
@@ -65,7 +48,7 @@ document.addEventListener("touchend", () => {
     if (gestureTimer) clearTimeout(gestureTimer);
 });
 
-// 💻 PrintScreen detection
+// 💻 PC (PrintScreen)
 window.addEventListener("keyup", (e) => {
     if (e.key === "PrintScreen" || e.key === "PrtSc") {
         sendScreenshotAlert();
@@ -77,6 +60,7 @@ window.addEventListener("keyup", (e) => {
 // --- LOGIN / REGISTER ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
@@ -180,7 +164,6 @@ socket?.on("userStopTyping", () => {
     typingEl?.remove();
     typingEl = null;
 });
-// ============================================
 
 // ================== SEEN ==================
 const seenMap = {};
@@ -188,7 +171,6 @@ const seenMap = {};
 socket?.on("updateSeen", ({ messageId, seenBy }) => {
     seenMap[messageId] = seenBy;
 });
-// =========================================
 
 // SOCKET EVENTS
 socket?.on("receiveMessage", (data) => {
@@ -213,24 +195,43 @@ socket?.on("chatCleared", () => {
     localStorage.removeItem("chat_history");
 });
 
-// DISPLAY
+// DISPLAY MESSAGE
 function displayMessage(data) {
     if (!messagesUl) return;
 
     const li = document.createElement("li");
     const myUser = localStorage.getItem("username");
 
-    if (data.username === myUser) li.classList.add("my-message");
+    // 🟡 ALERT MESSAGE
+    if (data.isAlert || data.username === "SYSTEM") {
+        li.style.cssText = `
+            align-self: center;
+            background: transparent;
+            border: none;
+            color: yellow;
+            font-size: 0.6rem;
+            padding: 2px;
+            margin: 2px 0;
+            text-align: center;
+        `;
 
-    const messageId = data._id || Math.random();
+        li.innerHTML = `<span>${data.text} • ${data.time}</span>`;
+    } 
+    else {
+        if (data.username === myUser) {
+            li.classList.add("my-message");
+        }
 
-    li.innerHTML = `
-        <span><strong>${data.username}:</strong> ${data.text}</span>
-        <span style="font-size: 0.6rem;">
-            ${data.time || getCurrentTime()}
-            <button onclick="showSeen('${messageId}')">ⓘ</button>
-        </span>
-    `;
+        const messageId = data._id || Math.random();
+
+        li.innerHTML = `
+            <span><strong>${data.username}:</strong> ${data.text}</span>
+            <span style="font-size: 0.6rem;">
+                ${data.time || getCurrentTime()}
+                <button class="info-btn" onclick="showSeen('${messageId}')">ⓘ</button>
+            </span>
+        `;
+    }
 
     messagesUl.appendChild(li);
     scrollToBottom();
