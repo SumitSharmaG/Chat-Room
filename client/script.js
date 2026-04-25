@@ -21,18 +21,35 @@ let lastAlertTime = 0;
 
 function sendScreenshotAlert(reason = "captured screen") {
     const now = Date.now();
-    if (now - lastAlertTime < 2000) return;
+    if (data.isAlert || data.username === "SYSTEM") {
+    li.style.cssText = `
+        align-self: center;
+        background: transparent;
+        border: none;
+        color: yellow;
+        font-size: 0.6rem;
+        padding: 2px;
+        margin: 2px 0;
+        text-align: center;
+    `;
 
-    lastAlertTime = now;
+    li.innerHTML = `<span>${data.text} • ${data.time}</span>`;
+} 
+else {
+    if (data.username === myUser) {
+        li.classList.add("my-message");
+    }
 
-    const username = localStorage.getItem("username") || "User";
+    const messageId = data._id || Math.random();
 
-    socket?.emit("sendMessage", {
-        username: "SYSTEM",
-        text: `📸 ${username} ${reason}`,
-        isAlert: true,
-        time: getCurrentTime()
-    });
+    li.innerHTML = `
+        <span><strong>${data.username}:</strong> ${data.text}</span>
+        <span style="font-size: 0.6rem;">
+            ${data.time || getCurrentTime()}
+            <button onclick="showSeen('${messageId}')">ⓘ</button>
+        </span>
+    `;
+
 }
 
 // 📱 3 finger mobile detection
@@ -55,12 +72,6 @@ window.addEventListener("keyup", (e) => {
     }
 });
 
-// 👀 TAB SWITCH (MOST IMPORTANT)
-document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-        sendScreenshotAlert("switched screen");
-    }
-});
 // ======================================================
 
 // --- LOGIN / REGISTER ---
