@@ -7,6 +7,38 @@ module.exports = (io) => {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
+    // 🔹 TYPING
+socket.on("typing", (username) => {
+  socket.broadcast.emit("userTyping", username);
+});
+
+socket.on("stopTyping", (username) => {
+  socket.broadcast.emit("userStopTyping", username);
+});
+
+// 🔹 SEEN
+socket.on("messageSeen", async ({ messageId, username }) => {
+  try {
+    const msg = await Message.findById(messageId);
+
+    if (!msg.seenBy) msg.seenBy = [];
+
+    if (!msg.seenBy.includes(username)) {
+      msg.seenBy.push(username);
+      await msg.save();
+    }
+
+    io.emit("updateSeen", {
+      messageId,
+      seenBy: msg.seenBy
+    });
+
+  } catch (err) {
+    console.error(err);
+  }
+});
+  
+
     // 🔹 USER JOIN EVENT
     socket.on("userJoined", (username) => {
       socket.username = username;
