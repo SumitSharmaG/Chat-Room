@@ -7,19 +7,23 @@ module.exports = (io) => {
     onlineCount++;
     io.emit("updateUserCount", onlineCount);
 
-    // 1. Message Send & Receive
+    // 1. Message Handling
     socket.on("sendMessage", async (data) => {
-      // Free version: agar backend model crash ho to bhi msg jaye isliye fallback ID
-      const finalData = {
+      const msgWithId = {
         ...data,
         id: data.id || "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000)
       };
-      
+
+      // Pehle message sabko bhej do (Taaki screen par turant dikhe)
+      io.emit("receiveMessage", msgWithId);
+
+      // Background mein save karne ki koshish karo (Server crash nahi hoga)
       try {
-        const msg = await Message.create(finalData);
-        io.emit("receiveMessage", msg);
+        if (Message) {
+          await Message.create(msgWithId);
+        }
       } catch (err) {
-        io.emit("receiveMessage", finalData);
+        console.error("DB Save Error (Ignored for stability):", err.message);
       }
     });
 
@@ -32,11 +36,12 @@ module.exports = (io) => {
       socket.broadcast.emit("removeTyping");
     });
 
-    // 3. Seen Feature Signal
+    // 3. Seen Logic
     socket.on("messageSeenUpdate", (data) => {
       io.emit("userSeenTheMessage", data);
     });
 
+    // 4. Clear Chat
     socket.on("clearAllChat", () => {
       io.emit("chatCleared");
     });
@@ -44,7 +49,7 @@ module.exports = (io) => {
     socket.on("disconnect", () => {
       onlineCount--;
       io.emit("updateUserCount", onlineCount);
-      socket.broadcast.emit("removeTyping");
     });
   });
 };
+              
