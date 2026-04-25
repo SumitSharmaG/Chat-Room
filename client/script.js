@@ -197,8 +197,9 @@ function displayMessage(data) {
         <span><strong>${data.username}:</strong> ${data.text}</span>
         <span style="font-size: 0.6rem;">
             ${data.time || getCurrentTime()}
-            <button onclick="showSeen('${messageId}')">ⓘ</button>
-        </span>
+            <button class="info-btn" onclick="showSeen('${messageId}')">
+    ⓘ
+</button>
     `;
 
     messagesUl.appendChild(li);
