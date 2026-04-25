@@ -1,48 +1,85 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 
-// ✅ Detect page
 const isChatPage = window.location.pathname.includes("chat.html");
-
-// ✅ Socket only for chat page
 const socket = isChatPage ? io(BACKEND, { transports: ["websocket"] }) : null;
 
-// 🔥 CONNECT + USER JOIN
+// 🔥 CONNECT
 if (socket) {
     socket.on("connect", () => {
         console.log("✅ Socket Connected:", socket.id);
 
         const username = localStorage.getItem("username");
-
         if (username) {
             socket.emit("userJoined", username);
         }
     });
 }
 
-// 🟢 Typing system
-let typingTimeout;
+// ================== SCREENSHOT LOGIC ==================
+let gestureTimer = null;
+let lastAlertTime = 0;
 
-// --- REGISTER & LOGIN ---
+function sendScreenshotAlert(reason = "captured screen") {
+    const now = Date.now();
+    if (now - lastAlertTime < 2000) return;
+
+    lastAlertTime = now;
+
+    const username = localStorage.getItem("username") || "User";
+
+    socket?.emit("sendMessage", {
+        username: "SYSTEM",
+        text: `📸 ${username} ${reason}`,
+        isAlert: true,
+        time: getCurrentTime()
+    });
+}
+
+// 📱 3 finger mobile detection
+document.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 3) {
+        gestureTimer = setTimeout(() => {
+            sendScreenshotAlert();
+        }, 800);
+    }
+});
+
+document.addEventListener("touchend", () => {
+    if (gestureTimer) clearTimeout(gestureTimer);
+});
+
+// 💻 PrintScreen detection
+window.addEventListener("keyup", (e) => {
+    if (e.key === "PrintScreen" || e.key === "PrtSc") {
+        sendScreenshotAlert();
+    }
+});
+
+// 👀 TAB SWITCH (MOST IMPORTANT)
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        sendScreenshotAlert("switched screen");
+    }
+});
+// ======================================================
+
+// --- LOGIN / REGISTER ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    try {
-        const res = await fetch(BACKEND + "/api/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
-        });
+    const res = await fetch(BACKEND + "/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+    });
 
-        if (res.ok) {
-            alert("Registered successfully!");
-            window.location.href = "login.html";
-        } else {
-            alert("Registration failed.");
-        }
-    } catch {
-        alert("Server error.");
+    if (res.ok) {
+        alert("Registered!");
+        window.location.href = "login.html";
+    } else {
+        alert("Error");
     }
 });
 
@@ -52,76 +89,31 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    try {
-        const res = await fetch(BACKEND + "/api/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
-        });
+    const res = await fetch(BACKEND + "/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+    });
 
-        const data = await res.json();
+    const data = await res.json();
 
-        if (data.success) {
-            localStorage.setItem("username", username);
-            window.location.href = "chat.html";
-        } else {
-            alert("Login failed.");
-        }
-    } catch {
-        alert("Server error.");
+    if (data.success) {
+        localStorage.setItem("username", username);
+        window.location.href = "chat.html";
+    } else {
+        alert("Login failed");
     }
 });
 
-// --- UTILS ---
+// --- TIME ---
 function getCurrentTime() {
     const now = new Date();
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12;
-    return `${hours}:${minutes}:${seconds} ${ampm}`;
-}
-
-
-// --- 3. SCREENSHOT DETECTION ---
-let gestureTimer = null;
-let lastAlertTime = 0;
-
-function sendScreenshotAlert(reason = "Screenshot") {
-    const now = Date.now();
-    if (now - lastAlertTime < 2000) return;
-
-    lastAlertTime = now;
-
-    const username = localStorage.getItem("username") || "User";
-
-    if (socket) {
-        socket.emit("sendMessage", {
-            username: "SYSTEM",
-            text: `📸 ${username} ${reason}`,
-            isAlert: true,
-            time: getCurrentTime()
-        });
-    }
-}
-
-document.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 3) {
-        gestureTimer = setTimeout(() => {
-            sendScreenshotAlert("captured screen");
-        }, 1000);
-    }
-});
-
-document.addEventListener('touchend', () => {
-    if (gestureTimer) clearTimeout(gestureTimer);
-});
-
-window.addEventListener('keyup', (e) => {
-    if (e.key === 'PrintScreen') sendScreenshotAlert("captured screen");
-});
-
+    let h = now.getHours();
+    const m = now.getMinutes().toString().padStart(2, "0");
+    const s = now.getSeconds().toString().padStart(2, "0");
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return `${h}:${m}:${s} ${ampm}`;
 }
 
 // --- CHAT ---
@@ -131,17 +123,13 @@ function scrollToBottom() {
     if (messagesUl) messagesUl.scrollTop = messagesUl.scrollHeight;
 }
 
-// 🟢 PAGE LOAD FIX
+// PAGE LOAD
 document.addEventListener("DOMContentLoaded", () => {
-    const myUser = localStorage.getItem("username");
+    const user = localStorage.getItem("username");
 
-    // username show
     const userDisplayEl = document.getElementById("display-username");
-    if (userDisplayEl && myUser) {
-        userDisplayEl.innerText = `@${myUser}`;
-    }
+    if (userDisplayEl && user) userDisplayEl.innerText = `@${user}`;
 
-    // restore chat
     const savedChat = localStorage.getItem("chat_history");
     if (savedChat && messagesUl) {
         messagesUl.innerHTML = savedChat;
@@ -149,10 +137,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// 🟢 Typing input
-const msgInput = document.getElementById("msg");
+// ================== TYPING ==================
+let typingTimeout;
 
-msgInput?.addEventListener("input", () => {
+document.getElementById("msg")?.addEventListener("input", () => {
     const username = localStorage.getItem("username");
 
     socket?.emit("typing", username);
@@ -164,124 +152,105 @@ msgInput?.addEventListener("input", () => {
     }, 1000);
 });
 
-// 🟢 Typing UI
 let typingEl = null;
 
-if (socket) {
-    socket.on("userTyping", (username) => {
-        if (typingEl) return;
+socket?.on("userTyping", (username) => {
+    if (typingEl) return;
 
-        typingEl = document.createElement("li");
-        typingEl.innerHTML = `${username} typing...`;
-        typingEl.style.fontSize = "0.7rem";
+    typingEl = document.createElement("li");
+    typingEl.innerHTML = `${username} typing...`;
+    typingEl.style.fontSize = "0.7rem";
 
-        messagesUl.appendChild(typingEl);
-        scrollToBottom();
-    });
+    messagesUl.appendChild(typingEl);
+    scrollToBottom();
+});
 
-    socket.on("userStopTyping", () => {
-        if (typingEl) {
-            typingEl.remove();
-            typingEl = null;
-        }
-    });
-}
+socket?.on("userStopTyping", () => {
+    typingEl?.remove();
+    typingEl = null;
+});
+// ============================================
 
-// 🟢 Seen system
+// ================== SEEN ==================
 const seenMap = {};
 
-if (socket) {
-    socket.on("updateSeen", ({ messageId, seenBy }) => {
-        seenMap[messageId] = seenBy;
-    });
-}
+socket?.on("updateSeen", ({ messageId, seenBy }) => {
+    seenMap[messageId] = seenBy;
+});
+// =========================================
 
-// 🔥 SOCKET EVENTS
-if (socket) {
-    socket.on("receiveMessage", (data) => {
-        displayMessage(data);
+// SOCKET EVENTS
+socket?.on("receiveMessage", (data) => {
+    displayMessage(data);
 
-        const username = localStorage.getItem("username");
+    const myUser = localStorage.getItem("username");
 
-        if (data._id && data.username !== username) {
-            socket.emit("messageSeen", {
-                messageId: data._id,
-                username
-            });
-        }
-    });
+    if (data._id && data.username !== myUser) {
+        socket.emit("messageSeen", {
+            messageId: data._id,
+            username: myUser
+        });
+    }
+});
 
-    socket.on("updateUserCount", (count) => {
-        const el = document.getElementById("online-count");
-        if (el) el.innerText = count;
-    });
+socket?.on("updateUserCount", (count) => {
+    document.getElementById("online-count").innerText = count;
+});
 
-    socket.on("chatCleared", () => {
-        if (messagesUl) messagesUl.innerHTML = "";
-        localStorage.removeItem("chat_history");
-    });
-}
+socket?.on("chatCleared", () => {
+    messagesUl.innerHTML = "";
+    localStorage.removeItem("chat_history");
+});
 
-// --- DISPLAY MESSAGE ---
+// DISPLAY
 function displayMessage(data) {
     if (!messagesUl) return;
 
     const li = document.createElement("li");
     const myUser = localStorage.getItem("username");
 
-    if (data.isAlert || data.username === "SYSTEM") {
-        li.style.cssText = "align-self: center; color: yellow; font-size: 0.6rem;";
-        li.innerHTML = `<span>${data.text} • ${data.time}</span>`;
-    } else {
-        if (data.username === myUser) {
-            li.classList.add("my-message");
-        }
+    if (data.username === myUser) li.classList.add("my-message");
 
-        const messageId = data._id || Math.random();
+    const messageId = data._id || Math.random();
 
-        li.innerHTML = `
-            <span><strong style="color: var(--accent-gold)">${data.username}:</strong> ${data.text}</span>
-            <span style="font-size: 0.6rem; color: #b59461;">
-                ${data.time || getCurrentTime()}
-                <button class="info-btn" onclick="showSeen('${messageId}')">ⓘ</button>
-            </span>
-        `;
-    }
+    li.innerHTML = `
+        <span><strong>${data.username}:</strong> ${data.text}</span>
+        <span style="font-size: 0.6rem;">
+            ${data.time || getCurrentTime()}
+            <button onclick="showSeen('${messageId}')">ⓘ</button>
+        </span>
+    `;
 
     messagesUl.appendChild(li);
     scrollToBottom();
 
-    // 🔥 SAVE CHAT FIX
     localStorage.setItem("chat_history", messagesUl.innerHTML);
 }
 
-// 🟢 Seen popup
-window.showSeen = function(messageId) {
-    const users = seenMap[messageId] || [];
-    alert("This Msg Seen By:\n" + users.join("\n"));
+// Seen popup
+window.showSeen = function(id) {
+    const users = seenMap[id] || [];
+    alert("Seen by:\n" + users.join("\n"));
 };
 
-// --- GLOBAL ACTIONS ---
+// ACTIONS
 window.handleSend = function () {
     const input = document.getElementById("msg");
     const text = input.value.trim();
 
-    if (text !== "" && socket) {
+    if (text && socket) {
         socket.emit("sendMessage", {
             username: localStorage.getItem("username"),
             text,
             time: getCurrentTime()
         });
-
         input.value = "";
     }
 };
 
 window.clearChat = function () {
-    if (confirm("Clear chat history?")) {
-        socket?.emit("clearAllChat");
-        if (messagesUl) messagesUl.innerHTML = "";
-        localStorage.removeItem("chat_history");
+    if (confirm("Clear chat?")) {
+        socket.emit("clearAllChat");
     }
 };
 
@@ -293,6 +262,6 @@ window.logout = function () {
 document.getElementById("msg")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
         e.preventDefault();
-        window.handleSend();
+        handleSend();
     }
 });
