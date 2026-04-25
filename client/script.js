@@ -1,6 +1,13 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
 
+// 🔥 USER JOIN EMIT (online count ke liye)
+const username = localStorage.getItem("username");
+
+if (socket && username) {
+    socket.emit("userJoined", username);
+}
+
 // --- 1. REGISTER & LOGIN LOGIC ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
