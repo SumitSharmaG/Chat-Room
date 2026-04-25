@@ -15,13 +15,12 @@
             --my-chat-bg: rgba(181, 148, 97, 0.15);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-        @media print { body { display: none !important; } }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-user-select: none; user-select: none; }
         body { background-color: var(--bg-base); background-image: radial-gradient(at 0% 0%, rgba(30, 20, 16, 0.4) 0px, transparent 50%); color: var(--text-main); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; position: fixed; width: 100%; }
 
         header { background: var(--bg-card); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(181, 148, 97, 0.2); height: 75px; z-index: 10; }
         .header-left { display: flex; align-items: center; gap: 10px; }
-        .home-btn { text-decoration: none; font-size: 1.2rem; }
+        .home-btn { text-decoration: none; font-size: 1.2rem; cursor: pointer; }
         .header-right { display: flex; align-items: center; gap: 12px; }
         .user-profile-section { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
         .btn-group { display: flex; gap: 8px; }
@@ -32,9 +31,8 @@
         #messages li { list-style: none; padding: 10px 15px; background: rgba(255, 255, 255, 0.07); border-radius: 15px 15px 15px 2px; max-width: 85%; width: fit-content; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; word-wrap: break-word; position: relative; }
         #messages li.my-message { align-self: flex-end; background: var(--my-chat-bg); border-color: var(--accent-gold); border-radius: 15px 15px 2px 15px; }
 
-        /* FEATURE STYLES */
         #typing-indicator { padding: 0 20px 5px; font-size: 0.65rem; color: var(--accent-gold); font-style: italic; min-height: 15px; }
-        .info-btn { background: transparent; border: none; color: var(--accent-gold); font-size: 0.75rem; cursor: pointer; opacity: 0.6; margin-left: 5px; padding: 0 2px; }
+        .info-btn { background: transparent; border: none; color: var(--accent-gold); font-size: 0.75rem; cursor: pointer; opacity: 0.6; margin-left: 5px; }
         .seen-box { display: none; font-size: 0.55rem; color: #aaa; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px; margin-top: 5px; border-top: 1px solid rgba(181, 148, 97, 0.1); }
         .seen-box strong { color: var(--accent-gold); margin-right: 3px; }
 
@@ -45,9 +43,7 @@
 </head>
 <body oncontextmenu="return false;">
     <header>
-        <div class="header-left">
-            <a href="https://chat-room-three-pied.vercel.app/" class="home-btn">🏠</a>
-        </div>
+        <div class="header-left"><a href="https://chat-room-three-pied.vercel.app/" class="home-btn">🏠</a></div>
         <h2 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1rem;">Secure Chat</h2>
         <div class="header-right">
             <div style="color: var(--accent-gold); font-size: 0.8rem; margin-right: 5px;">👁️ <span id="online-count">0</span></div>
