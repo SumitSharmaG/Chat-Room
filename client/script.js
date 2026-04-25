@@ -1,6 +1,5 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
-
 if (socket) {
     socket.on("connect", () => {
         const username = localStorage.getItem("username");
@@ -10,7 +9,6 @@ if (socket) {
         }
     });
 }
-
 
 // --- 1. REGISTER & LOGIN LOGIC ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
