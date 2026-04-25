@@ -2,7 +2,41 @@ const BACKEND = "https://chat-backend-gtg5.onrender.com";
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
 const messagesUl = document.getElementById("messages");
 
-// --- 1. UTILS ---
+// --- 1. LOGIN & REGISTER LOGIC (STRICT FIX) ---
+document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    try {
+        const res = await fetch(BACKEND + "/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+        if (res.ok) { alert("Registered successfully!"); window.location.href = "login.html"; }
+        else { alert("Registration failed. User might exist."); }
+    } catch (err) { alert("Server error connection."); }
+});
+
+document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    try {
+        const res = await fetch(BACKEND + "/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+            localStorage.setItem("username", username);
+            window.location.href = "chat.html";
+        } else { alert("Login failed. Check username/password."); }
+    } catch (err) { alert("Server error. Check if Backend is running."); }
+});
+
+// --- 2. UTILS ---
 function getCurrentTime() {
     const now = new Date();
     let hours = now.getHours();
@@ -15,7 +49,7 @@ function getCurrentTime() {
 
 function scrollToBottom() { if (messagesUl) messagesUl.scrollTop = messagesUl.scrollHeight; }
 
-// --- 2. SCREENSHOT & SECURITY (RESTORED) ---
+// --- 3. SECURITY & SCREENSHOT ALERT (RESTORED) ---
 let gestureTimer = null;
 let lastAlertTime = 0;
 
@@ -41,11 +75,12 @@ document.addEventListener('touchstart', (e) => {
 document.addEventListener('touchend', () => { if (gestureTimer) { clearTimeout(gestureTimer); gestureTimer = null; } });
 window.addEventListener('keyup', (e) => { if (e.key === 'PrintScreen' || e.key === 'PrtSc') sendScreenshotAlert("captured screen"); });
 
-// --- 3. CHAT INITIALIZATION ---
+// --- 4. CHAT INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
     const myUser = localStorage.getItem("username");
-    if (document.getElementById("display-username") && myUser) {
-        document.getElementById("display-username").innerText = `@${myUser}`;
+    const userDisplayEl = document.getElementById("display-username");
+    if (userDisplayEl && myUser) {
+        userDisplayEl.innerText = `@${myUser}`;
     }
     const savedChat = localStorage.getItem("chat_history");
     if (savedChat && messagesUl) {
@@ -54,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Typing Event
+// Typing Logic
 let typingTimeout;
 document.getElementById("msg")?.addEventListener("input", () => {
     socket?.emit("typing", { username: localStorage.getItem("username") });
@@ -62,12 +97,11 @@ document.getElementById("msg")?.addEventListener("input", () => {
     typingTimeout = setTimeout(() => socket?.emit("stopTyping"), 2000);
 });
 
-// --- 4. SOCKET EVENTS ---
+// --- 5. SOCKET EVENTS ---
 if (socket) {
     socket.on("receiveMessage", (data) => {
         displayMessage(data);
         const myUser = localStorage.getItem("username");
-        // Mark as seen only if not my message and not a system alert
         if (data.username !== myUser && data.id && data.username !== "SYSTEM") {
             socket.emit("messageSeenUpdate", { msgId: data.id, user: myUser });
         }
@@ -88,7 +122,8 @@ if (socket) {
         if (namesSpan) {
             if (namesSpan.innerText === "Loading...") namesSpan.innerText = "";
             if (!namesSpan.innerText.includes(data.user)) {
-                namesSpan.innerText = namesSpan.innerText ? `${namesSpan.innerText}, ${data.user}` : data.user;
+                const current = namesSpan.innerText;
+                namesSpan.innerText = current ? `${current}, ${data.user}` : data.user;
                 localStorage.setItem("chat_history", messagesUl.innerHTML);
             }
         }
@@ -122,7 +157,7 @@ function displayMessage(data) {
                 <span style="font-size: 0.55rem; color: #b59461;">${data.time || getCurrentTime()}</span>
                 <button class="info-btn" onclick="window.toggleSeenInfo('${msgId}')">ⓘ</button>
             </div>
-            <div id="box-${msgId}" class="seen-box"><strong>Seen by:</strong><span class="names">Loading...</span></div>
+            <div id="box-${msgId}" class="seen-box"><strong>Seen by:</strong> <span class="names">Loading...</span></div>
         `;
     }
     messagesUl.appendChild(li);
@@ -139,15 +174,13 @@ window.handleSend = function() {
     const input = document.getElementById("msg");
     const text = input.value.trim();
     if (text !== "" && socket) {
-        const msgId = "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
         socket.emit("sendMessage", { 
-            id: msgId,
+            id: "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
             username: localStorage.getItem("username"), 
             text: text, 
             time: getCurrentTime() 
         });
         input.value = "";
-        socket.emit("stopTyping");
     }
 };
 
@@ -165,4 +198,4 @@ window.logout = function() {
 document.getElementById("msg")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); window.handleSend(); }
 });
-        
+                                
