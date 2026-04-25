@@ -197,7 +197,7 @@ function displayMessage(data) {
         <span><strong>${data.username}:</strong> ${data.text}</span>
         <span style="font-size: 0.6rem;">
             ${data.time || getCurrentTime()}
-            <button onclick="showSeen('${messageId}')">⫶</button>
+            <button onclick="showSeen('${messageId}')">ⓘ</button>
         </span>
     `;
 
@@ -208,7 +208,7 @@ function displayMessage(data) {
 // 🟢 NEW popup
 window.showSeen = function(messageId) {
     const users = seenMap[messageId] || [];
-    alert("This Msg Seen By :--:\n" + users.join("\n"));
+    alert("This Msg Seen By :--\n" + users.join("\n"));
 };
 
 // --- GLOBAL ACTIONS ---
