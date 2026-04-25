@@ -7,44 +7,29 @@ module.exports = (io) => {
     onlineCount++;
     io.emit("updateUserCount", onlineCount);
 
-    // 1. Message Handling
     socket.on("sendMessage", async (data) => {
-      const msgWithId = {
+      const finalData = {
         ...data,
         id: data.id || "msg_" + Date.now() + "_" + Math.floor(Math.random() * 1000)
       };
+      
+      // Pehle broadcast karo taaki screen par turant dikhe
+      io.emit("receiveMessage", finalData);
 
-      // Pehle message sabko bhej do (Taaki screen par turant dikhe)
-      io.emit("receiveMessage", msgWithId);
-
-      // Background mein save karne ki koshish karo (Server crash nahi hoga)
+      // Save to DB (Only if not a system alert)
       try {
-        if (Message) {
-          await Message.create(msgWithId);
+        if (Message && data.username !== "SYSTEM") {
+          await Message.create(finalData);
         }
       } catch (err) {
-        console.error("DB Save Error (Ignored for stability):", err.message);
+        console.log("DB Storage skipped/error:", err.message);
       }
     });
 
-    // 2. Typing Indicator
-    socket.on("typing", (data) => {
-      socket.broadcast.emit("displayTyping", data);
-    });
-
-    socket.on("stopTyping", () => {
-      socket.broadcast.emit("removeTyping");
-    });
-
-    // 3. Seen Logic
-    socket.on("messageSeenUpdate", (data) => {
-      io.emit("userSeenTheMessage", data);
-    });
-
-    // 4. Clear Chat
-    socket.on("clearAllChat", () => {
-      io.emit("chatCleared");
-    });
+    socket.on("typing", (data) => socket.broadcast.emit("displayTyping", data));
+    socket.on("stopTyping", () => socket.broadcast.emit("removeTyping"));
+    socket.on("messageSeenUpdate", (data) => io.emit("userSeenTheMessage", data));
+    socket.on("clearAllChat", () => io.emit("chatCleared"));
 
     socket.on("disconnect", () => {
       onlineCount--;
@@ -52,4 +37,3 @@ module.exports = (io) => {
     });
   });
 };
-              
