@@ -1,56 +1,73 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 
-// ✅ FIXED SOCKET INIT (IMPORTANT)
-const socket = io(BACKEND, {
-    transports: ["websocket"]
-});
+// ✅ Detect page
+const isChatPage = window.location.pathname.includes("chat.html");
 
-// 🔥 CONNECT + USER JOIN (FINAL FIX)
-socket.on("connect", () => {
-    console.log("✅ Socket Connected:", socket.id);
+// ✅ Socket only for chat page
+const socket = isChatPage ? io(BACKEND, { transports: ["websocket"] }) : null;
 
-    const username = localStorage.getItem("username");
+// 🔥 CONNECT + USER JOIN
+if (socket) {
+    socket.on("connect", () => {
+        console.log("✅ Socket Connected:", socket.id);
 
-    if (username) {
-        console.log("🔥 Sending userJoined:", username);
-        socket.emit("userJoined", username);
-    } else {
-        console.log("❌ No username found in localStorage");
-    }
-});
+        const username = localStorage.getItem("username");
+
+        if (username) {
+            console.log("🔥 Sending userJoined:", username);
+            socket.emit("userJoined", username);
+        }
+    });
+}
 
 // --- 1. REGISTER & LOGIN LOGIC ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
+
     try {
         const res = await fetch(BACKEND + "/api/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password })
         });
-        if (res.ok) { alert("Registered successfully!"); window.location.href = "login.html"; }
-        else { alert("Registration failed."); }
-    } catch (err) { alert("Server error."); }
+
+        if (res.ok) {
+            alert("Registered successfully!");
+            window.location.href = "login.html";
+        } else {
+            alert("Registration failed.");
+        }
+    } catch (err) {
+        alert("Server error.");
+    }
 });
 
 document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
+
     try {
         const res = await fetch(BACKEND + "/api/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password })
         });
+
         const data = await res.json();
+
         if (data.success) {
             localStorage.setItem("username", username);
             window.location.href = "chat.html";
-        } else { alert("Login failed."); }
-    } catch (err) { alert("Server error."); }
+        } else {
+            alert("Login failed.");
+        }
+    } catch (err) {
+        alert("Server error.");
+    }
 });
 
 // --- 2. UTILS ---
@@ -71,15 +88,19 @@ let lastAlertTime = 0;
 function sendScreenshotAlert(reason = "Screenshot") {
     const now = Date.now();
     if (now - lastAlertTime < 2000) return;
+
     lastAlertTime = now;
 
     const username = localStorage.getItem("username") || "User";
-    socket.emit("sendMessage", {
-        username: "SYSTEM",
-        text: `📸 ${username} ${reason}`,
-        isAlert: true,
-        time: getCurrentTime()
-    });
+
+    if (socket) {
+        socket.emit("sendMessage", {
+            username: "SYSTEM",
+            text: `📸 ${username} ${reason}`,
+            isAlert: true,
+            time: getCurrentTime()
+        });
+    }
 }
 
 document.addEventListener('touchstart', (e) => {
@@ -121,19 +142,22 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // 🔥 SOCKET EVENTS
-socket.on("receiveMessage", (data) => displayMessage(data));
+if (socket) {
+    socket.on("receiveMessage", (data) => displayMessage(data));
 
-socket.on("updateUserCount", (count) => {
-    console.log("👥 Online Users:", count);
-    const el = document.getElementById("online-count");
-    if (el) el.innerText = count;
-});
+    socket.on("updateUserCount", (count) => {
+        console.log("👥 Online Users:", count);
+        const el = document.getElementById("online-count");
+        if (el) el.innerText = count;
+    });
 
-socket.on("chatCleared", () => {
-    if (messagesUl) messagesUl.innerHTML = "";
-    localStorage.removeItem("chat_history");
-});
+    socket.on("chatCleared", () => {
+        if (messagesUl) messagesUl.innerHTML = "";
+        localStorage.removeItem("chat_history");
+    });
+}
 
+// --- DISPLAY MESSAGE ---
 function displayMessage(data) {
     if (!messagesUl) return;
 
@@ -163,19 +187,21 @@ function displayMessage(data) {
 window.handleSend = function () {
     const input = document.getElementById("msg");
     const text = input.value.trim();
-    if (text !== "") {
+
+    if (text !== "" && socket) {
         socket.emit("sendMessage", {
             username: localStorage.getItem("username"),
             text,
             time: getCurrentTime()
         });
+
         input.value = "";
     }
 };
 
 window.clearChat = function () {
     if (confirm("Clear chat history?")) {
-        socket.emit("clearAllChat");
+        socket?.emit("clearAllChat");
         if (messagesUl) messagesUl.innerHTML = "";
         localStorage.removeItem("chat_history");
     }
