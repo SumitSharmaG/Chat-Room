@@ -1,26 +1,17 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
 
-document.addEventListener("DOMContentLoaded", () => {
-    const username = localStorage.getItem("username");
+// 🔥 SOCKET CONNECT + USER JOIN (FIXED)
+if (socket) {
+    socket.on("connect", () => {
+        console.log("✅ Socket connected:", socket.id);
 
-    if (socket && username) {
-
-        // Agar already connected hai
-        if (socket.connected) {
+        const username = localStorage.getItem("username");
+        if (username) {
             socket.emit("userJoined", username);
         }
-
-        // Agar baad me connect ho
-        socket.on("connect", () => {
-            socket.emit("userJoined", username);
-        });
-    }
-});
-
-socket.on("connect", () => {
-    console.log("✅ Socket connected:", socket.id);
-});
+    });
+}
 
 // --- 1. REGISTER & LOGIN LOGIC ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
@@ -113,8 +104,8 @@ function scrollToBottom() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Header mein username dikhana
     const myUser = localStorage.getItem("username");
+
     const userDisplayEl = document.getElementById("display-username");
     if (userDisplayEl && myUser) {
         userDisplayEl.innerText = `@${myUser}`;
@@ -134,12 +125,16 @@ window.addEventListener('resize', () => {
     }
 });
 
+// 🔥 SOCKET EVENTS
 if (socket) {
     socket.on("receiveMessage", (data) => displayMessage(data));
+
     socket.on("updateUserCount", (count) => {
+        console.log("👥 Online Users:", count); // debug
         const el = document.getElementById("online-count");
         if (el) el.innerText = count;
     });
+
     socket.on("chatCleared", () => {
         if (messagesUl) messagesUl.innerHTML = "";
         localStorage.removeItem("chat_history");
@@ -153,7 +148,7 @@ function displayMessage(data) {
     const myUser = localStorage.getItem("username");
 
     if (data.isAlert || data.username === "SYSTEM") {
-        li.style.cssText = "align-self: center; background: transparent; border: none; color: #ffff00; font-size: 0.6rem; padding: 2px; margin: 2px 0; list-style: none;";
+        li.style.cssText = "align-self: center; background: transparent; border: none; color: #ffff00; font-size: 0.6rem; padding: 2px; margin: 2px 0;";
         li.innerHTML = `<span>${data.text} • ${data.time}</span>`;
     } else {
         if (data.username === myUser) {
@@ -189,7 +184,6 @@ window.handleSend = function() {
 window.clearChat = function() {
     if (confirm("Clear chat history?")) {
         socket?.emit("clearAllChat");
-        // Local cleanup
         if (messagesUl) messagesUl.innerHTML = "";
         localStorage.removeItem("chat_history");
     }
@@ -206,4 +200,3 @@ document.getElementById("msg")?.addEventListener("keydown", (e) => {
         window.handleSend();
     }
 });
-                   
