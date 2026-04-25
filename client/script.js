@@ -83,7 +83,8 @@ function getCurrentTime() {
     return `${hours}:${minutes}:${seconds} ${ampm}`;
 }
 
-// --- SCREENSHOT ---
+
+// --- 3. SCREENSHOT DETECTION ---
 let gestureTimer = null;
 let lastAlertTime = 0;
 
@@ -95,12 +96,32 @@ function sendScreenshotAlert(reason = "Screenshot") {
 
     const username = localStorage.getItem("username") || "User";
 
-    socket?.emit("sendMessage", {
-        username: "SYSTEM",
-        text: `📸 ${username} ${reason}`,
-        isAlert: true,
-        time: getCurrentTime()
-    });
+    if (socket) {
+        socket.emit("sendMessage", {
+            username: "SYSTEM",
+            text: `📸 ${username} ${reason}`,
+            isAlert: true,
+            time: getCurrentTime()
+        });
+    }
+}
+
+document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 3) {
+        gestureTimer = setTimeout(() => {
+            sendScreenshotAlert("captured screen");
+        }, 1000);
+    }
+});
+
+document.addEventListener('touchend', () => {
+    if (gestureTimer) clearTimeout(gestureTimer);
+});
+
+window.addEventListener('keyup', (e) => {
+    if (e.key === 'PrintScreen') sendScreenshotAlert("captured screen");
+});
+
 }
 
 // --- CHAT ---
