@@ -1,27 +1,30 @@
 const Message = require("../models/Message");
 
-// 🔥 UNIQUE USERS TRACK
+// 🔥 UNIQUE USERS TRACK (username → multiple sockets)
 const onlineUsers = new Map();
 
 module.exports = (io) => {
   io.on("connection", (socket) => {
-    console.log("User connected");
+    console.log("User connected:", socket.id);
 
     // 🔹 USER JOIN EVENT
     socket.on("userJoined", (username) => {
       socket.username = username;
 
-      // Agar same user multiple tabs open kare
-      // to Map me overwrite hoga (duplicate nahi banega)
-      onlineUsers.set(username, socket.id);
+      // Agar user already exist hai
+      if (onlineUsers.has(username)) {
+        onlineUsers.get(username).add(socket.id);
+      } else {
+        onlineUsers.set(username, new Set([socket.id]));
+      }
 
-      console.log("Online Users:", onlineUsers);
+      console.log("🔥 Online Users:", onlineUsers);
 
-      // 🔥 COUNT UPDATE
+      // 🔥 COUNT = unique users
       io.emit("updateUserCount", onlineUsers.size);
     });
 
-    // 🔹 MESSAGE SEND (unchanged)
+    // 🔹 MESSAGE SEND (same)
     socket.on("sendMessage", async (data) => {
       try {
         const msg = await Message.create(data);
@@ -31,7 +34,7 @@ module.exports = (io) => {
       }
     });
 
-    // 🔹 CLEAR CHAT (agar use kar rahe ho)
+    // 🔹 CLEAR CHAT
     socket.on("clearAllChat", async () => {
       try {
         await Message.deleteMany({});
@@ -43,11 +46,23 @@ module.exports = (io) => {
 
     // 🔻 DISCONNECT
     socket.on("disconnect", () => {
-      console.log("User disconnected");
+      console.log("User disconnected:", socket.id);
 
-      if (socket.username) {
-        onlineUsers.delete(socket.username);
+      const username = socket.username;
+
+      if (username && onlineUsers.has(username)) {
+        const userSockets = onlineUsers.get(username);
+
+        // socket remove karo
+        userSockets.delete(socket.id);
+
+        // agar koi socket nahi bacha → user offline
+        if (userSockets.size === 0) {
+          onlineUsers.delete(username);
+        }
       }
+
+      console.log("🔥 After Disconnect:", onlineUsers);
 
       // 🔥 COUNT UPDATE
       io.emit("updateUserCount", onlineUsers.size);
