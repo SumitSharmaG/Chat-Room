@@ -257,6 +257,7 @@ window.handleSend = function () {
             time: getCurrentTime()
         });
         input.value = "";
+        input.focus();
     }
 };
 
