@@ -1,14 +1,26 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 const socket = typeof io !== "undefined" ? io(BACKEND) : null;
-if (socket) {
-    socket.on("connect", () => {
-        const username = localStorage.getItem("username");
 
-        if (username) {
+document.addEventListener("DOMContentLoaded", () => {
+    const username = localStorage.getItem("username");
+
+    if (socket && username) {
+
+        // Agar already connected hai
+        if (socket.connected) {
             socket.emit("userJoined", username);
         }
-    });
-}
+
+        // Agar baad me connect ho
+        socket.on("connect", () => {
+            socket.emit("userJoined", username);
+        });
+    }
+});
+
+socket.on("connect", () => {
+    console.log("✅ Socket connected:", socket.id);
+});
 
 // --- 1. REGISTER & LOGIN LOGIC ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
