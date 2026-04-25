@@ -40,9 +40,6 @@
             z-index: 10;
         }
 
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .home-btn { text-decoration: none; font-size: 1.2rem; cursor: pointer; }
-        
         .header-right { display: flex; align-items: center; gap: 12px; }
         
         .user-profile-section {
@@ -72,7 +69,6 @@
             width: fit-content; border: 1px solid rgba(255,255,255,0.05);
             display: flex; flex-direction: column;
             word-wrap: break-word;
-            position: relative;
         }
 
         #messages li.my-message {
@@ -81,38 +77,6 @@
             border-color: var(--accent-gold);
             border-radius: 15px 15px 2px 15px;
         }
-
-        /* TYPING INDICATOR STYLE */
-        #typing-indicator { 
-            padding: 0 20px 5px; 
-            font-size: 0.65rem; 
-            color: var(--accent-gold); 
-            font-style: italic; 
-            min-height: 15px;
-        }
-
-        /* SEEN INFO BOX STYLES */
-        .info-btn { 
-            background: transparent; 
-            border: none; 
-            color: var(--accent-gold); 
-            font-size: 0.75rem; 
-            cursor: pointer; 
-            opacity: 0.6; 
-            padding: 0 2px;
-        }
-
-        .seen-box { 
-            display: none; 
-            font-size: 0.55rem; 
-            color: #aaa; 
-            background: rgba(0, 0, 0, 0.3); 
-            padding: 4px 8px; 
-            border-radius: 4px; 
-            margin-top: 5px; 
-            border-top: 1px solid rgba(181, 148, 97, 0.1); 
-        }
-        .seen-box strong { color: var(--accent-gold); margin-right: 3px; }
 
         .input-area {
             background: var(--bg-card); padding: 10px 12px; 
@@ -141,6 +105,7 @@
     <header>
         <div class="header-left">
             <a href="https://chat-room-three-pied.vercel.app/" class="home-btn">🏠</a>
+            <h2 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 0.9rem;"></h2>
         </div>
         <h2 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1rem;">Secure Chat</h2>
         <div class="header-right">
@@ -158,8 +123,6 @@
     </header>
 
     <ul id="messages"></ul>
-    
-    <div id="typing-indicator"></div>
 
     <div class="input-area">
         <input id="msg" placeholder="Type a message..." autocomplete="off" />
@@ -174,5 +137,4 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>
-                        </html>
-                    
+    </html>
