@@ -19,10 +19,10 @@ if (socket) {
     });
 }
 
-// 🟢 NEW: Typing system
+// 🟢 Typing system
 let typingTimeout;
 
-// --- 1. REGISTER & LOGIN LOGIC ---
+// --- REGISTER & LOGIN ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = document.getElementById("username").value;
@@ -41,7 +41,7 @@ document.getElementById("registerForm")?.addEventListener("submit", async (e) =>
         } else {
             alert("Registration failed.");
         }
-    } catch (err) {
+    } catch {
         alert("Server error.");
     }
 });
@@ -67,12 +67,12 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
         } else {
             alert("Login failed.");
         }
-    } catch (err) {
+    } catch {
         alert("Server error.");
     }
 });
 
-// --- 2. UTILS ---
+// --- UTILS ---
 function getCurrentTime() {
     const now = new Date();
     let hours = now.getHours();
@@ -80,10 +80,10 @@ function getCurrentTime() {
     const seconds = now.getSeconds().toString().padStart(2, '0');
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12;
-    return `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+    return `${hours}:${minutes}:${seconds} ${ampm}`;
 }
 
-// --- 3. SCREENSHOT DETECTION ---
+// --- SCREENSHOT ---
 let gestureTimer = null;
 let lastAlertTime = 0;
 
@@ -95,39 +95,55 @@ function sendScreenshotAlert(reason = "Screenshot") {
 
     const username = localStorage.getItem("username") || "User";
 
-    if (socket) {
-        socket.emit("sendMessage", {
-            username: "SYSTEM",
-            text: `📸 ${username} ${reason}`,
-            isAlert: true,
-            time: getCurrentTime()
-        });
-    }
+    socket?.emit("sendMessage", {
+        username: "SYSTEM",
+        text: `📸 ${username} ${reason}`,
+        isAlert: true,
+        time: getCurrentTime()
+    });
 }
 
-// 🟢 NEW: Typing input event
-const msgInput = document.getElementById("msg");
-
-msgInput?.addEventListener("input", () => {
-    const username = localStorage.getItem("username");
-
-    socket.emit("typing", username);
-
-    clearTimeout(typingTimeout);
-
-    typingTimeout = setTimeout(() => {
-        socket.emit("stopTyping", username);
-    }, 1000);
-});
-
-// --- 4. CHAT LOGIC ---
+// --- CHAT ---
 const messagesUl = document.getElementById("messages");
 
 function scrollToBottom() {
     if (messagesUl) messagesUl.scrollTop = messagesUl.scrollHeight;
 }
 
-// 🟢 NEW typing UI
+// 🟢 PAGE LOAD FIX
+document.addEventListener("DOMContentLoaded", () => {
+    const myUser = localStorage.getItem("username");
+
+    // username show
+    const userDisplayEl = document.getElementById("display-username");
+    if (userDisplayEl && myUser) {
+        userDisplayEl.innerText = `@${myUser}`;
+    }
+
+    // restore chat
+    const savedChat = localStorage.getItem("chat_history");
+    if (savedChat && messagesUl) {
+        messagesUl.innerHTML = savedChat;
+        scrollToBottom();
+    }
+});
+
+// 🟢 Typing input
+const msgInput = document.getElementById("msg");
+
+msgInput?.addEventListener("input", () => {
+    const username = localStorage.getItem("username");
+
+    socket?.emit("typing", username);
+
+    clearTimeout(typingTimeout);
+
+    typingTimeout = setTimeout(() => {
+        socket?.emit("stopTyping", username);
+    }, 1000);
+});
+
+// 🟢 Typing UI
 let typingEl = null;
 
 if (socket) {
@@ -150,6 +166,15 @@ if (socket) {
     });
 }
 
+// 🟢 Seen system
+const seenMap = {};
+
+if (socket) {
+    socket.on("updateSeen", ({ messageId, seenBy }) => {
+        seenMap[messageId] = seenBy;
+    });
+}
+
 // 🔥 SOCKET EVENTS
 if (socket) {
     socket.on("receiveMessage", (data) => {
@@ -169,14 +194,10 @@ if (socket) {
         const el = document.getElementById("online-count");
         if (el) el.innerText = count;
     });
-}
 
-// 🟢 NEW Seen map
-const seenMap = {};
-
-if (socket) {
-    socket.on("updateSeen", ({ messageId, seenBy }) => {
-        seenMap[messageId] = seenBy;
+    socket.on("chatCleared", () => {
+        if (messagesUl) messagesUl.innerHTML = "";
+        localStorage.removeItem("chat_history");
     });
 }
 
@@ -187,29 +208,36 @@ function displayMessage(data) {
     const li = document.createElement("li");
     const myUser = localStorage.getItem("username");
 
-    if (data.username === myUser) {
-        li.classList.add("my-message");
+    if (data.isAlert || data.username === "SYSTEM") {
+        li.style.cssText = "align-self: center; color: yellow; font-size: 0.6rem;";
+        li.innerHTML = `<span>${data.text} • ${data.time}</span>`;
+    } else {
+        if (data.username === myUser) {
+            li.classList.add("my-message");
+        }
+
+        const messageId = data._id || Math.random();
+
+        li.innerHTML = `
+            <span><strong style="color: var(--accent-gold)">${data.username}:</strong> ${data.text}</span>
+            <span style="font-size: 0.6rem; color: #b59461;">
+                ${data.time || getCurrentTime()}
+                <button class="info-btn" onclick="showSeen('${messageId}')">ⓘ</button>
+            </span>
+        `;
     }
-
-    const messageId = data._id || Math.random();
-
-    li.innerHTML = `
-        <span><strong>${data.username}:</strong> ${data.text}</span>
-        <span style="font-size: 0.6rem;">
-            ${data.time || getCurrentTime()}
-            <button class="info-btn" onclick="showSeen('${messageId}')">
-    ⓘ
-</button>
-    `;
 
     messagesUl.appendChild(li);
     scrollToBottom();
+
+    // 🔥 SAVE CHAT FIX
+    localStorage.setItem("chat_history", messagesUl.innerHTML);
 }
 
-// 🟢 NEW popup
+// 🟢 Seen popup
 window.showSeen = function(messageId) {
     const users = seenMap[messageId] || [];
-    alert("This Msg Seen By :--\n" + users.join("\n"));
+    alert("This Msg Seen By:\n" + users.join("\n"));
 };
 
 // --- GLOBAL ACTIONS ---
@@ -227,3 +255,23 @@ window.handleSend = function () {
         input.value = "";
     }
 };
+
+window.clearChat = function () {
+    if (confirm("Clear chat history?")) {
+        socket?.emit("clearAllChat");
+        if (messagesUl) messagesUl.innerHTML = "";
+        localStorage.removeItem("chat_history");
+    }
+};
+
+window.logout = function () {
+    localStorage.clear();
+    window.location.href = "login.html";
+};
+
+document.getElementById("msg")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        window.handleSend();
+    }
+});
