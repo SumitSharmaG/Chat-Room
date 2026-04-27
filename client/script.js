@@ -1,17 +1,20 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 
-// ✅ ALWAYS CONNECT SOCKET (FIXED)
-const socket = io(BACKEND, { transports: ["websocket"] });
+// ✅ Only connect socket on chat page
+const isChatPage = window.location.pathname.includes("chat.html");
+const socket = isChatPage ? io(BACKEND, { transports: ["websocket"] }) : null;
 
-// 🔥 CONNECT
-socket.on("connect", () => {
-    console.log("✅ Socket Connected:", socket.id);
+// 🔥 CONNECT (only if socket exists)
+if (socket) {
+    socket.on("connect", () => {
+        console.log("✅ Socket Connected:", socket.id);
 
-    const username = localStorage.getItem("username");
-    if (username) {
-        socket.emit("userJoined", username);
-    }
-});
+        const username = localStorage.getItem("username");
+        if (username) {
+            socket.emit("userJoined", username);
+        }
+    });
+}
 
 // ================== SCREENSHOT LOGIC ==================
 let gestureTimer = null;
@@ -25,7 +28,7 @@ function sendScreenshotAlert(reason = "captured screen") {
 
     const username = localStorage.getItem("username") || "User";
 
-    socket.emit("sendMessage", {
+    socket?.emit("sendMessage", {
         username: "SYSTEM",
         text: `📸 ${username} ${reason}`,
         isAlert: true,
@@ -33,12 +36,10 @@ function sendScreenshotAlert(reason = "captured screen") {
     });
 }
 
-// 📱 Mobile (3 finger)
+// 📱 Mobile
 document.addEventListener("touchstart", (e) => {
     if (e.touches.length === 3) {
-        gestureTimer = setTimeout(() => {
-            sendScreenshotAlert();
-        }, 800);
+        gestureTimer = setTimeout(() => sendScreenshotAlert(), 800);
     }
 });
 
@@ -46,7 +47,7 @@ document.addEventListener("touchend", () => {
     if (gestureTimer) clearTimeout(gestureTimer);
 });
 
-// 💻 PC (PrintScreen)
+// 💻 PC
 window.addEventListener("keyup", (e) => {
     if (e.key === "PrintScreen" || e.key === "PrtSc") {
         sendScreenshotAlert();
@@ -109,7 +110,7 @@ function getCurrentTime() {
     return `${h}:${m}:${s} ${ampm}`;
 }
 
-// --- CHAT ---
+// ================== CHAT ==================
 const messagesUl = document.getElementById("messages");
 
 function scrollToBottom() {
@@ -121,7 +122,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const user = localStorage.getItem("username");
 
     const userDisplayEl = document.getElementById("display-username");
-    if (userDisplayEl && user) userDisplayEl.innerText = `@${user}`;
+    if (userDisplayEl && user) {
+        userDisplayEl.innerText = `@${user}`;
+    }
 
     const savedChat = localStorage.getItem("chat_history");
     if (savedChat && messagesUl) {
@@ -131,79 +134,81 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ================== TYPING ==================
-let typingTimeout;
+if (socket) {
+    let typingTimeout;
 
-document.getElementById("msg")?.addEventListener("input", () => {
-    const username = localStorage.getItem("username");
+    document.getElementById("msg")?.addEventListener("input", () => {
+        const username = localStorage.getItem("username");
 
-    console.log("Typing emit"); // debug
+        socket.emit("typing", username);
 
-    socket.emit("typing", username);
+        clearTimeout(typingTimeout);
 
-    clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            socket.emit("stopTyping", username);
+        }, 1000);
+    });
 
-    typingTimeout = setTimeout(() => {
-        socket.emit("stopTyping", username);
-    }, 1000);
-});
+    let typingEl = null;
 
-let typingEl = null;
+    socket.on("userTyping", (username) => {
+        if (!messagesUl) return;
 
-socket.on("userTyping", (username) => {
-    console.log("Typing received:", username);
+        if (!typingEl) {
+            typingEl = document.createElement("li");
+            typingEl.style.cssText = `
+                align-self: center;
+                color: #b59461;
+                font-size: 0.7rem;
+            `;
+            messagesUl.appendChild(typingEl);
+        }
 
-    if (!messagesUl) return;
+        typingEl.innerHTML = `${username} typing...`;
+        scrollToBottom();
+    });
 
-    if (!typingEl) {
-        typingEl = document.createElement("li");
-        typingEl.style.cssText = `
-            align-self: center;
-            color: #b59461;
-            font-size: 0.7rem;
-        `;
-        messagesUl.appendChild(typingEl);
-    }
-
-    typingEl.innerHTML = `${username} typing...`;
-    scrollToBottom();
-});
-
-socket.on("userStopTyping", () => {
-    if (typingEl) {
-        typingEl.remove();
-        typingEl = null;
-    }
-});
+    socket.on("userStopTyping", () => {
+        if (typingEl) {
+            typingEl.remove();
+            typingEl = null;
+        }
+    });
+}
 
 // ================== SEEN ==================
 const seenMap = {};
 
-socket.on("updateSeen", ({ messageId, seenBy }) => {
-    seenMap[messageId] = seenBy;
-});
+if (socket) {
+    socket.on("updateSeen", ({ messageId, seenBy }) => {
+        seenMap[messageId] = seenBy;
+    });
+}
 
 // SOCKET EVENTS
-socket.on("receiveMessage", (data) => {
-    displayMessage(data);
+if (socket) {
+    socket.on("receiveMessage", (data) => {
+        displayMessage(data);
 
-    const myUser = localStorage.getItem("username");
+        const myUser = localStorage.getItem("username");
 
-    if (data._id && data.username !== myUser) {
-        socket.emit("messageSeen", {
-            messageId: data._id,
-            username: myUser
-        });
-    }
-});
+        if (data._id && data.username !== myUser) {
+            socket.emit("messageSeen", {
+                messageId: data._id,
+                username: myUser
+            });
+        }
+    });
 
-socket.on("updateUserCount", (count) => {
-    document.getElementById("online-count").innerText = count;
-});
+    socket.on("updateUserCount", (count) => {
+        document.getElementById("online-count").innerText = count;
+    });
 
-socket.on("chatCleared", () => {
-    messagesUl.innerHTML = "";
-    localStorage.removeItem("chat_history");
-});
+    socket.on("chatCleared", () => {
+        if (messagesUl) messagesUl.innerHTML = "";
+        localStorage.removeItem("chat_history");
+    });
+}
 
 // DISPLAY MESSAGE
 function displayMessage(data) {
@@ -212,7 +217,6 @@ function displayMessage(data) {
     const li = document.createElement("li");
     const myUser = localStorage.getItem("username");
 
-    // 🟡 ALERT MESSAGE
     if (data.isAlert || data.username === "SYSTEM") {
         li.style.cssText = `
             align-self: center;
@@ -224,10 +228,8 @@ function displayMessage(data) {
             margin: 2px 0;
             text-align: center;
         `;
-
         li.innerHTML = `<span>${data.text} • ${data.time}</span>`;
-    } 
-    else {
+    } else {
         if (data.username === myUser) {
             li.classList.add("my-message");
         }
@@ -274,7 +276,7 @@ window.handleSend = function () {
 
 window.clearChat = function () {
     if (confirm("Clear chat?")) {
-        socket.emit("clearAllChat");
+        socket?.emit("clearAllChat");
     }
 };
 
