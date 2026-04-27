@@ -3,47 +3,58 @@ const Message = require("../models/Message");
 // 🔥 UNIQUE USERS TRACK (username → multiple sockets)
 const onlineUsers = new Map();
 
+// 🔥 TRACK TYPING USERS
+const typingUsers = new Set();
+
 module.exports = (io) => {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
-    // 🔹 TYPING
-socket.on("typing", (username) => {
-  socket.broadcast.emit("userTyping", username);
-});
+    // ================== TYPING ==================
 
-socket.on("stopTyping", (username) => {
-  socket.broadcast.emit("userStopTyping", username);
-});
-
-// 🔹 SEEN
-socket.on("messageSeen", async ({ messageId, username }) => {
-  try {
-    const msg = await Message.findById(messageId);
-
-    if (!msg.seenBy) msg.seenBy = [];
-
-    if (!msg.seenBy.includes(username)) {
-      msg.seenBy.push(username);
-      await msg.save();
-    }
-
-    io.emit("updateSeen", {
-      messageId,
-      seenBy: msg.seenBy
+    socket.on("typing", (username) => {
+      // अगर पहले से typing कर रहा है तो दुबारा emit नहीं
+      if (!typingUsers.has(username)) {
+        typingUsers.add(username);
+        socket.broadcast.emit("userTyping", username);
+      }
     });
 
-  } catch (err) {
-    console.error(err);
-  }
-});
-  
+    socket.on("stopTyping", (username) => {
+      typingUsers.delete(username);
+      socket.broadcast.emit("userStopTyping", username);
+    });
 
-    // 🔹 USER JOIN EVENT
+    // ================== SEEN ==================
+
+    socket.on("messageSeen", async ({ messageId, username }) => {
+      try {
+        const msg = await Message.findById(messageId);
+
+        if (!msg) return;
+
+        if (!msg.seenBy) msg.seenBy = [];
+
+        if (!msg.seenBy.includes(username)) {
+          msg.seenBy.push(username);
+          await msg.save();
+        }
+
+        io.emit("updateSeen", {
+          messageId,
+          seenBy: msg.seenBy
+        });
+
+      } catch (err) {
+        console.error("Seen error:", err);
+      }
+    });
+
+    // ================== USER JOIN ==================
+
     socket.on("userJoined", (username) => {
       socket.username = username;
 
-      // Agar user already exist hai
       if (onlineUsers.has(username)) {
         onlineUsers.get(username).add(socket.id);
       } else {
@@ -52,11 +63,11 @@ socket.on("messageSeen", async ({ messageId, username }) => {
 
       console.log("🔥 Online Users:", onlineUsers);
 
-      // 🔥 COUNT = unique users
       io.emit("updateUserCount", onlineUsers.size);
     });
 
-    // 🔹 MESSAGE SEND (same)
+    // ================== MESSAGE ==================
+
     socket.on("sendMessage", async (data) => {
       try {
         const msg = await Message.create(data);
@@ -66,7 +77,8 @@ socket.on("messageSeen", async ({ messageId, username }) => {
       }
     });
 
-    // 🔹 CLEAR CHAT
+    // ================== CLEAR CHAT ==================
+
     socket.on("clearAllChat", async () => {
       try {
         await Message.deleteMany({});
@@ -76,27 +88,32 @@ socket.on("messageSeen", async ({ messageId, username }) => {
       }
     });
 
-    // 🔻 DISCONNECT
+    // ================== DISCONNECT ==================
+
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
 
       const username = socket.username;
 
+      // 🔹 remove from online users
       if (username && onlineUsers.has(username)) {
         const userSockets = onlineUsers.get(username);
 
-        // socket remove karo
         userSockets.delete(socket.id);
 
-        // agar koi socket nahi bacha → user offline
         if (userSockets.size === 0) {
           onlineUsers.delete(username);
         }
       }
 
+      // 🔹 remove from typing users
+      if (username && typingUsers.has(username)) {
+        typingUsers.delete(username);
+        socket.broadcast.emit("userStopTyping", username);
+      }
+
       console.log("🔥 After Disconnect:", onlineUsers);
 
-      // 🔥 COUNT UPDATE
       io.emit("updateUserCount", onlineUsers.size);
     });
   });
