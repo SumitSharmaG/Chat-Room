@@ -1,79 +1,96 @@
-const Message = require("../models/Message"); // Ensure this is correctly implemented if using DB
+// Complete server.js for Private Chat with User Online Check
 
-// Manage multiple tabs per user
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allow all origins, adjust as necessary for production
+  },
+});
+
+// Store online users: username (lowercase) => socket.id
 const onlineUsers = new Map();
 
-module.exports = (io) => {
-    io.on("connection", (socket) => {
-        console.log("New Socket ID:", socket.id);
+// Serve static files if needed (not used here, but for production)
+// app.use(express.static('public'));
 
-        // User joins
-        socket.on("userJoined", (username) => {
-            if (!username) return;
-            const name = username.toLowerCase();
-            socket.username = name;
+io.on("connection", (socket) => {
+  console.log(`Socket connected: ${socket.id}`);
 
-            if (!onlineUsers.has(name)) {
-                onlineUsers.set(name, new Set());
-            }
-            onlineUsers.get(name).add(socket.id);
-            console.log(`Active: ${name} (${onlineUsers.get(name).size} tabs)`);
-            broadcastUsers(io);
-        });
+  // When a user joins, register their username
+  socket.on("userJoined", (username) => {
+    if (username) {
+      // Save user to online list
+      onlineUsers.set(username.toLowerCase(), socket.id);
+      console.log(`User joined: ${username}`);
+      // Notify all clients of updated online users
+      io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+    }
+  });
 
-        socket.on("requestOnlineUsers", () => {
-            broadcastUsers(io);
-        });
+  // When a user disconnects, remove from online list
+  socket.on("disconnect", () => {
+    // Find the username associated with this socket
+    for (let [user, id] of onlineUsers.entries()) {
+      if (id === socket.id) {
+        onlineUsers.delete(user);
+        console.log(`User disconnected: ${user}`);
+        break;
+      }
+    }
+    // Broadcast updated list
+    io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+  });
 
-        // Send message
-        socket.on("sendMessage", async (data) => {
-            try {
-                const msg = await Message.create(data); // Save message if DB setup
-                const rec = data.receiver.toLowerCase();
-                const sen = data.sender.toLowerCase();
+  // Handle check if specific user is online
+  socket.on("checkUserOnline", (username) => {
+    if (!username) {
+      socket.emit("userOnlineStatus", { username: "", online: false });
+      return;
+    }
+    const userKey = username.toLowerCase();
+    if (onlineUsers.has(userKey)) {
+      socket.emit("userOnlineStatus", { username: userKey, online: true });
+    } else {
+      socket.emit("userOnlineStatus", { username: userKey, online: false });
+    }
+  });
 
-                if (onlineUsers.has(rec)) {
-                    onlineUsers.get(rec).forEach(id => io.to(id).emit("receiveMessage", msg));
-                }
-                if (onlineUsers.has(sen)) {
-                    onlineUsers.get(sen).forEach(id => io.to(id).emit("receiveMessage", msg));
-                }
-            } catch (e) {
-                console.log("Msg Error:", e);
-            }
-        });
+  // Handle sending a private message
+  socket.on("sendMessage", (data) => {
+    const { sender, receiver, text, timestamp } = data;
+    if (!sender || !receiver || !text) return;
 
-        // Private chat handshake
-        socket.on("connectRequest", ({ from, to }) => {
-            const target = to.toLowerCase();
-            if (onlineUsers.has(target)) {
-                onlineUsers.get(target).forEach(id => io.to(id).emit("connectRequest", { from }));
-            }
-        });
+    // Find receiver socket id
+    const receiverId = onlineUsers.get(receiver.toLowerCase());
 
-        socket.on("connectResponse", ({ from, to, accepted }) => {
-            const target = to.toLowerCase();
-            if (onlineUsers.has(target)) {
-                onlineUsers.get(target).forEach(id => io.to(id).emit("connectResponse", { from, accepted }));
-            }
-        });
+    // Prepare message object
+    const messageData = {
+      sender,
+      receiver,
+      text,
+      timestamp,
+    };
 
-        // User disconnect
-        socket.on("disconnect", () => {
-            const name = socket.username;
-            if (name && onlineUsers.has(name)) {
-                onlineUsers.get(name).delete(socket.id);
-                if (onlineUsers.get(name).size === 0) {
-                    onlineUsers.delete(name);
-                }
-            }
-            broadcastUsers(io);
-            console.log("Socket disconnected:", socket.id);
-        });
-    });
-};
+    // Send to receiver if online
+    if (receiverId) {
+      io.to(receiverId).emit("receiveMessage", messageData);
+    }
 
-function broadcastUsers(io) {
-    const list = Array.from(onlineUsers.keys());
-    io.emit("onlineUsers", list);
-}
+    // Also, send the message back to sender for display
+    // (Optional: Remove if you handle message display differently)
+    const senderId = onlineUsers.get(sender.toLowerCase());
+    if (senderId) {
+      io.to(senderId).emit("receiveMessage", messageData);
+    }
+  });
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
