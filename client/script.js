@@ -282,7 +282,7 @@ window.clearChat = function () {
 
 window.logout = function () {
     localStorage.clear();
-    window.location.href = "login.html";
+    window.location.href = "selection.html";
 };
 
 document.getElementById("msg")?.addEventListener("keydown", (e) => {
