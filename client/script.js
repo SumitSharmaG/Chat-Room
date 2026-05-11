@@ -1,293 +1,99 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
+const socket = io(BACKEND, { transports: ["websocket"] });
+const myUser = localStorage.getItem("username");
+let currentMode = "world"; // 'world' or 'private'
+let activePrivateUser = null;
+let seenMap = {};
 
-// ✅ Only connect socket on chat page
-const isChatPage = window.location.pathname.includes("chat.html");
-const socket = isChatPage ? io(BACKEND, { transports: ["websocket"] }) : null;
+if (!myUser) window.location.href = "login.html";
 
-// 🔥 CONNECT (only if socket exists)
-if (socket) {
-    socket.on("connect", () => {
-        console.log("✅ Socket Connected:", socket.id);
-
-        const username = localStorage.getItem("username");
-        if (username) {
-            socket.emit("userJoined", username);
-        }
-    });
-}
-
-// ================== SCREENSHOT LOGIC ==================
-let gestureTimer = null;
-let lastAlertTime = 0;
-
-function sendScreenshotAlert(reason = "captured screen") {
-    const now = Date.now();
-    if (now - lastAlertTime < 2000) return;
-
-    lastAlertTime = now;
-
-    const username = localStorage.getItem("username") || "User";
-
-    socket?.emit("sendMessage", {
-        username: "SYSTEM",
-        text: `📸 ${username} ${reason}`,
-        isAlert: true,
-        time: getCurrentTime()
-    });
-}
-
-// 📱 Mobile
-document.addEventListener("touchstart", (e) => {
-    if (e.touches.length === 3) {
-        gestureTimer = setTimeout(() => sendScreenshotAlert(), 800);
-    }
+socket.on("connect", () => {
+    socket.emit("userJoined", myUser);
 });
 
-document.addEventListener("touchend", () => {
-    if (gestureTimer) clearTimeout(gestureTimer);
-});
-
-// 💻 PC
-window.addEventListener("keyup", (e) => {
-    if (e.key === "PrintScreen" || e.key === "PrtSc") {
-        sendScreenshotAlert();
-    }
-});
-
-// ======================================================
-
-// --- LOGIN / REGISTER ---
-document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    const res = await fetch(BACKEND + "/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-    });
-
-    if (res.ok) {
-        alert("Registered!");
-        window.location.href = "login.html";
+// --- UI Logic ---
+function switchMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + mode).classList.add('active');
+    
+    const plusBtn = document.getElementById('new-chat-plus');
+    if (mode === 'private') {
+        plusBtn.style.display = 'flex';
+        document.getElementById('chat-title').innerText = activePrivateUser ? "Chat: @" + activePrivateUser : "Private Inbox";
     } else {
-        alert("Error");
+        plusBtn.style.display = 'none';
+        document.getElementById('chat-title').innerText = "World Chat";
     }
-});
+    document.getElementById("messages").innerHTML = ""; // Switch pe clear
+}
 
-document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    const res = await fetch(BACKEND + "/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-        localStorage.setItem("username", username);
-        window.location.href = "chat.html";
-    } else {
-        alert("Login failed");
+function startNewPrivate() {
+    const user = prompt("Enter @username to message:");
+    if (user) {
+        activePrivateUser = user.replace("@", "").trim();
+        document.getElementById('chat-title').innerText = "Chat: @" + activePrivateUser;
+        document.getElementById("messages").innerHTML = "";
     }
-});
-
-// --- TIME ---
-function getCurrentTime() {
-    const now = new Date();
-    let h = now.getHours();
-    const m = now.getMinutes().toString().padStart(2, "0");
-    const s = now.getSeconds().toString().padStart(2, "0");
-    const ampm = h >= 12 ? "PM" : "AM";
-    h = h % 12 || 12;
-    return `${h}:${m}:${s} ${ampm}`;
 }
 
-// ================== CHAT ==================
-const messagesUl = document.getElementById("messages");
-
-function scrollToBottom() {
-    if (messagesUl) messagesUl.scrollTop = messagesUl.scrollHeight;
-}
-
-// PAGE LOAD
-document.addEventListener("DOMContentLoaded", () => {
-    const user = localStorage.getItem("username");
-
-    const userDisplayEl = document.getElementById("display-username");
-    if (userDisplayEl && user) {
-        userDisplayEl.innerText = `@${user}`;
-    }
-
-    const savedChat = localStorage.getItem("chat_history");
-    if (savedChat && messagesUl) {
-        messagesUl.innerHTML = savedChat;
-        scrollToBottom();
-    }
-});
-
-// ================== TYPING ==================
-if (socket) {
-    let typingTimeout;
-
-    document.getElementById("msg")?.addEventListener("input", () => {
-        const username = localStorage.getItem("username");
-
-        socket.emit("typing", username);
-
-        clearTimeout(typingTimeout);
-
-        typingTimeout = setTimeout(() => {
-            socket.emit("stopTyping", username);
-        }, 1000);
-    });
-
-    let typingEl = null;
-
-    socket.on("userTyping", (username) => {
-        if (!messagesUl) return;
-
-        if (!typingEl) {
-            typingEl = document.createElement("li");
-            typingEl.style.cssText = `
-                align-self: center;
-                color: #b59461;
-                font-size: 0.7rem;
-            `;
-            messagesUl.appendChild(typingEl);
-        }
-
-        typingEl.innerHTML = `${username} typing...`;
-        scrollToBottom();
-    });
-
-    socket.on("userStopTyping", () => {
-        if (typingEl) {
-            typingEl.remove();
-            typingEl = null;
-        }
-    });
-}
-
-// ================== SEEN ==================
-const seenMap = {};
-
-if (socket) {
-    socket.on("updateSeen", ({ messageId, seenBy }) => {
-        seenMap[messageId] = seenBy;
-    });
-}
-
-// SOCKET EVENTS
-if (socket) {
-    socket.on("receiveMessage", (data) => {
-        displayMessage(data);
-
-        const myUser = localStorage.getItem("username");
-
-        if (data._id && data.username !== myUser) {
-            socket.emit("messageSeen", {
-                messageId: data._id,
-                username: myUser
-            });
-        }
-    });
-
-    socket.on("updateUserCount", (count) => {
-        document.getElementById("online-count").innerText = count;
-    });
-
-    socket.on("chatCleared", () => {
-        if (messagesUl) messagesUl.innerHTML = "";
-        localStorage.removeItem("chat_history");
-    });
-}
-
-// DISPLAY MESSAGE
-function displayMessage(data) {
-    if (!messagesUl) return;
-
-    const li = document.createElement("li");
-    const myUser = localStorage.getItem("username");
-
-    if (data.isAlert || data.username === "SYSTEM") {
-        li.style.cssText = `
-            align-self: center;
-            background: transparent;
-            border: none;
-            color: yellow;
-            font-size: 0.6rem;
-            padding: 2px;
-            margin: 2px 0;
-            text-align: center;
-        `;
-        li.innerHTML = `<span>${data.text} • ${data.time}</span>`;
-    } else {
-        if (data.username === myUser) {
-            li.classList.add("my-message");
-        }
-
-        const messageId = data._id || Math.random();
-
-        li.innerHTML = `
-            <span><strong>${data.username}:</strong> ${data.text}</span>
-            <span style="font-size: 0.6rem;">
-                ${data.time || getCurrentTime()}
-                <button class="info-btn" onclick="showSeen('${messageId}')">ⓘ</button>
-            </span>
-        `;
-    }
-
-    messagesUl.appendChild(li);
-    scrollToBottom();
-
-    localStorage.setItem("chat_history", messagesUl.innerHTML);
-}
-
-// Seen popup
-window.showSeen = function(id) {
-    const users = seenMap[id] || [];
-    alert("Seen by:\n" + users.join("\n"));
-};
-
-// ACTIONS
+// --- Send Logic ---
 window.handleSend = function () {
     const input = document.getElementById("msg");
     const text = input.value.trim();
+    if (!text) return;
 
-    if (text && socket) {
-        socket.emit("sendMessage", {
-            username: localStorage.getItem("username"),
-            text,
-            time: getCurrentTime()
-        });
-
-        input.value = "";
-        input.focus(); // 🔥 keyboard fix
+    const receiver = (currentMode === "world") ? "world" : activePrivateUser;
+    
+    if (currentMode === "private" && !activePrivateUser) {
+        alert("Click + to start a private chat first!");
+        return;
     }
+
+    socket.emit("sendMessage", {
+        username: myUser,
+        text,
+        receiver: receiver,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+    input.value = "";
 };
 
-window.clearChat = function () {
-    if (confirm("Clear chat?")) {
-        socket?.emit("clearAllChat");
+// --- Receive Logic ---
+socket.on("receiveMessage", (data) => {
+    if (currentMode === "world" && data.receiver === "world") {
+        appendMessage(data);
+    } else if (currentMode === "private") {
+        if ((data.username === activePrivateUser && data.receiver === myUser) || 
+            (data.username === myUser && data.receiver === activePrivateUser)) {
+            appendMessage(data);
+        } else if (data.receiver === myUser) {
+            alert("New Private Message from @" + data.username);
+        }
     }
-};
+});
 
-window.logout = function () {
+function appendMessage(data) {
+    const ul = document.getElementById("messages");
+    const li = document.createElement("li");
+    li.className = (data.username === myUser) ? "my-message" : "other-message";
+    
+    li.innerHTML = `
+        <div style="font-size:0.7rem; color:gray;">${data.username}</div>
+        <div>${data.text}</div>
+        <div style="font-size:0.5rem; text-align:right;">${data.time}</div>
+    `;
+    ul.appendChild(li);
+    ul.scrollTop = ul.scrollHeight;
+}
+
+// Typing logic, Online Count, Logout... (Aapka purana code yahan add kar sakte hain)
+socket.on("updateUserCount", (count) => {
+    document.getElementById("online-count").innerText = count;
+});
+
+window.logout = function() {
     localStorage.clear();
     window.location.href = "login.html";
 };
-
-document.getElementById("msg")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        e.preventDefault();
-        handleSend();
-    }
-});
+            
