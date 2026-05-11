@@ -1,6 +1,5 @@
 const Message = require("../models/Message");
 const onlineUsers = new Map();
-const typingUsers = new Set();
 
 module.exports = (io) => {
   io.on("connection", (socket) => {
@@ -20,26 +19,27 @@ module.exports = (io) => {
         const msg = await Message.create(data);
         
         if (data.receiver === "world") {
+          // Sabko bhej do
           io.emit("receiveMessage", msg);
         } else {
-          // Private Logic: Send only to sender & receiver
-          const rSockets = onlineUsers.get(data.receiver);
-          const sSockets = onlineUsers.get(data.username);
-          if (rSockets) rSockets.forEach(id => io.to(id).emit("receiveMessage", msg));
-          if (sSockets) sSockets.forEach(id => io.to(id).emit("receiveMessage", msg));
+          // Sirf sender aur receiver ko bhej do
+          const targetSockets = onlineUsers.get(data.receiver);
+          const senderSockets = onlineUsers.get(data.username);
+          
+          if (targetSockets) targetSockets.forEach(id => io.to(id).emit("receiveMessage", msg));
+          if (senderSockets) senderSockets.forEach(id => io.to(id).emit("receiveMessage", msg));
         }
       } catch (err) {
-        console.error("Msg Error:", err);
+        console.error("Message error:", err);
       }
     });
 
-    socket.on("typing", (data) => {
-      // data: { username, receiver }
-      socket.broadcast.emit("userTyping", data);
+    socket.on("typing", (username) => {
+      socket.broadcast.emit("userTyping", username);
     });
 
-    socket.on("stopTyping", (data) => {
-      socket.broadcast.emit("userStopTyping", data);
+    socket.on("stopTyping", (username) => {
+      socket.broadcast.emit("userStopTyping", username);
     });
 
     socket.on("messageSeen", async ({ messageId, username }) => {
@@ -53,14 +53,21 @@ module.exports = (io) => {
       } catch (err) {}
     });
 
+    socket.on("clearAllChat", async () => {
+      try {
+        await Message.deleteMany({});
+        io.emit("chatCleared");
+      } catch (err) {}
+    });
+
     socket.on("disconnect", () => {
-      const u = socket.username;
-      if (u && onlineUsers.has(u)) {
-        onlineUsers.get(u).delete(socket.id);
-        if (onlineUsers.get(u).size === 0) onlineUsers.delete(u);
+      const username = socket.username;
+      if (username && onlineUsers.has(username)) {
+        onlineUsers.get(username).delete(socket.id);
+        if (onlineUsers.get(username).size === 0) onlineUsers.delete(username);
       }
       io.emit("updateUserCount", onlineUsers.size);
     });
   });
 };
-      
+              
