@@ -298,14 +298,14 @@ function register(){
 }
 
 /* LOGIN */
-function login(){
+function login() {
     const username = document.getElementById("username").value.trim().toLowerCase();
     const password = document.getElementById("password").value.trim();
     const users = JSON.parse(localStorage.getItem("global_users") || "[]");
 
     const user = users.find(u => u.username === username && u.password === password);
 
-    if(!user){
+    if (!user) {
         alert("Invalid credentials");
         return;
     }
@@ -315,11 +315,11 @@ function login(){
     document.getElementById("app").classList.remove("hidden");
     document.getElementById("myUser").innerText = "@" + user.username;
 
+    // IMPORTANT: Tell the server who we are
     socket.emit("userJoined", user.username);
-
-    setTimeout(() => {
-        socket.emit("requestOnlineUsers"); 
-    }, 300);
+    
+    // Request the list again just to be sure
+    socket.emit("requestOnlineUsers");
 }
 
 /* ONLINE USERS */
