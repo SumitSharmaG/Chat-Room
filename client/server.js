@@ -12,21 +12,29 @@ module.exports = (io) => {
     // ================== TYPING ==================
 
     socket.on("typing", (username) => {
+
       if (!typingUsers.has(username)) {
         typingUsers.add(username);
         socket.broadcast.emit("userTyping", username);
       }
+
     });
 
     socket.on("stopTyping", (username) => {
-      typingUsers.delete(username);
-      socket.broadcast.emit("userStopTyping", username);
+
+      if (typingUsers.has(username)) {
+        typingUsers.delete(username);
+        socket.broadcast.emit("userStopTyping", username);
+      }
+
     });
 
     // ================== SEEN ==================
 
     socket.on("messageSeen", async ({ messageId, username }) => {
+
       try {
+
         const msg = await Message.findById(messageId);
         if (!msg) return;
 
@@ -43,8 +51,9 @@ module.exports = (io) => {
         });
 
       } catch (err) {
-        console.error(err);
+        console.error("Seen error:", err);
       }
+
     });
 
     // ================== USER JOIN ==================
@@ -60,28 +69,37 @@ module.exports = (io) => {
       }
 
       emitOnlineUsers(io, onlineUsers);
+
     });
 
     // ================== SEND MESSAGE ==================
 
     socket.on("sendMessage", async (data) => {
+
       try {
+
         const msg = await Message.create(data);
         io.emit("receiveMessage", msg);
+
       } catch (err) {
-        console.error(err);
+        console.error("Message error:", err);
       }
+
     });
 
     // ================== CLEAR CHAT ==================
 
     socket.on("clearAllChat", async () => {
+
       try {
+
         await Message.deleteMany({});
         io.emit("chatCleared");
+
       } catch (err) {
-        console.error(err);
+        console.error("Clear error:", err);
       }
+
     });
 
     // ================== CONNECT REQUEST ==================
@@ -89,11 +107,17 @@ module.exports = (io) => {
     socket.on("connectRequest", ({ from, to }) => {
 
       for (const [user, sockets] of onlineUsers.entries()) {
+
         if (user === to) {
+
           for (const id of sockets) {
+
             io.to(id).emit("connectRequest", { from });
+
           }
+
         }
+
       }
 
     });
@@ -103,14 +127,20 @@ module.exports = (io) => {
     socket.on("connectResponse", ({ from, to, accepted }) => {
 
       for (const [user, sockets] of onlineUsers.entries()) {
+
         if (user === to) {
+
           for (const id of sockets) {
+
             io.to(id).emit("connectResponse", {
               from,
               accepted
             });
+
           }
+
         }
+
       }
 
     });
@@ -139,6 +169,9 @@ module.exports = (io) => {
       }
 
       emitOnlineUsers(io, onlineUsers);
+
+      console.log("User disconnected:", socket.id);
+
     });
 
   });
@@ -149,11 +182,12 @@ module.exports = (io) => {
 
 function emitOnlineUsers(io, onlineUsers) {
 
-  const users = {};
+  const users = [];
 
   for (const [username] of onlineUsers.entries()) {
-    users[username] = true;
+    users.push(username);
   }
 
   io.emit("onlineUsers", users);
+
 }
