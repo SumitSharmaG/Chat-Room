@@ -3,7 +3,6 @@ const isChatPage = window.location.pathname.includes("chat.html");
 const isLoginPage = window.location.pathname.includes("login.html") || window.location.pathname.endsWith("/");
 const isRegisterPage = window.location.pathname.includes("register.html");
 
-// ✅ Socket connection sirf chat page par
 const socket = isChatPage ? io(BACKEND, { transports: ["websocket"] }) : null;
 const myUser = localStorage.getItem("username");
 
@@ -14,57 +13,94 @@ let typingTimer;
 // Redirect logic
 if (isChatPage && !myUser) window.location.href = "login.html";
 
-// ================= LOGIN & REGISTER LOGIC (Missing Part) =================
+// ================= LOGIN & REGISTER LOGIC =================
 if (isLoginPage || isRegisterPage) {
     document.addEventListener("DOMContentLoaded", () => {
         const loginForm = document.getElementById("loginForm");
         const registerForm = document.getElementById("registerForm");
 
-        // Login Submit
+        // ✅ LOGIN LOGIC
         if (loginForm) {
-            loginForm.querySelector("button").addEventListener("click", async () => {
-                const username = document.getElementById("username").value.trim();
-                const password = document.getElementById("password").value.trim();
+            const loginBtn = loginForm.querySelector("button");
+            loginBtn.addEventListener("click", async (e) => {
+                e.preventDefault(); // 🔥 Refresh rokne ke liye
+                
+                const usernameInput = document.getElementById("username");
+                const passwordInput = document.getElementById("password");
+                
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
 
-                const res = await fetch(`${BACKEND}/api/login`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    localStorage.setItem("username", username);
-                    window.location.href = "chat.html";
-                } else {
-                    alert("Invalid Username or Password");
+                if(!username || !password) return alert("Please fill all fields");
+
+                loginBtn.innerText = "Authenticating...";
+                loginBtn.disabled = true;
+
+                try {
+                    const res = await fetch(`${BACKEND}/api/login`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        localStorage.setItem("username", username);
+                        window.location.href = "chat.html";
+                    } else {
+                        alert("Invalid Username or Password");
+                        loginBtn.innerText = "Login";
+                        loginBtn.disabled = false;
+                    }
+                } catch (err) {
+                    alert("Server Error. Try again.");
+                    loginBtn.innerText = "Login";
+                    loginBtn.disabled = false;
                 }
             });
         }
 
-        // Register Submit
+        // ✅ REGISTER LOGIC
         if (registerForm) {
-            registerForm.querySelector("button").addEventListener("click", async () => {
+            const regBtn = registerForm.querySelector("button");
+            regBtn.addEventListener("click", async (e) => {
+                e.preventDefault(); // 🔥 Refresh rokne ke liye
+
                 const username = document.getElementById("username").value.trim();
                 const password = document.getElementById("password").value.trim();
 
-                const res = await fetch(`${BACKEND}/api/register`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert("Account Created! Please Login.");
-                    window.location.href = "login.html";
-                } else {
-                    alert("Registration Failed");
+                if(!username || !password) return alert("Please fill all fields");
+
+                regBtn.innerText = "Creating Account...";
+                regBtn.disabled = true;
+
+                try {
+                    const res = await fetch(`${BACKEND}/api/register`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        alert("Registration Successful! Please Login.");
+                        window.location.href = "login.html";
+                    } else {
+                        alert("Username already exists or Error occurred.");
+                        regBtn.innerText = "Create Account";
+                        regBtn.disabled = false;
+                    }
+                } catch (err) {
+                    alert("Registration failed. Try again.");
+                    regBtn.innerText = "Create Account";
+                    regBtn.disabled = false;
                 }
             });
         }
     });
 }
 
-// ================= CHAT PAGE SOCKET LOGIC =================
+// ================= CHAT PAGE LOGIC =================
 if (socket) {
     socket.on("connect", () => {
         if (myUser) socket.emit("userJoined", myUser);
@@ -98,7 +134,7 @@ if (socket) {
         if (info) info.innerText = "";
     });
 
-    // 📩 RECEIVE LOGIC
+    // 📩 RECEIVE
     socket.on("receiveMessage", (data) => {
         if (currentMode === "world" && data.receiver === "world") {
             appendMessage(data);
@@ -107,7 +143,7 @@ if (socket) {
                 (data.username === myUser && data.receiver === activePrivateUser)) {
                 appendMessage(data);
             } else if (data.receiver === myUser) {
-                alert(`📩 New PM from @${data.username}`);
+                alert(`📩 New Private Message from @${data.username}`);
             }
         }
     });
@@ -148,7 +184,7 @@ window.handleSend = () => {
     if (!text || !socket) return;
 
     if (currentMode === "private" && !activePrivateUser) {
-        alert("Use the + button to select a user!");
+        alert("Please use the + button first!");
         return;
     }
 
@@ -167,7 +203,6 @@ function appendMessage(data) {
     if (!ul) return;
     const li = document.createElement("li");
     li.className = `msg-container ${data.username === myUser ? 'my-msg' : 'other-msg'}`;
-    
     li.innerHTML = `
         <div style="font-size: 0.7rem; color: var(--accent-gold); font-weight: 600; margin-bottom: 4px;">${data.username}</div>
         <div>${data.text}</div>
@@ -179,4 +214,4 @@ function appendMessage(data) {
 
 window.logout = () => { localStorage.clear(); window.location.href = "login.html"; };
 window.clearChat = () => { if(confirm("Clear all?")) socket.emit("clearAllChat"); };
-            
+                        
