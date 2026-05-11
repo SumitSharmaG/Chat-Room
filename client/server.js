@@ -72,6 +72,9 @@ module.exports = (io) => {
 
     });
 
+socket.on("requestOnlineUsers", () => {
+  emitOnlineUsers(io);
+});
     // ================== SEND MESSAGE ==================
 
     socket.on("sendMessage", async (data) => {
