@@ -1,11 +1,85 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
-const socket = window.location.pathname.includes("chat.html") ? io(BACKEND, { transports: ["websocket"] }) : null;
+const isChatPage = window.location.pathname.includes("chat.html");
+const isLoginPage = window.location.pathname.includes("login.html") || window.location.pathname.endsWith("/");
+const isRegisterPage = window.location.pathname.includes("register.html");
+
 const myUser = localStorage.getItem("username");
 
-let view = "world"; // 'world' or 'private'
-let activeChat = null; // Username we are currently chatting with
+// ================= 1. LOGIN & REGISTER FIX (Refresh Roka Gaya Hai) =================
+if (isLoginPage || isRegisterPage) {
+    document.addEventListener("DOMContentLoaded", () => {
+        const loginForm = document.getElementById("loginForm");
+        const registerForm = document.getElementById("registerForm");
 
-if (!myUser && window.location.pathname.includes("chat.html")) window.location.href = "login.html";
+        if (loginForm) {
+            // Hum form submit event ko hi pakad lete hain taki refresh na ho
+            loginForm.addEventListener("submit", (e) => e.preventDefault()); 
+            
+            const loginBtn = loginForm.querySelector("button");
+            loginBtn.onclick = async (e) => {
+                e.preventDefault(); // Double protection
+                e.stopPropagation();
+
+                const u = document.getElementById("username").value.trim();
+                const p = document.getElementById("password").value.trim();
+
+                if(!u || !p) return alert("Please enter details");
+
+                loginBtn.innerText = "Authenticating...";
+                try {
+                    const res = await fetch(`${BACKEND}/api/login`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username: u, password: p })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        localStorage.setItem("username", u);
+                        window.location.href = "chat.html";
+                    } else {
+                        alert("Galt Username ya Password!");
+                        loginBtn.innerText = "Login";
+                    }
+                } catch (err) {
+                    alert("Server Error! Baad mein koshish karein.");
+                    loginBtn.innerText = "Login";
+                }
+            };
+        }
+
+        if (registerForm) {
+            registerForm.addEventListener("submit", (e) => e.preventDefault());
+            const regBtn = registerForm.querySelector("button");
+            regBtn.onclick = async (e) => {
+                e.preventDefault();
+                const u = document.getElementById("username").value.trim();
+                const p = document.getElementById("password").value.trim();
+
+                try {
+                    const res = await fetch(`${BACKEND}/api/register`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username: u, password: p })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        alert("Account ban gaya! Ab login karein.");
+                        window.location.href = "login.html";
+                    } else {
+                        alert("Username pehle se maujood hai.");
+                    }
+                } catch (err) { alert("Error!"); }
+            };
+        }
+    });
+}
+
+// ================= 2. CHAT LOGIC (Socket & Storage) =================
+const socket = isChatPage ? io(BACKEND, { transports: ["websocket"] }) : null;
+let view = "world"; 
+let activeChat = null;
+
+if (isChatPage && !myUser) window.location.href = "login.html";
 
 if (socket) {
     socket.on("connect", () => {
@@ -13,137 +87,111 @@ if (socket) {
     });
 
     socket.on("receiveMessage", (data) => {
-        handleIncomingMessage(data);
+        // Message Save Karein
+        const key = data.receiver === "world" ? "h_world" : `h_${data.username === myUser ? data.receiver : data.username}`;
+        let history = JSON.parse(localStorage.getItem(key) || "[]");
+        history.push(data);
+        localStorage.setItem(key, JSON.stringify(history));
+
+        // Inbox List Update
+        if (data.receiver !== "world") {
+            let partner = data.username === myUser ? data.receiver : data.username;
+            let list = JSON.parse(localStorage.getItem("my_inboxes") || "[]");
+            if (!list.includes(partner)) {
+                list.push(partner);
+                localStorage.setItem("my_inboxes", JSON.stringify(list));
+            }
+        }
+
+        // UI Update
+        if (view === "world" && data.receiver === "world") {
+            appendUI(data);
+        } else if (view === "private") {
+            const partner = data.username === myUser ? data.receiver : data.username;
+            if (activeChat === partner) {
+                appendUI(data);
+            } else {
+                renderInbox(); 
+            }
+        }
     });
 
-    socket.on("updateUserCount", (count) => {
-        document.getElementById("online-count").innerText = count;
+    socket.on("updateUserCount", (c) => {
+        if(document.getElementById("online-count")) document.getElementById("online-count").innerText = c;
     });
 }
 
-// --- CORE LOGIC ---
-function handleIncomingMessage(msg) {
-    // 1. Storage Logic
-    const chatKey = msg.receiver === "world" ? "history_world" : `history_${msg.username === myUser ? msg.receiver : msg.username}`;
-    let history = JSON.parse(localStorage.getItem(chatKey) || "[]");
-    history.push(msg);
-    localStorage.setItem(chatKey, JSON.stringify(history));
-
-    // 2. Inbox Tracking (For Private)
-    if (msg.receiver !== "world") {
-        let partner = msg.username === myUser ? msg.receiver : msg.username;
-        let inboxes = JSON.parse(localStorage.getItem("my_inboxes") || "[]");
-        if (!inboxes.includes(partner)) {
-            inboxes.push(partner);
-            localStorage.setItem("my_inboxes", JSON.stringify(inboxes));
-        }
-    }
-
-    // 3. UI Update Logic
-    if (view === "world" && msg.receiver === "world") {
-        appendUI(msg);
-    } else if (view === "private") {
-        if (activeChat === (msg.username === myUser ? msg.receiver : msg.username)) {
-            appendUI(msg);
-        } else {
-            renderInboxList(); // Update the list to show new message alert
-        }
-    }
-}
-
+// ================= 3. UI FUNCTIONS =================
 window.switchView = (v) => {
-    view = v;
-    activeChat = null;
+    view = v; activeChat = null;
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.getElementById(`tab-${v}`).classList.add('active');
 
-    const msgList = document.getElementById("messages");
-    const inboxView = document.getElementById("inbox-view");
-    const fab = document.getElementById("fab-new");
-
     if (v === 'world') {
-        msgList.style.display = "flex";
-        inboxView.style.display = "none";
-        fab.style.display = "none";
-        document.getElementById("current-title").innerText = "World Chat";
-        loadLocalHistory("history_world");
+        document.getElementById("messages").style.display = "flex";
+        document.getElementById("inbox-view").style.display = "none";
+        document.getElementById("fab-new").style.display = "none";
+        loadHistory("h_world");
     } else {
-        msgList.style.display = "none";
-        inboxView.style.display = "block";
-        fab.style.display = "flex";
-        document.getElementById("current-title").innerText = "Inbox";
-        renderInboxList();
+        document.getElementById("messages").style.display = "none";
+        document.getElementById("inbox-view").style.display = "block";
+        document.getElementById("fab-new").style.display = "flex";
+        renderInbox();
     }
 };
 
-function renderInboxList() {
-    const container = document.getElementById("inbox-view");
-    container.innerHTML = "";
-    let inboxes = JSON.parse(localStorage.getItem("my_inboxes") || "[]");
-
-    if (inboxes.length === 0) {
-        container.innerHTML = "<p style='text-align:center; margin-top:20px; color:#555;'>No private chats yet.</p>";
-        return;
-    }
-
-    inboxes.forEach(user => {
-        const item = document.createElement("div");
-        item.className = "inbox-card";
-        item.innerHTML = `<div><strong>@${user}</strong></div><div class="new-badge">Active</div>`;
-        item.onclick = () => openChat(user);
-        container.appendChild(item);
+function renderInbox() {
+    const box = document.getElementById("inbox-view");
+    box.innerHTML = "";
+    let list = JSON.parse(localStorage.getItem("my_inboxes") || "[]");
+    list.forEach(u => {
+        const d = document.createElement("div");
+        d.className = "inbox-card";
+        d.innerHTML = `<strong>@${u}</strong> <span class="new-badge">Message</span>`;
+        d.onclick = () => { activeChat = u; openRoom(u); };
+        box.appendChild(d);
     });
 }
 
-function openChat(user) {
-    activeChat = user;
+function openRoom(u) {
     document.getElementById("messages").style.display = "flex";
     document.getElementById("inbox-view").style.display = "none";
-    document.getElementById("current-title").innerText = "@" + user;
-    loadLocalHistory(`history_${user}`);
+    loadHistory(`h_${u}`);
 }
 
 window.createNewChat = () => {
-    const user = prompt("Enter @username to start chat:");
-    if (user) openChat(user.replace("@","").trim());
+    const u = prompt("Kisko message bhejna hai? (@username)");
+    if(u) { activeChat = u.replace("@","").trim(); openRoom(activeChat); }
 };
 
-function loadLocalHistory(key) {
+function loadHistory(key) {
     const ul = document.getElementById("messages");
     ul.innerHTML = "";
-    let history = JSON.parse(localStorage.getItem(key) || "[]");
-    history.forEach(m => appendUI(m));
-    ul.scrollTop = ul.scrollHeight;
+    let h = JSON.parse(localStorage.getItem(key) || "[]");
+    h.forEach(m => appendUI(m));
 }
 
 window.sendMessage = () => {
     const input = document.getElementById("msg-input");
-    const text = input.value.trim();
-    if (!text || !socket) return;
+    if (!input.value.trim() || !socket) return;
 
-    if (view === "private" && !activeChat) return alert("Select a user from Inbox!");
-
-    const payload = {
+    socket.emit("sendMessage", {
         username: myUser,
-        text: text,
+        text: input.value.trim(),
         receiver: (view === "world") ? "world" : activeChat,
         time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-    };
-
-    socket.emit("sendMessage", payload);
+    });
     input.value = "";
 };
 
-function appendUI(data) {
+function appendUI(d) {
     const ul = document.getElementById("messages");
+    if(!ul) return;
     const li = document.createElement("li");
-    li.className = `msg-bubble ${data.username === myUser ? 'my-msg' : 'other-msg'}`;
-    li.innerHTML = `<div style="font-size:0.6rem; color:var(--accent-gold); font-weight:bold;">${data.username}</div>
-                    <div>${data.text}</div>
-                    <div style="font-size:0.5rem; text-align:right; color:#888;">${data.time}</div>`;
+    li.className = `msg-bubble ${d.username === myUser ? 'my-msg' : 'other-msg'}`;
+    li.innerHTML = `<small style="color:gold;">${d.username}</small><div>${d.text}</div>`;
     ul.appendChild(li);
     ul.scrollTop = ul.scrollHeight;
 }
 
 window.logout = () => { localStorage.clear(); window.location.href = "login.html"; };
-                                 
