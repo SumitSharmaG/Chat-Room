@@ -254,7 +254,6 @@ body{
             <input id="searchUser" placeholder="Search username...">
         </div>
 
-        <!-- ONLINE USERS -->
         <div id="usersList"></div>
 
     </div>
@@ -286,8 +285,38 @@ let currentUser = null;
 let currentChatUser = null;
 let onlineUsers = {};
 
+/* INIT STORAGE SAFETY */
+if(!localStorage.getItem("global_users")){
+    localStorage.setItem("global_users","[]");
+}
+
 /* REGISTER */
-function register(){ /* unchanged */ }
+function register(){
+
+    const username =
+    document.getElementById("username").value.trim().toLowerCase();
+
+    const password =
+    document.getElementById("password").value.trim();
+
+    let users =
+    JSON.parse(localStorage.getItem("global_users") || "[]");
+
+    if(users.find(u=>u.username===username)){
+        alert("Username already exists");
+        return;
+    }
+
+    users.push({
+        id: Date.now().toString(),
+        username,
+        password
+    });
+
+    localStorage.setItem("global_users", JSON.stringify(users));
+
+    alert("Registered!");
+}
 
 /* LOGIN */
 function login(){
@@ -316,13 +345,11 @@ function login(){
 
     document.getElementById("myUser").innerText = "@" + user.username;
 
-    // 🔥 JOIN SOCKET
     socket.emit("userJoined", user.username);
-
 }
 
 /* ONLINE USERS */
-socket.on("onlineUsers", (users) => {
+socket.on("onlineUsers", (users)=>{
     onlineUsers = users;
     renderUsers();
 });
@@ -332,11 +359,11 @@ function renderUsers(){
     const box = document.getElementById("usersList");
     box.innerHTML = "";
 
-    const myUser = currentUser.username;
+    if(!currentUser) return;
 
-    Object.keys(onlineUsers).forEach(username => {
+    Object.keys(onlineUsers).forEach(username=>{
 
-        if(username === myUser) return;
+        if(username === currentUser.username) return;
 
         const div = document.createElement("div");
         div.className = "user";
@@ -344,19 +371,22 @@ function renderUsers(){
         div.innerText = "🟢 @" + username;
 
         div.onclick = () => {
+
             socket.emit("connectRequest", {
-                from: myUser,
+                from: currentUser.username,
                 to: username
             });
+
         };
 
         box.appendChild(div);
+
     });
 
 }
 
 /* CONNECT REQUEST */
-socket.on("connectRequest", ({ from }) => {
+socket.on("connectRequest", ({from})=>{
 
     const accept = confirm(`Connect with @${from}?`);
 
@@ -368,15 +398,9 @@ socket.on("connectRequest", ({ from }) => {
 
 });
 
-/* CONNECT RESPONSE */
-socket.on("connectResponse", ({ from, accepted }) => {
-
-    if(accepted){
-        alert("Connected with @" + from);
-    } else {
-        alert("Rejected by @" + from);
-    }
-
+/* RESPONSE */
+socket.on("connectResponse", ({from, accepted})=>{
+    alert(accepted ? "Connected with @" + from : "Rejected by @" + from);
 });
 
 </script>
