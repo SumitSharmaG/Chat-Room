@@ -3,12 +3,11 @@ const mongoose = require("mongoose");
 const MessageSchema = new mongoose.Schema({
   username: String,
   text: String,
+
+  // 🔥 ADD (already using in frontend)
   time: String,
-  // 🆕 World chat ke liye "world" rahega, private ke liye user ka naam
-  receiver: { 
-    type: String, 
-    default: "world" 
-  },
+
+  // 🔥 SEEN FEATURE
   seenBy: {
     type: [String],
     default: []
