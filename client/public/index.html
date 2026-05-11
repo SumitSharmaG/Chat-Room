@@ -299,7 +299,7 @@ function login(){
     document.getElementById("password").value.trim();
 
     const users =
-    JSON.parse(localStorage.getItem("global_users"));
+    JSON.parse(localStorage.getItem("global_users") || "[]");
 
     const user =
     users.find(u => u.username === username && u.password === password);
