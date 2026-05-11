@@ -1,15 +1,74 @@
-const Message = require("../models/Message"); // Ensure your schema has sender, receiver, text, timestamp
+const Message = require("../models/Message"); 
 
+// These stay outside the module.exports to persist across all socket connections
 const onlineUsers = new Map(); 
 const typingUsers = new Set();
 
 module.exports = (io) => {
 
   io.on("connection", (socket) => {
-
     console.log("User connected:", socket.id);
 
-    // ================== TYPING ==================
+    // ================== USER JOIN ==================
+    socket.on("userJoined", (username) => {
+      // Standardize username to avoid "Asheesh" vs "asheesh" issues
+      const cleanName = username.toLowerCase();
+      socket.username = cleanName;
+
+      if (onlineUsers.has(cleanName)) {
+        onlineUsers.get(cleanName).add(socket.id);
+      } else {
+        onlineUsers.set(cleanName, new Set([socket.id]));
+      }
+
+      console.log(`User Joined: ${cleanName} | Total Active: ${onlineUsers.size}`);
+      emitOnlineUsers(io, onlineUsers);
+    });
+
+    socket.on("requestOnlineUsers", () => {
+      emitOnlineUsers(io, onlineUsers);
+    });
+
+    // ================== SEND MESSAGE ==================
+    socket.on("sendMessage", async (data) => {
+      try {
+        const msg = await Message.create(data);
+        
+        const receiverSockets = onlineUsers.get(data.receiver.toLowerCase());
+        const senderSockets = onlineUsers.get(data.sender.toLowerCase());
+
+        // Private Routing: Only send to the two parties involved
+        if (receiverSockets) {
+            receiverSockets.forEach(id => io.to(id).emit("receiveMessage", msg));
+        }
+        if (senderSockets) {
+            senderSockets.forEach(id => io.to(id).emit("receiveMessage", msg));
+        }
+
+      } catch (err) {
+        console.error("Message error:", err);
+      }
+    });
+
+    // ================== CONNECT REQUEST ==================
+    socket.on("connectRequest", ({ from, to }) => {
+      const receiverSockets = onlineUsers.get(to.toLowerCase());
+      if (receiverSockets) {
+        receiverSockets.forEach(id => io.to(id).emit("connectRequest", { from }));
+      }
+    });
+
+    // ================== CONNECT RESPONSE ==================
+    socket.on("connectResponse", ({ from, to, accepted }) => {
+      const originalRequesterSockets = onlineUsers.get(to.toLowerCase());
+      if (originalRequesterSockets) {
+        originalRequesterSockets.forEach(id => {
+            io.to(id).emit("connectResponse", { from, accepted });
+        });
+      }
+    });
+
+    // ================== TYPING & SEEN ==================
     socket.on("typing", (username) => {
       if (!typingUsers.has(username)) {
         typingUsers.add(username);
@@ -24,103 +83,18 @@ module.exports = (io) => {
       }
     });
 
-    // ================== SEEN ==================
     socket.on("messageSeen", async ({ messageId, username }) => {
       try {
         const msg = await Message.findById(messageId);
-        if (!msg) return;
-        if (!msg.seenBy) msg.seenBy = [];
-
-        if (!msg.seenBy.includes(username)) {
-          msg.seenBy.push(username);
-          await msg.save();
+        if (msg) {
+          if (!msg.seenBy) msg.seenBy = [];
+          if (!msg.seenBy.includes(username)) {
+            msg.seenBy.push(username);
+            await msg.save();
+          }
+          io.emit("updateSeen", { messageId, seenBy: msg.seenBy });
         }
-
-        io.emit("updateSeen", {
-          messageId,
-          seenBy: msg.seenBy
-        });
-      } catch (err) {
-        console.error("Seen error:", err);
-      }
-    });
-
-    // ================== USER JOIN ==================
-    socket.on("userJoined", (username) => {
-      socket.username = username;
-
-      if (onlineUsers.has(username)) {
-        onlineUsers.get(username).add(socket.id);
-      } else {
-        onlineUsers.set(username, new Set([socket.id]));
-      }
-
-      emitOnlineUsers(io, onlineUsers);
-    });
-
-    socket.on("requestOnlineUsers", () => {
-      emitOnlineUsers(io, onlineUsers); // Fixed: Added onlineUsers parameter here
-    });
-
-    // ================== SEND MESSAGE ==================
-    socket.on("sendMessage", async (data) => {
-      try {
-        const msg = await Message.create(data);
-        
-        // Find specific sockets for true private routing
-        const receiverSockets = onlineUsers.get(data.receiver);
-        const senderSockets = onlineUsers.get(data.sender);
-
-        // Send to receiver
-        if (receiverSockets) {
-            for (const id of receiverSockets) {
-                io.to(id).emit("receiveMessage", msg);
-            }
-        }
-
-        // Send back to sender (to support multiple tabs/devices)
-        if (senderSockets) {
-            for (const id of senderSockets) {
-                io.to(id).emit("receiveMessage", msg);
-            }
-        }
-
-      } catch (err) {
-        console.error("Message error:", err);
-      }
-    });
-
-    // ================== CLEAR CHAT ==================
-    socket.on("clearAllChat", async () => {
-      try {
-        await Message.deleteMany({});
-        io.emit("chatCleared");
-      } catch (err) {
-        console.error("Clear error:", err);
-      }
-    });
-
-    // ================== CONNECT REQUEST ==================
-    socket.on("connectRequest", ({ from, to }) => {
-      const receiverSockets = onlineUsers.get(to);
-      if (receiverSockets) {
-        for (const id of receiverSockets) {
-            io.to(id).emit("connectRequest", { from });
-        }
-      }
-    });
-
-    // ================== CONNECT RESPONSE ==================
-    socket.on("connectResponse", ({ from, to, accepted }) => {
-      const originalRequesterSockets = onlineUsers.get(to);
-      if (originalRequesterSockets) {
-        for (const id of originalRequesterSockets) {
-            io.to(id).emit("connectResponse", {
-              from, // The user who just clicked accept/reject
-              accepted
-            });
-        }
-      }
+      } catch (err) { console.error(err); }
     });
 
     // ================== DISCONNECT ==================
@@ -145,15 +119,19 @@ module.exports = (io) => {
       console.log("User disconnected:", socket.id);
     });
 
+    socket.on("clearAllChat", async () => {
+      try {
+        await Message.deleteMany({});
+        io.emit("chatCleared");
+      } catch (err) { console.error(err); }
+    });
   });
 };
 
 // ================== HELPERS ==================
-function emitOnlineUsers(io, onlineUsers) {
-  if (!onlineUsers) return;
-  const users = [];
-  for (const [username] of onlineUsers.entries()) {
-    users.push(username);
-  }
+function emitOnlineUsers(io, onlineUsersMap) {
+  if (!onlineUsersMap) return;
+  // Convert Map keys to an array for the frontend to consume
+  const users = Array.from(onlineUsersMap.keys());
   io.emit("onlineUsers", users);
 }
