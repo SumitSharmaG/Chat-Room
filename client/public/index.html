@@ -4,15 +4,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Secure Private Chat | Premium</title>
-<!-- Styles omitted for brevity, same as your current style block -->
-<!-- (You can keep your styles as-is) -->
+<!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
 <style>
-/* Your CSS styles here (same as provided) */
 :root { --bg:#090909; --card:#141414; --gold:#b59461; --text:#f2f2f2; --mine:rgba(181,148,97,0.15); --status-off:#ff4b4b; --status-on:#4bffb9; }
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
 body { background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
 .hidden { display:none !important; }
+
 #auth { height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
 .auth-box { width:340px; background:var(--card); border:1px solid rgba(181,148,97,0.15); border-radius:20px; padding:30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 .auth-box h1 { text-align:center; margin-bottom:25px; color:var(--gold); font-family:'Playfair Display',serif; }
@@ -20,6 +19,7 @@ body { background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
 .auth-box input:focus { border-color: var(--gold); }
 .auth-box button { width:100%; padding:14px; border:none; border-radius:12px; margin-top:10px; background:var(--gold); font-weight:600; cursor:pointer; transition: 0.3s; }
 .auth-box button:hover { opacity: 0.8; transform: translateY(-2px); }
+
 #app { display:flex; height:100vh; }
 .sidebar { width:330px; background:var(--card); border-right:1px solid rgba(181,148,97,0.12); display:flex; flex-direction:column; }
 .sidebar-top { padding:20px; border-bottom:1px solid rgba(181,148,97,0.12); }
@@ -27,14 +27,18 @@ body { background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
 #conn-status { width: 10px; height: 10px; border-radius: 50%; background: var(--status-off); display: inline-block; }
 #conn-status.online { background: var(--status-on); box-shadow: 0 0 8px var(--status-on); }
 #myUser { margin-top:6px; opacity:0.7; font-size:0.85rem; letter-spacing: 1px; }
-.search-box { padding:15px; border-bottom:1px solid rgba(181,148,97,0.1); }
-.search-box input { width:100%; padding:12px; border:none; border-radius:12px; background:#1d1d1d; color:white; outline:none; }
+#connectSection { display:flex; align-items:center; padding: 15px; border-bottom:1px solid rgba(181,148,97,0.1); }
+#connectInput { flex:1; padding:12px; border:none; border-radius:12px; background:#1d1d1d; color:white; outline:none; font-size:1rem; }
+#connectButton { margin-left:10px; padding:10px 15px; border:none; border-radius:8px; background:var(--gold); cursor:pointer; font-weight:600; font-size:0.9rem; }
+#connectStatus { margin-left:10px; font-size:0.9rem; color:#f55; }
+
 #usersList { flex: 1; overflow-y: auto; }
 .user { padding:18px; border-bottom:1px solid rgba(255,255,255,0.03); cursor:pointer; transition:0.2s; display: flex; justify-content: space-between; align-items: center; }
 .user:hover { background:rgba(255,255,255,0.04); }
 .user.active { background:rgba(181,148,97,0.12); border-left: 3px solid var(--gold); }
 .user-info { display: flex; align-items: center; gap: 10px; }
 .dot { width: 8px; height: 8px; background: var(--status-on); border-radius: 50%; }
+
 .chat-area { flex:1; display:flex; flex-direction:column; background: #0c0c0c; }
 .chat-header { height:75px; background:var(--card); border-bottom:1px solid rgba(181,148,97,0.12); display:flex; align-items:center; padding:0 25px; color:var(--gold); font-weight:600; font-size: 1.1rem; }
 #messages { flex:1; overflow-y:auto; padding:25px; display:flex; flex-direction:column; gap:15px; }
@@ -42,6 +46,7 @@ body { background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .mine { align-self:flex-end; background:var(--mine); border:1px solid rgba(181,148,97,0.3); border-bottom-right-radius: 4px; }
 .time { font-size:0.65rem; opacity:0.4; margin-top:6px; text-align: right; }
+
 .input-area { background:var(--card); border-top:1px solid rgba(181,148,97,0.12); padding:20px; display:flex; gap:12px; }
 #messageInput { flex:1; border:none; border-radius:15px; background:#1c1c1c; padding:14px 20px; color:white; outline:none; border: 1px solid transparent; }
 #messageInput:focus { border-color: rgba(181,148,97,0.3); }
@@ -51,6 +56,7 @@ body { background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
 </head>
 <body>
 
+<!-- Authentication Panel -->
 <div id="auth">
     <div class="auth-box">
         <h1>Secure Chat</h1>
@@ -61,15 +67,31 @@ body { background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
     </div>
 </div>
 
+<!-- Main Application -->
 <div id="app" class="hidden">
     <div class="sidebar">
         <div class="sidebar-top">
             <h2>Private Chats <span id="conn-status"></span></h2>
             <div id="myUser"></div>
         </div>
-        <div class="search-box"><input id="searchUser" placeholder="Search users..." /></div>
+
+        <!-- Manual Connect Section -->
+        <div id="connectSection">
+            <input type="text" id="connectInput" placeholder="Enter username..." />
+            <button id="connectButton" onclick="connectToUser()">Connect</button>
+            <div id="connectStatus"></div>
+        </div>
+
+        <!-- Optional: To give user feedback -->
+        <div style="padding:10px; font-size:0.85rem; color:#ccc;">Enter username above and click Connect.</div>
+
+        <!-- User List (Optional, can be hidden if only manual connect) -->
+        <!--
         <div id="usersList"></div>
+        -->
     </div>
+
+    <!-- Chat Area -->
     <div class="chat-area">
         <div class="chat-header" id="chatHeader">Select a contact to start</div>
         <div id="messages"></div>
@@ -80,6 +102,7 @@ body { background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
     </div>
 </div>
 
+<!-- Socket.io Library -->
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 <script>
 const socket = io("https://chat-backend-gtg5.onrender.com", {
@@ -90,106 +113,97 @@ const socket = io("https://chat-backend-gtg5.onrender.com", {
 let currentUser = null;
 let currentChatUser = null;
 
-// --- CONNECTION HANDLERS ---
+// --- Connection Handlers ---
 socket.on("connect", () => {
     document.getElementById("conn-status").classList.add("online");
-    if(currentUser) socket.emit("userJoined", currentUser.username);
 });
 socket.on("disconnect", () => {
     document.getElementById("conn-status").classList.remove("online");
 });
 
-// --- AUTH LOGIC ---
+// --- Authentication ---
 function register() {
     const u = document.getElementById("username").value.trim().toLowerCase();
     const p = document.getElementById("password").value.trim();
-    if(!u || !p) return alert("Fields required");
+    if (!u || !p) return alert("Fields required");
     let users = JSON.parse(localStorage.getItem("global_users") || "[]");
-    if(users.find(x => x.username === u)) return alert("User exists");
-    users.push({username: u, password: p});
+    if (users.find(x => x.username === u)) return alert("User exists");
+    users.push({ username: u, password: p });
     localStorage.setItem("global_users", JSON.stringify(users));
     alert("Registered! Now Login.");
 }
-
 function login() {
     const u = document.getElementById("username").value.trim().toLowerCase();
     const p = document.getElementById("password").value.trim();
     const users = JSON.parse(localStorage.getItem("global_users") || "[]");
     const found = users.find(x => x.username === u && x.password === p);
-    if(!found) return alert("Invalid Login");
+    if (!found) return alert("Invalid Login");
     currentUser = found;
     document.getElementById("auth").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
     document.getElementById("myUser").innerText = "@" + u;
 
     socket.emit("userJoined", u);
-    socket.emit("requestOnlineUsers");
+    // Optionally, request current online user list if needed
 }
 
-// --- USER LIST LOGIC ---
-socket.on("onlineUsers", (list) => {
-    const box = document.getElementById("usersList");
-    box.innerHTML = "";
-    list.forEach(name => {
-        if(name === currentUser.username) return;
-        const div = document.createElement("div");
-        div.className = `user ${currentChatUser === name ? 'active' : ''}`;
-        div.innerHTML = `
-            <div class="user-info"><div class="dot"></div> @${name}</div>
-            <button onclick="requestChat('${name}')" style="background:var(--gold); border:none; padding:4px 8px; border-radius:5px; cursor:pointer; font-size:0.7rem;">Connect</button>
-        `;
-        box.appendChild(div);
-    });
-});
-
-function requestChat(target) {
-    socket.emit("connectRequest", { from: currentUser.username, to: target });
-    alert("Waiting for @" + target + " to accept...");
-}
-
-socket.on("connectRequest", ({from}) => {
-    if(confirm(`Accept private chat with @${from}?`)) {
-        socket.emit("connectResponse", { from: currentUser.username, to: from, accepted: true });
-        startChat(from);
+// --- Manual Connect Logic ---
+function connectToUser() {
+    const username = document.getElementById("connectInput").value.trim().toLowerCase();
+    if (!username) {
+        alert("Please enter a username");
+        return;
     }
-});
+    // Save for use after response
+    window.targetUser = username;
+    document.getElementById("connectStatus").innerText = "Checking user...";
+    socket.emit("checkUserOnline", username);
+}
 
-socket.on("connectResponse", ({from, accepted}) => {
-    if(accepted) {
-        startChat(from);
-        alert("Chat connected with @" + from);
+// Listen for server response
+socket.on("userOnlineStatus", (data) => {
+    document.getElementById("connectStatus").innerText = "";
+    if (data.online) {
+        startChat(data.username);
     } else {
-        alert("@" + from + " declined.");
+        alert("User not found or offline");
     }
 });
 
-function startChat(name) {
-    currentChatUser = name;
-    document.getElementById("chatHeader").innerText = "Chatting with @" + name;
-    document.getElementById("messages").innerHTML = ""; 
-    socket.emit("requestOnlineUsers"); // Refresh list to show active state
+// --- User List and Chat ---
+socket.on("onlineUsers", (list) => {
+    // Optional: You can implement a list or omit if only manual connect
+});
+
+// Start Chat
+function startChat(username) {
+    currentChatUser = username;
+    document.getElementById("chatHeader").innerText = "Chatting with @" + username;
+    document.getElementById("messages").innerHTML = "";
+    // Optionally, refresh user list or status
 }
 
-// --- MESSAGING LOGIC ---
+// --- Messaging ---
 function sendMessage() {
     const input = document.getElementById("messageInput");
     const val = input.value.trim();
-    if(!val || !currentChatUser) return;
+    if (!val || !currentChatUser) return;
 
     const data = {
         sender: currentUser.username,
         receiver: currentChatUser,
         text: val,
-        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-
     socket.emit("sendMessage", data);
     input.value = "";
 }
 
 socket.on("receiveMessage", (msg) => {
-    if((msg.sender === currentChatUser && msg.receiver === currentUser.username) || 
-       (msg.sender === currentUser.username && msg.receiver === currentChatUser)) {
+    if (
+        (msg.sender === currentChatUser && msg.receiver === currentUser.username) ||
+        (msg.sender === currentUser.username && msg.receiver === currentChatUser)
+    ) {
         renderMessage(msg);
     }
 });
@@ -198,7 +212,7 @@ function renderMessage(msg) {
     const box = document.getElementById("messages");
     const isMine = msg.sender === currentUser.username;
     const div = document.createElement("div");
-    div.className = `message ${isMine ? 'mine' : ''}`;
+    div.className = `message ${isMine ? "mine" : ""}`;
     div.innerHTML = `<div>${msg.text}</div><div class="time">${msg.timestamp}</div>`;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
