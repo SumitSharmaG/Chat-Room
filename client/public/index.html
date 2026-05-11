@@ -338,20 +338,31 @@ function login(){
         return;
     }
 
+    // 1. SET USER FIRST
     currentUser = user;
 
+    // 2. UPDATE UI
     document.getElementById("auth").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
-
     document.getElementById("myUser").innerText = "@" + user.username;
 
+    // 3. CONNECT SOCKET FIRST (IMPORTANT)
     socket.emit("userJoined", user.username);
-}
 
+    // 4. FORCE SYNC ONLINE USERS (fixes empty list issue)
+    setTimeout(() => {
+        socket.emit("requestOnlineUsers"); // optional but helps sync
+    }, 300);
+}
 /* ONLINE USERS */
-socket.on("onlineUsers", (users)=>{
-    onlineUsers = users;
-    renderUsers();
+socket.on("onlineUsers", (users) => {
+
+    onlineUsers = users || [];
+
+    if (currentUser) {
+        renderUsers();
+    }
+
 });
 
 function renderUsers(){
@@ -418,7 +429,9 @@ socket.on("connectRequest", ({from})=>{
 socket.on("connectResponse", ({from, accepted})=>{
     alert(accepted ? "Connected with @" + from : "Rejected by @" + from);
 });
-
+socket.on("connect", () => {
+    console.log("Socket connected:", socket.id);
+});
 </script>
 
 </body>
