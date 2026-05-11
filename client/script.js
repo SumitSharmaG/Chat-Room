@@ -93,7 +93,7 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
 
     if (data.success) {
         localStorage.setItem("username", username);
-        window.location.href = "world-chat.html";
+        window.location.href = "selection.html";
     } else {
         alert("Login failed");
     }
