@@ -1,15 +1,15 @@
-const Message = require("../models/Message");
+const Message = require("../models/Message"); // Ensure this is correctly implemented if using DB
 
-// Global state
-const onlineUsers = new Map(); 
+// Manage multiple tabs per user
+const onlineUsers = new Map();
 
 module.exports = (io) => {
     io.on("connection", (socket) => {
         console.log("New Socket ID:", socket.id);
 
-        // --- USER ENTERS ---
+        // User joins
         socket.on("userJoined", (username) => {
-            if(!username) return;
+            if (!username) return;
             const name = username.toLowerCase();
             socket.username = name;
 
@@ -17,7 +17,6 @@ module.exports = (io) => {
                 onlineUsers.set(name, new Set());
             }
             onlineUsers.get(name).add(socket.id);
-
             console.log(`Active: ${name} (${onlineUsers.get(name).size} tabs)`);
             broadcastUsers(io);
         });
@@ -26,42 +25,40 @@ module.exports = (io) => {
             broadcastUsers(io);
         });
 
-        // --- PRIVATE CHAT ROUTING ---
+        // Send message
         socket.on("sendMessage", async (data) => {
             try {
-                // Save to DB (Optional but recommended for history)
-                const msg = await Message.create(data);
-                
+                const msg = await Message.create(data); // Save message if DB setup
                 const rec = data.receiver.toLowerCase();
                 const sen = data.sender.toLowerCase();
 
-                // Send to all tabs of the receiver
                 if (onlineUsers.has(rec)) {
                     onlineUsers.get(rec).forEach(id => io.to(id).emit("receiveMessage", msg));
                 }
-                // Send back to all tabs of the sender
                 if (onlineUsers.has(sen)) {
                     onlineUsers.get(sen).forEach(id => io.to(id).emit("receiveMessage", msg));
                 }
-            } catch (e) { console.log("Msg Error:", e); }
+            } catch (e) {
+                console.log("Msg Error:", e);
+            }
         });
 
-        // --- HANDSHAKE LOGIC ---
+        // Private chat handshake
         socket.on("connectRequest", ({ from, to }) => {
             const target = to.toLowerCase();
-            if(onlineUsers.has(target)) {
+            if (onlineUsers.has(target)) {
                 onlineUsers.get(target).forEach(id => io.to(id).emit("connectRequest", { from }));
             }
         });
 
         socket.on("connectResponse", ({ from, to, accepted }) => {
             const target = to.toLowerCase();
-            if(onlineUsers.has(target)) {
+            if (onlineUsers.has(target)) {
                 onlineUsers.get(target).forEach(id => io.to(id).emit("connectResponse", { from, accepted }));
             }
         });
 
-        // --- CLEANUP ---
+        // User disconnect
         socket.on("disconnect", () => {
             const name = socket.username;
             if (name && onlineUsers.has(name)) {
