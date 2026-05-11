@@ -1,99 +1,123 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
-const socket = io(BACKEND, { transports: ["websocket"] });
+const isChatPage = window.location.pathname.includes("chat.html");
+const socket = isChatPage ? io(BACKEND, { transports: ["websocket"] }) : null;
 const myUser = localStorage.getItem("username");
-let currentMode = "world"; // 'world' or 'private'
+
+let currentMode = "world";
 let activePrivateUser = null;
-let seenMap = {};
+let typingTimer;
 
-if (!myUser) window.location.href = "login.html";
+if (isChatPage && !myUser) window.location.href = "login.html";
 
-socket.on("connect", () => {
-    socket.emit("userJoined", myUser);
-});
+if (socket) {
+    socket.on("connect", () => {
+        if (myUser) socket.emit("userJoined", myUser);
+    });
 
-// --- UI Logic ---
-function switchMode(mode) {
-    currentMode = mode;
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('btn-' + mode).classList.add('active');
-    
-    const plusBtn = document.getElementById('new-chat-plus');
-    if (mode === 'private') {
-        plusBtn.style.display = 'flex';
-        document.getElementById('chat-title').innerText = activePrivateUser ? "Chat: @" + activePrivateUser : "Private Inbox";
-    } else {
-        plusBtn.style.display = 'none';
-        document.getElementById('chat-title').innerText = "World Chat";
-    }
-    document.getElementById("messages").innerHTML = ""; // Switch pe clear
-}
+    // 📸 OLD FEATURE: SCREENSHOT ALERT
+    window.addEventListener("keyup", (e) => {
+        if (e.key === "PrintScreen") {
+            socket.emit("sendMessage", {
+                username: "SYSTEM",
+                text: `📸 ALERT: ${myUser} took a screenshot!`,
+                receiver: "world",
+                time: new Date().toLocaleTimeString()
+            });
+        }
+    });
 
-function startNewPrivate() {
-    const user = prompt("Enter @username to message:");
-    if (user) {
-        activePrivateUser = user.replace("@", "").trim();
-        document.getElementById('chat-title').innerText = "Chat: @" + activePrivateUser;
+    // ⌨️ OLD FEATURE: TYPING
+    window.isTyping = () => {
+        socket.emit("typing", myUser);
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => socket.emit("stopTyping", myUser), 2000);
+    };
+
+    socket.on("userTyping", (user) => {
+        document.getElementById("typing-info").innerText = `${user} is typing...`;
+    });
+    socket.on("userStopTyping", () => {
+        document.getElementById("typing-info").innerText = "";
+    });
+
+    // 📩 RECEIVE LOGIC
+    socket.on("receiveMessage", (data) => {
+        if (currentMode === "world" && data.receiver === "world") {
+            appendMessage(data);
+        } else if (currentMode === "private") {
+            // Sirf is active user ke sath chat dikhao
+            if ((data.username === activePrivateUser && data.receiver === myUser) || 
+                (data.username === myUser && data.receiver === activePrivateUser)) {
+                appendMessage(data);
+            } else if (data.receiver === myUser) {
+                alert(`📩 New Private Message from @${data.username}`);
+            }
+        }
+    });
+
+    socket.on("updateUserCount", (count) => {
+        document.getElementById("online-count").innerText = count;
+    });
+
+    socket.on("chatCleared", () => {
         document.getElementById("messages").innerHTML = "";
-    }
+    });
 }
 
-// --- Send Logic ---
-window.handleSend = function () {
+// --- TAB SWITCHING ---
+window.switchMode = (mode) => {
+    currentMode = mode;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + mode).classList.add('active');
+    document.getElementById('add-private').style.display = (mode === 'private') ? 'flex' : 'none';
+    document.getElementById('view-title').innerText = (mode === 'world') ? 'World Chat' : 'Private Inbox';
+    document.getElementById('messages').innerHTML = "";
+    activePrivateUser = null;
+};
+
+window.startPrivate = () => {
+    const user = prompt("Enter @username to chat privately:");
+    if (user && user.trim() !== "") {
+        activePrivateUser = user.replace("@", "").trim();
+        document.getElementById('view-title').innerText = "Chatting with @" + activePrivateUser;
+        document.getElementById('messages').innerHTML = "";
+    }
+};
+
+window.handleSend = () => {
     const input = document.getElementById("msg");
     const text = input.value.trim();
-    if (!text) return;
+    if (!text || !socket) return;
 
-    const receiver = (currentMode === "world") ? "world" : activePrivateUser;
-    
     if (currentMode === "private" && !activePrivateUser) {
-        alert("Click + to start a private chat first!");
+        alert("Please use the + button to start a private chat first!");
         return;
     }
 
     socket.emit("sendMessage", {
         username: myUser,
-        text,
-        receiver: receiver,
+        text: text,
+        receiver: (currentMode === "world") ? "world" : activePrivateUser,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     });
     input.value = "";
+    socket.emit("stopTyping", myUser);
 };
-
-// --- Receive Logic ---
-socket.on("receiveMessage", (data) => {
-    if (currentMode === "world" && data.receiver === "world") {
-        appendMessage(data);
-    } else if (currentMode === "private") {
-        if ((data.username === activePrivateUser && data.receiver === myUser) || 
-            (data.username === myUser && data.receiver === activePrivateUser)) {
-            appendMessage(data);
-        } else if (data.receiver === myUser) {
-            alert("New Private Message from @" + data.username);
-        }
-    }
-});
 
 function appendMessage(data) {
     const ul = document.getElementById("messages");
     const li = document.createElement("li");
-    li.className = (data.username === myUser) ? "my-message" : "other-message";
+    li.className = `msg-container ${data.username === myUser ? 'my-msg' : 'other-msg'}`;
     
     li.innerHTML = `
-        <div style="font-size:0.7rem; color:gray;">${data.username}</div>
+        <div style="font-size: 0.7rem; color: var(--accent-gold); font-weight: 600; margin-bottom: 4px;">${data.username}</div>
         <div>${data.text}</div>
-        <div style="font-size:0.5rem; text-align:right;">${data.time}</div>
+        <div style="font-size: 0.6rem; color: #666; text-align: right; margin-top: 5px;">${data.time}</div>
     `;
     ul.appendChild(li);
     ul.scrollTop = ul.scrollHeight;
 }
 
-// Typing logic, Online Count, Logout... (Aapka purana code yahan add kar sakte hain)
-socket.on("updateUserCount", (count) => {
-    document.getElementById("online-count").innerText = count;
-});
-
-window.logout = function() {
-    localStorage.clear();
-    window.location.href = "login.html";
-};
-            
+window.logout = () => { localStorage.clear(); window.location.href = "login.html"; };
+window.clearChat = () => { if(confirm("Clear all?")) socket.emit("clearAllChat"); };
+                                
