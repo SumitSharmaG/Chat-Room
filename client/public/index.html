@@ -3,13 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Secure Private Chat</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
 <style>
-
 :root{
     --bg:#090909;
     --card:#141414;
@@ -217,7 +214,6 @@ body{
     cursor:pointer;
     font-size:18px;
 }
-
 </style>
 </head>
 
@@ -225,65 +221,49 @@ body{
 
 <!-- AUTH -->
 <div id="auth">
-
     <div class="auth-box">
-
         <h1>Secure Chat</h1>
-
         <input id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
-
         <button onclick="register()">Register</button>
         <button onclick="login()">Login</button>
-
     </div>
-
 </div>
 
 <!-- APP -->
 <div id="app" class="hidden">
-
     <div class="sidebar">
-
         <div class="sidebar-top">
             <h2>Private Chats</h2>
             <div id="myUser"></div>
         </div>
-
         <div class="search-box">
             <input id="searchUser" placeholder="Search username...">
         </div>
-
         <div id="usersList"></div>
-
     </div>
 
     <div class="chat-area">
-
         <div class="chat-header" id="chatHeader">
             Select a user
         </div>
-
         <div id="messages"></div>
-
         <div class="input-area">
-            <input id="messageInput" placeholder="Type a message...">
+            <input id="messageInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
             <button class="send-btn" onclick="sendMessage()">➤</button>
         </div>
-
     </div>
-
 </div>
 
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
 <script>
-
+// Make sure this points to your actual backend URL when hosting
 const socket = io("https://chat-backend-gtg5.onrender.com");
 
 let currentUser = null;
 let currentChatUser = null;
-let onlineUsers = {};
+let onlineUsers = [];
 
 /* INIT STORAGE SAFETY */
 if(!localStorage.getItem("global_users")){
@@ -292,15 +272,15 @@ if(!localStorage.getItem("global_users")){
 
 /* REGISTER */
 function register(){
+    const username = document.getElementById("username").value.trim().toLowerCase();
+    const password = document.getElementById("password").value.trim();
 
-    const username =
-    document.getElementById("username").value.trim().toLowerCase();
+    if(!username || !password) {
+        alert("Please enter both username and password.");
+        return;
+    }
 
-    const password =
-    document.getElementById("password").value.trim();
-
-    let users =
-    JSON.parse(localStorage.getItem("global_users") || "[]");
+    let users = JSON.parse(localStorage.getItem("global_users") || "[]");
 
     if(users.find(u=>u.username===username)){
         alert("Username already exists");
@@ -314,70 +294,56 @@ function register(){
     });
 
     localStorage.setItem("global_users", JSON.stringify(users));
-
-    alert("Registered!");
+    alert("Registered successfully! You can now login.");
 }
 
 /* LOGIN */
 function login(){
+    const username = document.getElementById("username").value.trim().toLowerCase();
+    const password = document.getElementById("password").value.trim();
+    const users = JSON.parse(localStorage.getItem("global_users") || "[]");
 
-    const username =
-    document.getElementById("username").value.trim().toLowerCase();
-
-    const password =
-    document.getElementById("password").value.trim();
-
-    const users =
-    JSON.parse(localStorage.getItem("global_users") || "[]");
-
-    const user =
-    users.find(u => u.username === username && u.password === password);
+    const user = users.find(u => u.username === username && u.password === password);
 
     if(!user){
         alert("Invalid credentials");
         return;
     }
 
-    // 1. SET USER FIRST
     currentUser = user;
-
-    // 2. UPDATE UI
     document.getElementById("auth").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
     document.getElementById("myUser").innerText = "@" + user.username;
 
-    // 3. CONNECT SOCKET FIRST (IMPORTANT)
     socket.emit("userJoined", user.username);
 
-    // 4. FORCE SYNC ONLINE USERS (fixes empty list issue)
     setTimeout(() => {
-        socket.emit("requestOnlineUsers"); // optional but helps sync
+        socket.emit("requestOnlineUsers"); 
     }, 300);
 }
+
 /* ONLINE USERS */
 socket.on("onlineUsers", (users) => {
-
     onlineUsers = users || [];
-
-    if (currentUser) {
-        renderUsers();
-    }
-
+    if (currentUser) renderUsers();
 });
 
 function renderUsers(){
-
     const box = document.getElementById("usersList");
     box.innerHTML = "";
 
     if(!currentUser) return;
 
     onlineUsers.forEach(username => {
-
         if(username === currentUser.username) return;
 
         const div = document.createElement("div");
         div.className = "user";
+        
+        // Highlight the user we are currently chatting with
+        if(currentChatUser === username) {
+            div.classList.add("active");
+        }
 
         div.innerHTML = `
             <div>🟢 @${username}</div>
@@ -396,39 +362,100 @@ function renderUsers(){
         `;
 
         div.querySelector("button").onclick = () => {
-
             socket.emit("connectRequest", {
                 from: currentUser.username,
                 to: username
             });
-
             alert("Request sent to @" + username);
-
         };
 
         box.appendChild(div);
-
     });
-
 }
 
-/* CONNECT REQUEST */
+/* CONNECT REQUEST (When someone wants to chat with YOU) */
 socket.on("connectRequest", ({from})=>{
-
     const accept = confirm(`Connect with @${from}?`);
+    
+    if (accept) {
+        currentChatUser = from;
+        document.getElementById("chatHeader").innerText = "Chatting with @" + from;
+        document.getElementById("messages").innerHTML = ""; // Clear old chat
+        renderUsers(); // Update active state in sidebar
+    }
 
     socket.emit("connectResponse", {
         from: currentUser.username,
         to: from,
         accepted: accept
     });
-
 });
 
-/* RESPONSE */
+/* CONNECT RESPONSE (When someone responds to YOUR request) */
 socket.on("connectResponse", ({from, accepted})=>{
-    alert(accepted ? "Connected with @" + from : "Rejected by @" + from);
+    if (accepted) {
+        currentChatUser = from;
+        document.getElementById("chatHeader").innerText = "Chatting with @" + from;
+        document.getElementById("messages").innerHTML = ""; // Clear old chat
+        renderUsers(); // Update active state in sidebar
+        alert("Connected with @" + from);
+    } else {
+        alert("Rejected by @" + from);
+    }
 });
+
+/* SEND MESSAGE */
+function sendMessage() {
+    const input = document.getElementById("messageInput");
+    const text = input.value.trim();
+
+    if (!text) return;
+    if (!currentChatUser) {
+        alert("Please connect with a user first!");
+        return;
+    }
+
+    const messageData = {
+        sender: currentUser.username,
+        receiver: currentChatUser,
+        text: text,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    socket.emit("sendMessage", messageData);
+    input.value = "";
+}
+
+/* ALLOW ENTER KEY TO SEND */
+function handleKeyPress(event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+}
+
+/* RECEIVE MESSAGE */
+socket.on("receiveMessage", (msg) => {
+    // Only render the message if it belongs to the active conversation
+    if (
+        (msg.sender === currentChatUser && msg.receiver === currentUser.username) ||
+        (msg.sender === currentUser.username && msg.receiver === currentChatUser)
+    ) {
+        const box = document.getElementById("messages");
+        const div = document.createElement("div");
+        
+        const isMine = msg.sender === currentUser.username;
+        div.className = `message ${isMine ? 'mine' : ''}`;
+        
+        div.innerHTML = `
+            <div class="text">${msg.text}</div>
+            <div class="time">${msg.timestamp || 'Just now'}</div>
+        `;
+        
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight; // Auto-scroll to bottom
+    }
+});
+
 socket.on("connect", () => {
     console.log("Socket connected:", socket.id);
 });
