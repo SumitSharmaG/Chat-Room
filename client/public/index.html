@@ -74,23 +74,14 @@ body { background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
             <h2>Private Chats <span id="conn-status"></span></h2>
             <div id="myUser"></div>
         </div>
-
         <!-- Manual Connect Section -->
         <div id="connectSection">
             <input type="text" id="connectInput" placeholder="Enter username..." />
             <button id="connectButton" onclick="connectToUser()">Connect</button>
             <div id="connectStatus"></div>
         </div>
-
-        <!-- Optional: To give user feedback -->
-        <div style="padding:10px; font-size:0.85rem; color:#ccc;">Enter username above and click Connect.</div>
-
-        <!-- User List (Optional, can be hidden if only manual connect) -->
-        <!--
-        <div id="usersList"></div>
-        -->
+        <!-- Optional: User list (not used here) -->
     </div>
-
     <!-- Chat Area -->
     <div class="chat-area">
         <div class="chat-header" id="chatHeader">Select a contact to start</div>
@@ -102,7 +93,7 @@ body { background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
     </div>
 </div>
 
-<!-- Socket.io Library -->
+<!-- Socket.io -->
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 <script>
 const socket = io("https://chat-backend-gtg5.onrender.com", {
@@ -113,7 +104,7 @@ const socket = io("https://chat-backend-gtg5.onrender.com", {
 let currentUser = null;
 let currentChatUser = null;
 
-// --- Connection Handlers ---
+// Connection status indicator
 socket.on("connect", () => {
     document.getElementById("conn-status").classList.add("online");
 });
@@ -121,7 +112,7 @@ socket.on("disconnect", () => {
     document.getElementById("conn-status").classList.remove("online");
 });
 
-// --- Authentication ---
+// Register new user
 function register() {
     const u = document.getElementById("username").value.trim().toLowerCase();
     const p = document.getElementById("password").value.trim();
@@ -132,6 +123,7 @@ function register() {
     localStorage.setItem("global_users", JSON.stringify(users));
     alert("Registered! Now Login.");
 }
+// Login user
 function login() {
     const u = document.getElementById("username").value.trim().toLowerCase();
     const p = document.getElementById("password").value.trim();
@@ -142,25 +134,24 @@ function login() {
     document.getElementById("auth").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
     document.getElementById("myUser").innerText = "@" + u;
-
+    // Notify server of user joining
     socket.emit("userJoined", u);
-    // Optionally, request current online user list if needed
 }
 
-// --- Manual Connect Logic ---
+// Manual connect to user
 function connectToUser() {
     const username = document.getElementById("connectInput").value.trim().toLowerCase();
     if (!username) {
         alert("Please enter a username");
         return;
     }
-    // Save for use after response
+    // Save target
     window.targetUser = username;
     document.getElementById("connectStatus").innerText = "Checking user...";
     socket.emit("checkUserOnline", username);
 }
 
-// Listen for server response
+// Handle server response for user online
 socket.on("userOnlineStatus", (data) => {
     document.getElementById("connectStatus").innerText = "";
     if (data.online) {
@@ -170,25 +161,18 @@ socket.on("userOnlineStatus", (data) => {
     }
 });
 
-// --- User List and Chat ---
-socket.on("onlineUsers", (list) => {
-    // Optional: You can implement a list or omit if only manual connect
-});
-
-// Start Chat
+// Start chat
 function startChat(username) {
     currentChatUser = username;
     document.getElementById("chatHeader").innerText = "Chatting with @" + username;
     document.getElementById("messages").innerHTML = "";
-    // Optionally, refresh user list or status
 }
 
-// --- Messaging ---
+// Send message
 function sendMessage() {
     const input = document.getElementById("messageInput");
     const val = input.value.trim();
-    if (!val || !currentChatUser) return;
-
+    if (!val || !currentChatUser || !currentUser) return;
     const data = {
         sender: currentUser.username,
         receiver: currentChatUser,
@@ -199,6 +183,7 @@ function sendMessage() {
     input.value = "";
 }
 
+// Receive message
 socket.on("receiveMessage", (msg) => {
     if (
         (msg.sender === currentChatUser && msg.receiver === currentUser.username) ||
@@ -208,6 +193,7 @@ socket.on("receiveMessage", (msg) => {
     }
 });
 
+// Render message
 function renderMessage(msg) {
     const box = document.getElementById("messages");
     const isMine = msg.sender === currentUser.username;
