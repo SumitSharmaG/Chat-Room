@@ -1,7 +1,7 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 
 // ✅ Only connect socket on chat page
-const isChatPage = window.location.pathname.includes("chat.html");
+const isChatPage = window.location.pathname.includes("world-chat.html");
 const socket = isChatPage ? io(BACKEND, { transports: ["websocket"] }) : null;
 
 // 🔥 CONNECT (only if socket exists)
@@ -93,7 +93,7 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
 
     if (data.success) {
         localStorage.setItem("username", username);
-        window.location.href = "chat.html";
+        window.location.href = "world-chat.html";
     } else {
         alert("Login failed");
     }
@@ -282,7 +282,7 @@ window.clearChat = function () {
 
 window.logout = function () {
     localStorage.clear();
-    window.location.href = "selection.html";
+    window.location.href = "login.html";
 };
 
 document.getElementById("msg")?.addEventListener("keydown", (e) => {
