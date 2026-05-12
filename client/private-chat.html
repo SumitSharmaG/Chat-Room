@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +30,7 @@
             height:100vh;
         }
 
-        /* LEFT SIDEBAR */
+        /* SIDEBAR */
 
         .sidebar{
             width:35%;
@@ -52,6 +53,24 @@
             font-size:28px;
         }
 
+        .header-right{
+            display:flex;
+            gap:10px;
+            align-items:center;
+        }
+
+        #addBtn{
+            width:35px;
+            height:35px;
+            border:none;
+            border-radius:50%;
+            background:#d4af6a;
+            color:black;
+            font-size:22px;
+            cursor:pointer;
+            font-weight:bold;
+        }
+
         .online-dot{
             width:12px;
             height:12px;
@@ -60,8 +79,40 @@
             box-shadow:0 0 10px #3cff9b;
         }
 
+        /* SEARCH BOX */
+
+        #searchBox{
+            display:none;
+            padding:10px;
+            border-bottom:1px solid #222;
+        }
+
+        #usernameInput{
+            width:100%;
+            padding:12px;
+            border:none;
+            outline:none;
+            border-radius:10px;
+            background:#1c1c1c;
+            color:white;
+        }
+
+        #startBtn{
+            width:100%;
+            margin-top:10px;
+            padding:10px;
+            border:none;
+            border-radius:10px;
+            background:#d4af6a;
+            font-weight:bold;
+            cursor:pointer;
+        }
+
+        /* USER LIST */
+
         .user-list{
             padding:15px;
+            overflow-y:auto;
         }
 
         .user{
@@ -77,7 +128,7 @@
             background:#242424;
         }
 
-        /* RIGHT CHAT AREA */
+        /* CHAT AREA */
 
         .chat-area{
             width:65%;
@@ -115,6 +166,8 @@
             color:black;
         }
 
+        /* SEND BOX */
+
         .send-box{
             display:flex;
             gap:10px;
@@ -123,7 +176,7 @@
             background:#111;
         }
 
-        .send-box input{
+        #messageInput{
             flex:1;
             padding:14px;
             border:none;
@@ -151,36 +204,59 @@
 
     <div class="container">
 
-        <!-- LEFT -->
+        <!-- LEFT SIDEBAR -->
 
         <div class="sidebar">
 
             <div class="sidebar-header">
+
                 <h2>Private Chats</h2>
-                <div class="online-dot"></div>
-            </div>
 
-            <div class="user-list">
+                <div class="header-right">
 
-                <div
-                    class="user"
-                    onclick="selectUser('@xyz')"
-                >
-                    @xyz
-                </div>
+                    <button
+                        onclick="openSearchBox()"
+                        id="addBtn"
+                    >
+                        +
+                    </button>
 
-                <div
-                    class="user"
-                    onclick="selectUser('@rahul')"
-                >
-                    @rahul
+                    <div class="online-dot"></div>
+
                 </div>
 
             </div>
+
+
+            <!-- SEARCH USER -->
+
+            <div id="searchBox">
+
+                <input
+                    type="text"
+                    id="usernameInput"
+                    placeholder="@username"
+                >
+
+                <button
+                    id="startBtn"
+                    onclick="addUser()"
+                >
+                    Start Chat
+                </button>
+
+            </div>
+
+
+            <!-- USER LIST -->
+
+            <div class="user-list" id="userList"></div>
 
         </div>
 
-        <!-- RIGHT -->
+
+
+        <!-- RIGHT CHAT AREA -->
 
         <div class="chat-area">
 
@@ -189,6 +265,9 @@
             </div>
 
             <div id="messages"></div>
+
+
+            <!-- SEND MESSAGE -->
 
             <div class="send-box">
 
@@ -209,6 +288,7 @@
     </div>
 
 
+
     <!-- SOCKET -->
 
     <script src="/socket.io/socket.io.js"></script>
@@ -221,6 +301,149 @@
             localStorage.getItem("username") || "@guest";
 
         let selectedUser = "";
+
+
+
+        // OPEN SEARCH BOX
+
+        function openSearchBox(){
+
+            const box =
+                document.getElementById("searchBox");
+
+            if(box.style.display === "none"){
+
+                box.style.display = "block";
+
+            }else{
+
+                box.style.display = "none";
+            }
+        }
+
+
+
+        // ADD USER TO SIDEBAR
+
+        function addUser(){
+
+            const username =
+                document.getElementById(
+                    "usernameInput"
+                ).value.trim();
+
+            if(!username) return;
+
+
+            const userList =
+                document.getElementById("userList");
+
+
+            // CHECK DUPLICATE
+
+            const alreadyExists =
+                document.getElementById(username);
+
+            if(alreadyExists){
+
+                selectUser(username);
+
+                return;
+            }
+
+
+            // CREATE USER DIV
+
+            const div =
+                document.createElement("div");
+
+            div.classList.add("user");
+
+            div.id = username;
+
+            div.innerText = username;
+
+
+            div.onclick = () => {
+
+                selectUser(username);
+
+            };
+
+
+            userList.appendChild(div);
+
+
+            // SAVE USER LIST
+
+            let users =
+                JSON.parse(
+                    localStorage.getItem("chatUsers")
+                ) || [];
+
+            users.push(username);
+
+            localStorage.setItem(
+                "chatUsers",
+                JSON.stringify(users)
+            );
+
+
+            // AUTO OPEN CHAT
+
+            selectUser(username);
+
+
+            // CLEAR INPUT
+
+            document.getElementById(
+                "usernameInput"
+            ).value = "";
+
+
+            // CLOSE SEARCH BOX
+
+            document.getElementById(
+                "searchBox"
+            ).style.display = "none";
+
+        }
+
+
+
+        // LOAD USER LIST AFTER REFRESH
+
+        window.addEventListener("load", () => {
+
+            const users =
+                JSON.parse(
+                    localStorage.getItem("chatUsers")
+                ) || [];
+
+            users.forEach((username) => {
+
+                const div =
+                    document.createElement("div");
+
+                div.classList.add("user");
+
+                div.id = username;
+
+                div.innerText = username;
+
+                div.onclick = () => {
+
+                    selectUser(username);
+
+                };
+
+                document
+                    .getElementById("userList")
+                    .appendChild(div);
+
+            });
+
+        });
 
 
 
@@ -240,7 +463,7 @@
 
 
 
-        // LOAD OLD CHATS
+        // LOAD OLD MESSAGES
 
         function loadMessages(){
 
@@ -278,6 +501,7 @@
                     div.classList.add("message");
 
                     if(chat.sender === currentUser){
+
                         div.classList.add("my-message");
                     }
 
@@ -302,7 +526,8 @@
             const input =
                 document.getElementById("messageInput");
 
-            const text = input.value.trim();
+            const text =
+                input.value.trim();
 
             if(!text) return;
 
@@ -315,7 +540,7 @@
             };
 
 
-            // SEND SOCKET
+            // SOCKET SEND
 
             socket.emit(
                 "private_message",
@@ -368,6 +593,7 @@
                     );
 
                     loadMessages();
+
                 }
 
             }
