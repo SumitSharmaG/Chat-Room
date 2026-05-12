@@ -323,7 +323,7 @@
 
 
         const currentUser =
-            localStorage.getItem("username") || "@guest";
+            localStorage.getItem("username") || "guest";
 
         let selectedUser = "";
 
@@ -416,7 +416,7 @@
 
             div.classList.add("inbox");
 
-            div.innerText = username;
+            div.innerText = "@" + username;
 
             div.onclick = () => {
                 openChat(username);
@@ -456,7 +456,7 @@
             document.getElementById(
                 "chatTitle"
             ).innerText =
-                "Chat with " + username;
+                "Chat with @" + username;
 
             loadMessages();
 
@@ -558,11 +558,13 @@
 
             const data = {
 
-                sender: currentUser,
-                receiver: selectedUser,
-                text: text
+    sender: currentUser.replace("@",""),
 
-            };
+    receiver: selectedUser.replace("@",""),
+
+    text: text
+
+};
 
 
             // SOCKET SEND
