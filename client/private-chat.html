@@ -2,8 +2,8 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
     <title>Private Chat</title>
 
@@ -13,7 +13,7 @@
             margin:0;
             padding:0;
             box-sizing:border-box;
-            font-family:Arial, sans-serif;
+            font-family:Arial,sans-serif;
         }
 
         body{
@@ -74,12 +74,12 @@
         .online-dot{
             width:12px;
             height:12px;
-            background:#3cff9b;
             border-radius:50%;
+            background:#3cff9b;
             box-shadow:0 0 10px #3cff9b;
         }
 
-        /* SEARCH BOX */
+        /* SEARCH */
 
         #searchBox{
             display:none;
@@ -213,7 +213,7 @@
             font-weight:bold;
         }
 
-        /* MOBILE VIEW */
+        /* MOBILE */
 
         @media(max-width:768px){
 
@@ -228,12 +228,9 @@
             }
 
             .chat-area{
-                display:none;
+                width:100%;
                 height:100vh;
-            }
-
-            .chat-area.active{
-                display:flex;
+                display:none;
             }
 
             #backBtn{
@@ -254,7 +251,10 @@
 
         <!-- SIDEBAR -->
 
-        <div class="sidebar">
+        <div
+            class="sidebar"
+            id="sidebar"
+        >
 
             <div class="sidebar-header">
 
@@ -263,8 +263,8 @@
                 <div class="header-right">
 
                     <button
-                        onclick="openSearchBox()"
                         id="addBtn"
+                        onclick="openSearchBox()"
                     >
                         +
                     </button>
@@ -276,7 +276,7 @@
             </div>
 
 
-            <!-- SEARCH BOX -->
+            <!-- SEARCH -->
 
             <div id="searchBox">
 
@@ -309,7 +309,10 @@
 
         <!-- CHAT AREA -->
 
-        <div class="chat-area">
+        <div
+            class="chat-area"
+            id="chatArea"
+        >
 
             <div class="chat-header">
 
@@ -332,7 +335,7 @@
             <div id="messages"></div>
 
 
-            <!-- SEND BOX -->
+            <!-- SEND -->
 
             <div class="send-box">
 
@@ -362,12 +365,35 @@
 
     <script>
 
-        const socket = io();
+        const BACKEND =
+            "https://chat-backend-gtg5.onrender.com";
+
+        const socket =
+            io(BACKEND,{
+                transports:["websocket"]
+            });
 
         const currentUser =
             localStorage.getItem("username") || "@guest";
 
         let selectedUser = "";
+
+
+
+        // MOBILE INIT
+
+        window.addEventListener("load",()=>{
+
+            if(window.innerWidth <= 768){
+
+                document.getElementById(
+                    "chatArea"
+                ).style.display = "none";
+            }
+
+            loadUsers();
+
+        });
 
 
 
@@ -378,14 +404,10 @@
             const box =
                 document.getElementById("searchBox");
 
-            if(box.style.display === "block"){
-
-                box.style.display = "none";
-
-            }else{
-
-                box.style.display = "block";
-            }
+            box.style.display =
+                box.style.display === "block"
+                ? "none"
+                : "block";
         }
 
 
@@ -401,27 +423,50 @@
 
             if(!username) return;
 
+            createInbox(username);
+
+            selectUser(username);
+
+            document.getElementById(
+                "usernameInput"
+            ).value = "";
+
+            document.getElementById(
+                "searchBox"
+            ).style.display = "none";
+        }
+
+
+
+        // CREATE INBOX
+
+        function createInbox(username){
+
+            let users =
+                JSON.parse(
+                    localStorage.getItem("chatUsers")
+                ) || [];
+
+            if(users.includes(username)) return;
+
+            users.push(username);
+
+            localStorage.setItem(
+                "chatUsers",
+                JSON.stringify(users)
+            );
+
+            addUserToUI(username);
+        }
+
+
+
+        // USER UI
+
+        function addUserToUI(username){
 
             const userList =
                 document.getElementById("userList");
-
-
-            // DUPLICATE CHECK
-
-            const alreadyExists =
-                document.getElementById(
-                    "user-" + username
-                );
-
-            if(alreadyExists){
-
-                selectUser(username);
-
-                return;
-            }
-
-
-            // CREATE USER
 
             const div =
                 document.createElement("div");
@@ -431,8 +476,8 @@
             div.id =
                 "user-" + username;
 
-            div.innerText = username;
-
+            div.innerText =
+                username;
 
             div.onclick = () => {
 
@@ -440,81 +485,31 @@
 
             };
 
-
             userList.appendChild(div);
-
-
-            // SAVE USER LIST
-
-            let users =
-                JSON.parse(
-                    localStorage.getItem("chatUsers")
-                ) || [];
-
-            users.push(username);
-
-            localStorage.setItem(
-                "chatUsers",
-                JSON.stringify(users)
-            );
-
-
-            // AUTO OPEN CHAT
-
-            selectUser(username);
-
-
-            // CLEAR INPUT
-
-            document.getElementById(
-                "usernameInput"
-            ).value = "";
-
-
-            // CLOSE SEARCH
-
-            document.getElementById(
-                "searchBox"
-            ).style.display = "none";
-
         }
 
 
 
-        // LOAD USERS AFTER REFRESH
+        // LOAD USERS
 
-        window.addEventListener("load", () => {
+        function loadUsers(){
 
             const users =
                 JSON.parse(
                     localStorage.getItem("chatUsers")
                 ) || [];
 
-            users.forEach((username) => {
+            document.getElementById(
+                "userList"
+            ).innerHTML = "";
 
-                const div =
-                    document.createElement("div");
+            users.forEach((user)=>{
 
-                div.classList.add("user");
-
-                div.id =
-                    "user-" + username;
-
-                div.innerText = username;
-
-                div.onclick = () => {
-
-                    selectUser(username);
-
-                };
-
-                document
-                    .getElementById("userList")
-                    .appendChild(div);
+                addUserToUI(user);
 
             });
 
-        });
+        }
 
 
 
@@ -531,36 +526,33 @@
 
             loadMessages();
 
-
-            // MOBILE VIEW
-
             if(window.innerWidth <= 768){
 
-                document.querySelector(
-                    ".sidebar"
+                document.getElementById(
+                    "sidebar"
                 ).style.display = "none";
 
-                document.querySelector(
-                    ".chat-area"
-                ).classList.add("active");
+                document.getElementById(
+                    "chatArea"
+                ).style.display = "flex";
             }
         }
 
 
 
-        // BACK BUTTON
+        // BACK
 
         function goBack(){
 
             if(window.innerWidth <= 768){
 
-                document.querySelector(
-                    ".sidebar"
+                document.getElementById(
+                    "sidebar"
                 ).style.display = "flex";
 
-                document.querySelector(
-                    ".chat-area"
-                ).classList.remove("active");
+                document.getElementById(
+                    "chatArea"
+                ).style.display = "none";
             }
         }
 
@@ -575,27 +567,29 @@
 
             messagesDiv.innerHTML = "";
 
-
             const chats =
                 JSON.parse(
                     localStorage.getItem("privateChats")
                 ) || [];
 
-
-            chats.forEach((chat) => {
+            chats.forEach((chat)=>{
 
                 if(
 
                     (
-                        chat.sender === currentUser &&
+                        chat.sender === currentUser
+                        &&
                         chat.receiver === selectedUser
                     )
 
                     ||
 
                     (
-                        chat.sender === selectedUser &&
+
+                        chat.sender === selectedUser
+                        &&
                         chat.receiver === currentUser
+
                     )
 
                 ){
@@ -618,7 +612,6 @@
 
             });
 
-
             messagesDiv.scrollTop =
                 messagesDiv.scrollHeight;
         }
@@ -631,15 +624,15 @@
 
             if(!selectedUser) return;
 
-
             const input =
-                document.getElementById("messageInput");
+                document.getElementById(
+                    "messageInput"
+                );
 
             const text =
                 input.value.trim();
 
             if(!text) return;
-
 
             const data = {
 
@@ -660,18 +653,17 @@
 
             // SAVE LOCAL
 
-            const oldChats =
+            const chats =
                 JSON.parse(
                     localStorage.getItem("privateChats")
                 ) || [];
 
-            oldChats.push(data);
+            chats.push(data);
 
             localStorage.setItem(
                 "privateChats",
-                JSON.stringify(oldChats)
+                JSON.stringify(chats)
             );
-
 
             input.value = "";
 
@@ -684,27 +676,56 @@
 
         socket.on(
             "receive_private_message",
-            (data) => {
+            (data)=>{
 
                 if(
-    data.receiver === currentUser
-    ||
-    data.sender === currentUser
-)
 
-                    const oldChats =
+                    data.receiver === currentUser
+                    ||
+                    data.sender === currentUser
+
+                ){
+
+                    // SAVE CHAT
+
+                    const chats =
                         JSON.parse(
                             localStorage.getItem("privateChats")
                         ) || [];
 
-                    oldChats.push(data);
+                    chats.push(data);
 
                     localStorage.setItem(
                         "privateChats",
-                        JSON.stringify(oldChats)
+                        JSON.stringify(chats)
                     );
 
-                    loadMessages();
+
+                    // AUTO INBOX
+
+                    const otherUser =
+
+                        data.sender === currentUser
+
+                        ?
+
+                        data.receiver
+
+                        :
+
+                        data.sender;
+
+
+                    createInbox(otherUser);
+
+
+                    // REFRESH CHAT
+
+                    if(selectedUser === otherUser){
+
+                        loadMessages();
+                    }
+
                 }
 
             }
