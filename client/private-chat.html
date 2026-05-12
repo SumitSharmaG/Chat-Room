@@ -687,8 +687,10 @@
             (data) => {
 
                 if(
-                    data.receiver === currentUser
-                ){
+    data.receiver === currentUser
+    ||
+    data.sender === currentUser
+)
 
                     const oldChats =
                         JSON.parse(
