@@ -114,10 +114,45 @@
         let typingTimeout;
 
         // Security logic
-        document.addEventListener('touchstart', e => {
-            if(e.touches.length >= 3) alert("Security: Multi-finger gesture detected!");
-        });
+        
+let gestureTimer = null;
+let lastAlertTime = 0;
 
+function sendScreenshotAlert(reason = "captured screen") {
+    const now = Date.now();
+    if (now - lastAlertTime < 2000) return;
+
+    lastAlertTime = now;
+
+    const username = localStorage.getItem("username") || "User";
+
+    socket?.emit("sendMessage", {
+        username: "SYSTEM",
+        text: `📸 ${username} ${reason}`,
+        isAlert: true,
+        time: getCurrentTime()
+    });
+}
+
+// 📱 Mobile
+document.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 3) {
+        gestureTimer = setTimeout(() => sendScreenshotAlert(), 800);
+    }
+});
+
+document.addEventListener("touchend", () => {
+    if (gestureTimer) clearTimeout(gestureTimer);
+});
+
+// 💻 PC
+window.addEventListener("keyup", (e) => {
+    if (e.key === "PrintScreen" || e.key === "PrtSc") {
+        sendScreenshotAlert();
+    }
+});
+
+        
         socket.on("connect", () => {
             socket.emit("userJoined", currentUser);
             loadInbox();
