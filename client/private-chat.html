@@ -11,190 +11,242 @@
 
     <style>
 
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family:Arial;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
 
-        body{
-            background:#0f0f0f;
-            color:white;
-            height:100vh;
-            overflow:hidden;
+        body {
+            background: #0d0d0d;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .container{
-            display:flex;
-            height:100vh;
+        .container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
         }
 
         /* SIDEBAR */
 
-        .sidebar{
-            width:35%;
-            background:#111;
-            border-right:1px solid #222;
-            display:flex;
-            flex-direction:column;
+        .sidebar {
+            width: 320px;
+            min-width: 280px;
+            background: #121212;
+            border-right: 1px solid #232323;
+            display: flex;
+            flex-direction: column;
         }
 
-        .sidebar-header{
-            padding:20px;
-            border-bottom:1px solid #222;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
+        .sidebar-header {
+            padding: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #232323;
         }
 
-        .sidebar-header h2{
-            color:#d4af6a;
-            font-size:28px;
+        .sidebar-header h2 {
+            color: #d4af6a;
+            font-size: 24px;
         }
 
-        .header-right{
-            display:flex;
-            gap:10px;
-            align-items:center;
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        #addBtn{
-            width:35px;
-            height:35px;
-            border:none;
-            border-radius:50%;
-            background:#d4af6a;
-            color:black;
-            font-size:22px;
-            cursor:pointer;
-            font-weight:bold;
+        #addBtn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 50%;
+            background: #d4af6a;
+            color: black;
+            font-size: 24px;
+            cursor: pointer;
+            font-weight: bold;
         }
 
-        .online-dot{
-            width:12px;
-            height:12px;
-            border-radius:50%;
-            background:#3cff9b;
-            box-shadow:0 0 10px #3cff9b;
+        .online-dot {
+            width: 12px;
+            height: 12px;
+            background: #3cff9b;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #3cff9b;
         }
 
         /* SEARCH BOX */
 
-        #searchBox{
-            display:none;
-            padding:10px;
-            border-bottom:1px solid #222;
+        #searchBox {
+            display: none;
+            padding: 12px;
+            border-bottom: 1px solid #232323;
         }
 
-        #usernameInput{
-            width:100%;
-            padding:12px;
-            border:none;
-            outline:none;
-            border-radius:10px;
-            background:#1c1c1c;
-            color:white;
+        #usernameInput {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            outline: none;
+            border-radius: 12px;
+            background: #1d1d1d;
+            color: white;
+            font-size: 15px;
         }
 
-        #startBtn{
-            width:100%;
-            margin-top:10px;
-            padding:10px;
-            border:none;
-            border-radius:10px;
-            background:#d4af6a;
-            font-weight:bold;
-            cursor:pointer;
+        #startBtn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: #d4af6a;
+            font-weight: bold;
+            cursor: pointer;
         }
 
         /* USER LIST */
 
-        .user-list{
-            padding:15px;
-            overflow-y:auto;
+        .user-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
         }
 
-        .user{
-            background:#1a1a1a;
-            padding:14px;
-            border-radius:10px;
-            margin-bottom:10px;
-            cursor:pointer;
-            transition:0.3s;
+        .user {
+            background: #1b1b1b;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid transparent;
         }
 
-        .user:hover{
-            background:#242424;
+        .user:hover {
+            background: #242424;
+            border-color: #d4af6a;
         }
 
         /* CHAT AREA */
 
-        .chat-area{
-            width:65%;
-            display:flex;
-            flex-direction:column;
-            justify-content:space-between;
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0f0f0f;
         }
 
-        .chat-header{
-            padding:20px;
-            border-bottom:1px solid #222;
-            color:#d4af6a;
-            font-weight:bold;
-            background:#121212;
+        .chat-header {
+            padding: 18px;
+            border-bottom: 1px solid #232323;
+            background: #151515;
+            color: #d4af6a;
+            font-weight: bold;
+            font-size: 18px;
         }
 
-        #messages{
-            flex:1;
-            overflow-y:auto;
-            padding:20px;
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .message{
-            background:#1c1c1c;
-            padding:10px 14px;
-            border-radius:10px;
-            margin-bottom:10px;
-            width:fit-content;
-            max-width:80%;
+        .message {
+            background: #1f1f1f;
+            padding: 12px 15px;
+            border-radius: 14px;
+            max-width: 80%;
+            word-wrap: break-word;
+            line-height: 1.4;
         }
 
-        .my-message{
-            margin-left:auto;
-            background:#d4af6a;
-            color:black;
+        .my-message {
+            align-self: flex-end;
+            background: #d4af6a;
+            color: black;
         }
 
         /* SEND BOX */
 
-        .send-box{
-            display:flex;
-            gap:10px;
-            padding:15px;
-            border-top:1px solid #222;
-            background:#111;
+        .send-box {
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #232323;
+            background: #111;
         }
 
-        #messageInput{
-            flex:1;
-            padding:14px;
-            border:none;
-            outline:none;
-            border-radius:12px;
-            background:#1c1c1c;
-            color:white;
-            font-size:16px;
+        #messageInput {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            outline: none;
+            border-radius: 14px;
+            background: #1d1d1d;
+            color: white;
+            font-size: 15px;
         }
 
-        .send-box button{
-            width:60px;
-            border:none;
-            border-radius:12px;
-            background:#d4af6a;
-            cursor:pointer;
-            font-size:20px;
-            font-weight:bold;
+        .send-box button {
+            width: 58px;
+            border: none;
+            border-radius: 14px;
+            background: #d4af6a;
+            font-size: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* MOBILE VIEW */
+
+        @media(max-width: 768px) {
+
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                min-width: 100%;
+                height: 40vh;
+                border-right: none;
+                border-bottom: 1px solid #232323;
+            }
+
+            .chat-area {
+                height: 60vh;
+            }
+
+            .sidebar-header h2 {
+                font-size: 22px;
+            }
+
+            .chat-header {
+                font-size: 16px;
+            }
+
+            .message {
+                max-width: 90%;
+                font-size: 14px;
+            }
+
+            #messageInput {
+                font-size: 14px;
+            }
+
+            .send-box button {
+                width: 52px;
+            }
         }
 
     </style>
@@ -204,7 +256,7 @@
 
     <div class="container">
 
-        <!-- LEFT SIDEBAR -->
+        <!-- SIDEBAR -->
 
         <div class="sidebar">
 
@@ -214,10 +266,7 @@
 
                 <div class="header-right">
 
-                    <button
-                        onclick="openSearchBox()"
-                        id="addBtn"
-                    >
+                    <button onclick="openSearchBox()" id="addBtn">
                         +
                     </button>
 
@@ -226,7 +275,6 @@
                 </div>
 
             </div>
-
 
             <!-- SEARCH USER -->
 
@@ -238,15 +286,11 @@
                     placeholder="@username"
                 >
 
-                <button
-                    id="startBtn"
-                    onclick="addUser()"
-                >
+                <button id="startBtn" onclick="addUser()">
                     Start Chat
                 </button>
 
             </div>
-
 
             <!-- USER LIST -->
 
@@ -255,17 +299,15 @@
         </div>
 
 
-
-        <!-- RIGHT CHAT AREA -->
+        <!-- CHAT AREA -->
 
         <div class="chat-area">
 
             <div class="chat-header" id="chatWith">
-                Select a contact to start
+                Select a contact to start chatting
             </div>
 
             <div id="messages"></div>
-
 
             <!-- SEND MESSAGE -->
 
@@ -288,7 +330,6 @@
     </div>
 
 
-
     <!-- SOCKET -->
 
     <script src="/socket.io/socket.io.js"></script>
@@ -303,73 +344,51 @@
         let selectedUser = "";
 
 
-
         // OPEN SEARCH BOX
 
-        function openSearchBox(){
+        function openSearchBox() {
 
-            const box =
-                document.getElementById("searchBox");
+            const box = document.getElementById("searchBox");
 
-            if(box.style.display === "none"){
-
-                box.style.display = "block";
-
-            }else{
-
-                box.style.display = "none";
-            }
+            box.style.display =
+                box.style.display === "block"
+                ? "none"
+                : "block";
         }
 
 
+        // ADD USER
 
-        // ADD USER TO SIDEBAR
-
-        function addUser(){
+        function addUser() {
 
             const username =
                 document.getElementById(
                     "usernameInput"
                 ).value.trim();
 
-            if(!username) return;
-
+            if (!username) return;
 
             const userList =
                 document.getElementById("userList");
 
-
-            // CHECK DUPLICATE
-
             const alreadyExists =
                 document.getElementById(username);
 
-            if(alreadyExists){
-
+            if (alreadyExists) {
                 selectUser(username);
-
                 return;
             }
-
-
-            // CREATE USER DIV
 
             const div =
                 document.createElement("div");
 
             div.classList.add("user");
-
             div.id = username;
-
             div.innerText = username;
 
-
             div.onclick = () => {
-
                 selectUser(username);
-
             };
-
 
             userList.appendChild(div);
 
@@ -388,30 +407,19 @@
                 JSON.stringify(users)
             );
 
-
-            // AUTO OPEN CHAT
-
             selectUser(username);
-
-
-            // CLEAR INPUT
 
             document.getElementById(
                 "usernameInput"
             ).value = "";
 
-
-            // CLOSE SEARCH BOX
-
             document.getElementById(
                 "searchBox"
             ).style.display = "none";
-
         }
 
 
-
-        // LOAD USER LIST AFTER REFRESH
+        // LOAD USERS AFTER REFRESH
 
         window.addEventListener("load", () => {
 
@@ -426,30 +434,23 @@
                     document.createElement("div");
 
                 div.classList.add("user");
-
                 div.id = username;
-
                 div.innerText = username;
 
                 div.onclick = () => {
-
                     selectUser(username);
-
                 };
 
                 document
                     .getElementById("userList")
                     .appendChild(div);
-
             });
-
         });
-
 
 
         // SELECT USER
 
-        function selectUser(username){
+        function selectUser(username) {
 
             selectedUser = username;
 
@@ -462,10 +463,9 @@
         }
 
 
+        // LOAD MESSAGES
 
-        // LOAD OLD MESSAGES
-
-        function loadMessages(){
+        function loadMessages() {
 
             const messagesDiv =
                 document.getElementById("messages");
@@ -479,29 +479,24 @@
 
             chats.forEach((chat) => {
 
-                if(
-
+                if (
                     (
                         chat.sender === currentUser &&
                         chat.receiver === selectedUser
                     )
-
                     ||
-
                     (
                         chat.sender === selectedUser &&
                         chat.receiver === currentUser
                     )
-
-                ){
+                ) {
 
                     const div =
                         document.createElement("div");
 
                     div.classList.add("message");
 
-                    if(chat.sender === currentUser){
-
+                    if (chat.sender === currentUser) {
                         div.classList.add("my-message");
                     }
 
@@ -510,33 +505,29 @@
 
                     messagesDiv.appendChild(div);
                 }
-
             });
 
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
-
 
 
         // SEND MESSAGE
 
-        function sendPrivateMessage(){
+        function sendPrivateMessage() {
 
-            if(!selectedUser) return;
+            if (!selectedUser) return;
 
             const input =
                 document.getElementById("messageInput");
 
-            const text =
-                input.value.trim();
+            const text = input.value.trim();
 
-            if(!text) return;
+            if (!text) return;
 
             const data = {
-
                 sender: currentUser,
                 receiver: selectedUser,
                 text: text
-
             };
 
 
@@ -562,12 +553,10 @@
                 JSON.stringify(oldChats)
             );
 
-
             input.value = "";
 
             loadMessages();
         }
-
 
 
         // RECEIVE MESSAGE
@@ -576,9 +565,9 @@
             "receive_private_message",
             (data) => {
 
-                if(
+                if (
                     data.receiver === currentUser
-                ){
+                ) {
 
                     const oldChats =
                         JSON.parse(
@@ -593,13 +582,12 @@
                     );
 
                     loadMessages();
-
                 }
-
             }
         );
 
     </script>
 
 </body>
+
     </html>
