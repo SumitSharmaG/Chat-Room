@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Private Chat</title>
 
     <style>
@@ -214,6 +213,7 @@
         }
 
     </style>
+
 </head>
 
 <body>
@@ -245,7 +245,7 @@
                 <input
                     type="text"
                     id="usernameInput"
-                    placeholder="@username"
+                    placeholder="username"
                 >
 
                 <button onclick="startChat()">
@@ -255,16 +255,23 @@
             </div>
 
 
-            <!-- INBOX LIST -->
+            <!-- INBOX -->
 
-            <div class="inbox-list" id="inboxList"></div>
+            <div
+                class="inbox-list"
+                id="inboxList"
+            ></div>
 
         </div>
 
 
-        <!-- CHAT -->
 
-        <div class="chat-area" id="chatArea">
+        <!-- CHAT AREA -->
+
+        <div
+            class="chat-area"
+            id="chatArea"
+        >
 
             <div class="chat-header">
 
@@ -284,7 +291,10 @@
 
             <!-- MESSAGES -->
 
-            <div class="messages" id="messages"></div>
+            <div
+                class="messages"
+                id="messages"
+            ></div>
 
 
             <!-- SEND -->
@@ -308,6 +318,7 @@
     </div>
 
 
+
     <!-- SOCKET -->
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -317,10 +328,10 @@
         const BACKEND =
             "https://chat-backend-gtg5.onrender.com";
 
-        const socket = io(BACKEND,{
-            transports:["websocket"]
-        });
-
+        const socket =
+            io(BACKEND,{
+                transports:["websocket"]
+            });
 
         const currentUser =
             localStorage.getItem("username") || "guest";
@@ -328,11 +339,29 @@
         let selectedUser = "";
 
 
-        // LOAD APP
+        // PAGE LOAD
 
         window.onload = () => {
 
             loadInbox();
+
+            // CONNECT SOCKET
+
+            socket.on("connect",()=>{
+
+                console.log(
+                    "✅ Private Connected:",
+                    socket.id
+                );
+
+                socket.emit(
+                    "userJoined",
+                    currentUser
+                );
+
+            });
+
+            // MOBILE
 
             if(window.innerWidth <= 768){
 
@@ -343,7 +372,8 @@
         };
 
 
-        // SEARCH BOX
+
+        // SEARCH TOGGLE
 
         function toggleSearch(){
 
@@ -351,10 +381,18 @@
                 document.getElementById("searchBox");
 
             box.style.display =
+
                 box.style.display === "block"
-                ? "none"
-                : "block";
+
+                ?
+
+                "none"
+
+                :
+
+                "block";
         }
+
 
 
         // START CHAT
@@ -382,6 +420,7 @@
         }
 
 
+
         // ADD INBOX
 
         function addInbox(username){
@@ -390,6 +429,9 @@
                 JSON.parse(
                     localStorage.getItem("privateUsers")
                 ) || [];
+
+            username =
+                username.replace("@","");
 
             if(users.includes(username)) return;
 
@@ -404,6 +446,7 @@
         }
 
 
+
         // RENDER INBOX
 
         function renderInbox(username){
@@ -416,14 +459,18 @@
 
             div.classList.add("inbox");
 
-            div.innerText = "@" + username;
+            div.innerText =
+                "@" + username;
 
             div.onclick = () => {
+
                 openChat(username);
+
             };
 
             list.appendChild(div);
         }
+
 
 
         // LOAD INBOX
@@ -447,11 +494,13 @@
         }
 
 
+
         // OPEN CHAT
 
         function openChat(username){
 
-            selectedUser = username;
+            selectedUser =
+                username.replace("@","");
 
             document.getElementById(
                 "chatTitle"
@@ -473,6 +522,7 @@
         }
 
 
+
         // BACK
 
         function goBack(){
@@ -488,6 +538,7 @@
                 ).style.display = "none";
             }
         }
+
 
 
         // LOAD MESSAGES
@@ -521,6 +572,7 @@
                         &&
                         chat.receiver === currentUser
                     )
+
                 ){
 
                     const div =
@@ -529,18 +581,21 @@
                     div.classList.add("msg");
 
                     if(chat.sender === currentUser){
+
                         div.classList.add("my-msg");
                     }
 
                     div.innerHTML =
-                        `<b>${chat.sender}</b><br>${chat.text}`;
+                        `<b>@${chat.sender}</b><br>${chat.text}`;
 
                     box.appendChild(div);
                 }
             });
 
-            box.scrollTop = box.scrollHeight;
+            box.scrollTop =
+                box.scrollHeight;
         }
+
 
 
         // SEND MESSAGE
@@ -550,21 +605,26 @@
             if(!selectedUser) return;
 
             const input =
-                document.getElementById("messageInput");
+                document.getElementById(
+                    "messageInput"
+                );
 
-            const text = input.value.trim();
+            const text =
+                input.value.trim();
 
             if(!text) return;
 
             const data = {
 
-    sender: currentUser.replace("@",""),
+                sender:
+                    currentUser.replace("@",""),
 
-    receiver: selectedUser.replace("@",""),
+                receiver:
+                    selectedUser.replace("@",""),
 
-    text: text
+                text:text
 
-};
+            };
 
 
             // SOCKET SEND
@@ -575,7 +635,7 @@
             );
 
 
-            // SAVE CHAT
+            // SAVE LOCAL
 
             let chats =
                 JSON.parse(
@@ -595,6 +655,7 @@
         }
 
 
+
         // RECEIVE MESSAGE
 
         socket.on(
@@ -602,9 +663,15 @@
             (data)=>{
 
                 if(
-                    data.receiver === currentUser
+
+                    data.receiver ===
+                    currentUser.replace("@","")
+
                     ||
-                    data.sender === currentUser
+
+                    data.sender ===
+                    currentUser.replace("@","")
+
                 ){
 
                     let chats =
@@ -619,9 +686,11 @@
                         JSON.stringify(chats)
                     );
 
+
                     const otherUser =
 
-                        data.sender === currentUser
+                        data.sender ===
+                        currentUser.replace("@","")
 
                         ?
 
@@ -631,14 +700,18 @@
 
                         data.sender;
 
+
                     addInbox(otherUser);
 
+
                     if(selectedUser === otherUser){
+
                         loadMessages();
                     }
                 }
             }
         );
+
 
 
         // ENTER SEND
@@ -648,6 +721,7 @@
         ).addEventListener("keydown",(e)=>{
 
             if(e.key === "Enter"){
+
                 sendMessage();
             }
         });
@@ -655,4 +729,4 @@
     </script>
 
 </body>
-            </html>
+</html>
