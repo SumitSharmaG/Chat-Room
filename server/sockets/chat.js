@@ -88,6 +88,12 @@ module.exports = (io) => {
       }
     });
 
+    socket.on("private_message", (data) => {
+
+    io.emit("receive_private_message", data);
+
+});
+
     // ================== DISCONNECT ==================
 
     socket.on("disconnect", () => {
