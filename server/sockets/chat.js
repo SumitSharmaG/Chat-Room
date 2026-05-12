@@ -90,9 +90,30 @@ module.exports = (io) => {
 
     socket.on("private_message", (data) => {
 
-    io.emit("receive_private_message", data);
+    // SEND ONLY TO RECEIVER
+
+    for (const [username, sockets] of onlineUsers) {
+
+        if (
+            username === data.receiver
+            ||
+            username === data.sender
+        ) {
+
+            sockets.forEach((socketId) => {
+
+                io.to(socketId).emit(
+                    "receive_private_message",
+                    data
+                );
+
+            });
+
+        }
+    }
 
 });
+
 
     // ================== DISCONNECT ==================
 
