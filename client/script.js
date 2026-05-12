@@ -1,18 +1,37 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 
-// ✅ Only connect socket on chat page
+// ✅ Connect socket on BOTH chat pages
 const isChatPage =
     window.location.pathname.includes("world-chat.html")
     ||
     window.location.pathname.includes("private-chat.html");
+
+
+// ✅ Create socket
+const socket = isChatPage
+    ? io(BACKEND, { transports: ["websocket"] })
+    : null;
+
+
 // 🔥 CONNECT (only if socket exists)
 if (socket) {
-    socket.on("connect", () => {
-        console.log("✅ Socket Connected:", socket.id);
 
-        const username = localStorage.getItem("username");
+    socket.on("connect", () => {
+
+        console.log(
+            "✅ Socket Connected:",
+            socket.id
+        );
+
+        const username =
+            localStorage.getItem("username");
+
         if (username) {
-            socket.emit("userJoined", username);
+
+            socket.emit(
+                "userJoined",
+                username
+            );
         }
     });
 }
