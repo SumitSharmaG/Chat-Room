@@ -1,9 +1,10 @@
 const BACKEND = "https://chat-backend-gtg5.onrender.com";
 
 // ✅ Only connect socket on chat page
-const isChatPage = window.location.pathname.includes("chat.html");
-const socket = isChatPage ? io(BACKEND, { transports: ["websocket"] }) : null;
-
+const isChatPage =
+    window.location.pathname.includes("world-chat.html")
+    ||
+    window.location.pathname.includes("private-chat.html");
 // 🔥 CONNECT (only if socket exists)
 if (socket) {
     socket.on("connect", () => {
