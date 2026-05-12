@@ -2,8 +2,8 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Private Chat</title>
 
@@ -23,7 +23,7 @@
             overflow:hidden;
         }
 
-        .container{
+        .app{
             display:flex;
             height:100vh;
             width:100%;
@@ -33,61 +33,44 @@
 
         .sidebar{
             width:320px;
-            min-width:280px;
             background:#121212;
-            border-right:1px solid #232323;
+            border-right:1px solid #222;
             display:flex;
             flex-direction:column;
         }
 
-        .sidebar-header{
-            padding:18px;
+        .top{
+            padding:16px;
             display:flex;
             justify-content:space-between;
             align-items:center;
-            border-bottom:1px solid #232323;
+            border-bottom:1px solid #222;
         }
 
-        .sidebar-header h2{
+        .top h2{
             color:#d4af6a;
             font-size:24px;
         }
 
-        .header-right{
-            display:flex;
-            align-items:center;
-            gap:10px;
-        }
-
-        #addBtn{
-            width:36px;
-            height:36px;
+        .add-btn{
+            width:38px;
+            height:38px;
             border:none;
             border-radius:50%;
             background:#d4af6a;
             color:black;
-            font-size:24px;
+            font-size:26px;
             cursor:pointer;
             font-weight:bold;
         }
 
-        .online-dot{
-            width:12px;
-            height:12px;
-            border-radius:50%;
-            background:#3cff9b;
-            box-shadow:0 0 10px #3cff9b;
-        }
-
-        /* SEARCH */
-
-        #searchBox{
+        .search-box{
             display:none;
             padding:12px;
-            border-bottom:1px solid #232323;
+            border-bottom:1px solid #222;
         }
 
-        #usernameInput{
+        .search-box input{
             width:100%;
             padding:12px;
             border:none;
@@ -95,10 +78,9 @@
             border-radius:12px;
             background:#1d1d1d;
             color:white;
-            font-size:15px;
         }
 
-        #startBtn{
+        .search-box button{
             width:100%;
             margin-top:10px;
             padding:12px;
@@ -109,15 +91,13 @@
             cursor:pointer;
         }
 
-        /* USER LIST */
-
-        .user-list{
+        .inbox-list{
             flex:1;
             overflow-y:auto;
             padding:12px;
         }
 
-        .user{
+        .inbox{
             background:#1b1b1b;
             padding:14px;
             border-radius:14px;
@@ -126,8 +106,8 @@
             transition:0.3s;
         }
 
-        .user:hover{
-            background:#242424;
+        .inbox:hover{
+            background:#262626;
         }
 
         /* CHAT AREA */
@@ -136,21 +116,20 @@
             flex:1;
             display:flex;
             flex-direction:column;
-            background:#0f0f0f;
         }
 
         .chat-header{
-            padding:18px;
-            border-bottom:1px solid #232323;
+            padding:16px;
             background:#151515;
-            color:#d4af6a;
-            font-weight:bold;
+            border-bottom:1px solid #222;
             display:flex;
             align-items:center;
             gap:15px;
+            color:#d4af6a;
+            font-weight:bold;
         }
 
-        #backBtn{
+        .back-btn{
             display:none;
             background:none;
             border:none;
@@ -159,40 +138,38 @@
             cursor:pointer;
         }
 
-        #messages{
+        .messages{
             flex:1;
             overflow-y:auto;
-            padding:18px;
+            padding:16px;
             display:flex;
             flex-direction:column;
             gap:12px;
         }
 
-        .message{
-            background:#1f1f1f;
-            padding:12px 15px;
-            border-radius:14px;
+        .msg{
             max-width:80%;
+            background:#1d1d1d;
+            padding:12px 14px;
+            border-radius:14px;
             word-wrap:break-word;
         }
 
-        .my-message{
+        .my-msg{
             align-self:flex-end;
             background:#d4af6a;
             color:black;
         }
 
-        /* SEND BOX */
-
         .send-box{
-            padding:15px;
+            padding:14px;
             display:flex;
             gap:10px;
-            border-top:1px solid #232323;
+            border-top:1px solid #222;
             background:#111;
         }
 
-        #messageInput{
+        .send-box input{
             flex:1;
             padding:14px;
             border:none;
@@ -200,11 +177,10 @@
             border-radius:14px;
             background:#1d1d1d;
             color:white;
-            font-size:15px;
         }
 
         .send-box button{
-            width:58px;
+            width:60px;
             border:none;
             border-radius:14px;
             background:#d4af6a;
@@ -217,27 +193,22 @@
 
         @media(max-width:768px){
 
-            .container{
-                flex-direction:column;
-            }
-
             .sidebar{
                 width:100%;
-                min-width:100%;
                 height:100vh;
             }
 
             .chat-area{
+                display:none;
                 width:100%;
                 height:100vh;
-                display:none;
             }
 
-            #backBtn{
+            .back-btn{
                 display:block;
             }
 
-            .message{
+            .msg{
                 max-width:90%;
             }
         }
@@ -247,38 +218,29 @@
 
 <body>
 
-    <div class="container">
+    <div class="app">
 
         <!-- SIDEBAR -->
 
-        <div
-            class="sidebar"
-            id="sidebar"
-        >
+        <div class="sidebar" id="sidebar">
 
-            <div class="sidebar-header">
+            <div class="top">
 
                 <h2>Private Chats</h2>
 
-                <div class="header-right">
-
-                    <button
-                        id="addBtn"
-                        onclick="openSearchBox()"
-                    >
-                        +
-                    </button>
-
-                    <div class="online-dot"></div>
-
-                </div>
+                <button
+                    class="add-btn"
+                    onclick="toggleSearch()"
+                >
+                    +
+                </button>
 
             </div>
 
 
             <!-- SEARCH -->
 
-            <div id="searchBox">
+            <div class="search-box" id="searchBox">
 
                 <input
                     type="text"
@@ -286,45 +248,35 @@
                     placeholder="@username"
                 >
 
-                <button
-                    id="startBtn"
-                    onclick="addUser()"
-                >
+                <button onclick="startChat()">
                     Start Chat
                 </button>
 
             </div>
 
 
-            <!-- USER LIST -->
+            <!-- INBOX LIST -->
 
-            <div
-                class="user-list"
-                id="userList"
-            ></div>
+            <div class="inbox-list" id="inboxList"></div>
 
         </div>
 
 
+        <!-- CHAT -->
 
-        <!-- CHAT AREA -->
-
-        <div
-            class="chat-area"
-            id="chatArea"
-        >
+        <div class="chat-area" id="chatArea">
 
             <div class="chat-header">
 
                 <button
-                    id="backBtn"
+                    class="back-btn"
                     onclick="goBack()"
                 >
                     ←
                 </button>
 
-                <span id="chatWith">
-                    Select a contact
+                <span id="chatTitle">
+                    Select Chat
                 </span>
 
             </div>
@@ -332,7 +284,7 @@
 
             <!-- MESSAGES -->
 
-            <div id="messages"></div>
+            <div class="messages" id="messages"></div>
 
 
             <!-- SEND -->
@@ -345,9 +297,7 @@
                     placeholder="Type message..."
                 >
 
-                <button
-                    onclick="sendPrivateMessage()"
-                >
+                <button onclick="sendMessage()">
                     ➤
                 </button>
 
@@ -358,20 +308,19 @@
     </div>
 
 
-
     <!-- SOCKET -->
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
     <script>
 
         const BACKEND =
             "https://chat-backend-gtg5.onrender.com";
 
-        const socket =
-            io(BACKEND,{
-                transports:["websocket"]
-            });
+        const socket = io(BACKEND,{
+            transports:["websocket"]
+        });
+
 
         const currentUser =
             localStorage.getItem("username") || "@guest";
@@ -379,10 +328,11 @@
         let selectedUser = "";
 
 
+        // LOAD APP
 
-        // MOBILE INIT
+        window.onload = () => {
 
-        window.addEventListener("load",()=>{
+            loadInbox();
 
             if(window.innerWidth <= 768){
 
@@ -390,16 +340,12 @@
                     "chatArea"
                 ).style.display = "none";
             }
-
-            loadUsers();
-
-        });
-
+        };
 
 
         // SEARCH BOX
 
-        function openSearchBox(){
+        function toggleSearch(){
 
             const box =
                 document.getElementById("searchBox");
@@ -411,10 +357,9 @@
         }
 
 
+        // START CHAT
 
-        // ADD USER
-
-        function addUser(){
+        function startChat(){
 
             const username =
                 document.getElementById(
@@ -423,9 +368,9 @@
 
             if(!username) return;
 
-            createInbox(username);
+            addInbox(username);
 
-            selectUser(username);
+            openChat(username);
 
             document.getElementById(
                 "usernameInput"
@@ -437,14 +382,13 @@
         }
 
 
+        // ADD INBOX
 
-        // CREATE INBOX
-
-        function createInbox(username){
+        function addInbox(username){
 
             let users =
                 JSON.parse(
-                    localStorage.getItem("chatUsers")
+                    localStorage.getItem("privateUsers")
                 ) || [];
 
             if(users.includes(username)) return;
@@ -452,75 +396,65 @@
             users.push(username);
 
             localStorage.setItem(
-                "chatUsers",
+                "privateUsers",
                 JSON.stringify(users)
             );
 
-            addUserToUI(username);
+            renderInbox(username);
         }
 
 
+        // RENDER INBOX
 
-        // USER UI
+        function renderInbox(username){
 
-        function addUserToUI(username){
-
-            const userList =
-                document.getElementById("userList");
+            const list =
+                document.getElementById("inboxList");
 
             const div =
                 document.createElement("div");
 
-            div.classList.add("user");
+            div.classList.add("inbox");
 
-            div.id =
-                "user-" + username;
-
-            div.innerText =
-                username;
+            div.innerText = username;
 
             div.onclick = () => {
-
-                selectUser(username);
-
+                openChat(username);
             };
 
-            userList.appendChild(div);
+            list.appendChild(div);
         }
 
 
+        // LOAD INBOX
 
-        // LOAD USERS
-
-        function loadUsers(){
+        function loadInbox(){
 
             const users =
                 JSON.parse(
-                    localStorage.getItem("chatUsers")
+                    localStorage.getItem("privateUsers")
                 ) || [];
 
             document.getElementById(
-                "userList"
+                "inboxList"
             ).innerHTML = "";
 
             users.forEach((user)=>{
 
-                addUserToUI(user);
+                renderInbox(user);
 
             });
-
         }
 
 
+        // OPEN CHAT
 
-        // SELECT USER
-
-        function selectUser(username){
+        function openChat(username){
 
             selectedUser = username;
 
             document.getElementById(
-                "chatWith"
+                "chatTitle"
             ).innerText =
                 "Chat with " + username;
 
@@ -537,7 +471,6 @@
                 ).style.display = "flex";
             }
         }
-
 
 
         // BACK
@@ -557,15 +490,14 @@
         }
 
 
-
         // LOAD MESSAGES
 
         function loadMessages(){
 
-            const messagesDiv =
+            const box =
                 document.getElementById("messages");
 
-            messagesDiv.innerHTML = "";
+            box.innerHTML = "";
 
             const chats =
                 JSON.parse(
@@ -585,52 +517,42 @@
                     ||
 
                     (
-
                         chat.sender === selectedUser
                         &&
                         chat.receiver === currentUser
-
                     )
-
                 ){
 
                     const div =
                         document.createElement("div");
 
-                    div.classList.add("message");
+                    div.classList.add("msg");
 
                     if(chat.sender === currentUser){
-
-                        div.classList.add("my-message");
+                        div.classList.add("my-msg");
                     }
 
                     div.innerHTML =
                         `<b>${chat.sender}</b><br>${chat.text}`;
 
-                    messagesDiv.appendChild(div);
+                    box.appendChild(div);
                 }
-
             });
 
-            messagesDiv.scrollTop =
-                messagesDiv.scrollHeight;
+            box.scrollTop = box.scrollHeight;
         }
-
 
 
         // SEND MESSAGE
 
-        function sendPrivateMessage(){
+        function sendMessage(){
 
             if(!selectedUser) return;
 
             const input =
-                document.getElementById(
-                    "messageInput"
-                );
+                document.getElementById("messageInput");
 
-            const text =
-                input.value.trim();
+            const text = input.value.trim();
 
             if(!text) return;
 
@@ -651,9 +573,9 @@
             );
 
 
-            // SAVE LOCAL
+            // SAVE CHAT
 
-            const chats =
+            let chats =
                 JSON.parse(
                     localStorage.getItem("privateChats")
                 ) || [];
@@ -671,7 +593,6 @@
         }
 
 
-
         // RECEIVE MESSAGE
 
         socket.on(
@@ -679,16 +600,12 @@
             (data)=>{
 
                 if(
-
                     data.receiver === currentUser
                     ||
                     data.sender === currentUser
-
                 ){
 
-                    // SAVE CHAT
-
-                    const chats =
+                    let chats =
                         JSON.parse(
                             localStorage.getItem("privateChats")
                         ) || [];
@@ -699,9 +616,6 @@
                         "privateChats",
                         JSON.stringify(chats)
                     );
-
-
-                    // AUTO INBOX
 
                     const otherUser =
 
@@ -715,23 +629,28 @@
 
                         data.sender;
 
-
-                    createInbox(otherUser);
-
-
-                    // REFRESH CHAT
+                    addInbox(otherUser);
 
                     if(selectedUser === otherUser){
-
                         loadMessages();
                     }
-
                 }
-
             }
         );
+
+
+        // ENTER SEND
+
+        document.getElementById(
+            "messageInput"
+        ).addEventListener("keydown",(e)=>{
+
+            if(e.key === "Enter"){
+                sendMessage();
+            }
+        });
 
     </script>
 
 </body>
-    </html>
+            </html>
