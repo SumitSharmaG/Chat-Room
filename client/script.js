@@ -291,4 +291,121 @@ document.getElementById("msg")?.addEventListener("keydown", (e) => {
         handleSend();
     }
 });
+
+const currentUser =
+    localStorage.getItem("username") || "guest";
+
+
+// LOAD OLD PRIVATE CHATS
+window.addEventListener("load", () => {
+
+    const oldChats =
+        JSON.parse(localStorage.getItem("privateChats")) || [];
+
+    const messages =
+        document.getElementById("messages");
+
+    if(messages){
+
+        oldChats.forEach((chat) => {
+
+            messages.innerHTML += `
+                <div>
+                    <b>${chat.sender}</b> :
+                    ${chat.text}
+                </div>
+            `;
+        });
+
+    }
+
+});
+
+
+// SEND PRIVATE MESSAGE
+function sendPrivateMessage() {
+
+    const receiver =
+        document.getElementById("receiver").value;
+
+    const message =
+        document.getElementById("message").value;
+
+    if(!receiver || !message) return;
+
+    const data = {
+        sender: currentUser,
+        receiver,
+        text: message
+    };
+
+
+    // SOCKET SEND
+    socket.emit("private_message", data);
+
+
+    // SAVE IN LOCAL STORAGE
+    const oldChats =
+        JSON.parse(localStorage.getItem("privateChats")) || [];
+
+    oldChats.push(data);
+
+    localStorage.setItem(
+        "privateChats",
+        JSON.stringify(oldChats)
+    );
+
+
+    // SHOW MESSAGE
+    const messages =
+        document.getElementById("messages");
+
+    if(messages){
+
+        messages.innerHTML += `
+            <div>
+                <b>${data.sender}</b> :
+                ${data.text}
+            </div>
+        `;
+    }
+
+    document.getElementById("message").value = "";
+}
+
+
+
+// RECEIVE PRIVATE MESSAGE
+socket.on("receive_private_message", (data) => {
+
+    if(data.receiver === currentUser){
+
+        const messages =
+            document.getElementById("messages");
+
+        if(messages){
+
+            messages.innerHTML += `
+                <div>
+                    <b>${data.sender}</b> :
+                    ${data.text}
+                </div>
+            `;
+        }
+
+
+        // SAVE RECEIVED MSG
+        const oldChats =
+            JSON.parse(localStorage.getItem("privateChats")) || [];
+
+        oldChats.push(data);
+
+        localStorage.setItem(
+            "privateChats",
+            JSON.stringify(oldChats)
+        );
+
+    }
+
+});
             
