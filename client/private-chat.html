@@ -48,7 +48,7 @@
 
         .top h2{
             color:#d4af6a;
-            font-size:24px;
+            font-size:22px;
         }
 
         .add-btn{
@@ -114,7 +114,7 @@
             background:#262626;
         }
 
-        /* CHAT AREA */
+        /* CHAT */
 
         .chat-area{
             flex:1;
@@ -124,15 +124,15 @@
         }
 
         .chat-header{
-            padding:16px;
+            padding:14px;
             background:#151515;
             border-bottom:1px solid #222;
             display:flex;
             align-items:center;
-            gap:15px;
+            gap:10px;
             color:#d4af6a;
             font-weight:bold;
-            z-index:1000;
+            flex-wrap:wrap;
         }
 
         .back-btn{
@@ -142,6 +142,21 @@
             color:#d4af6a;
             font-size:24px;
             cursor:pointer;
+        }
+
+        .top-btn{
+            background:#1d1d1d;
+            color:#d4af6a;
+            border:none;
+            padding:7px 10px;
+            border-radius:8px;
+            cursor:pointer;
+            font-size:13px;
+        }
+
+        .clear-btn{
+            background:red;
+            color:white;
         }
 
         /* MESSAGES */
@@ -169,6 +184,23 @@
             align-self:flex-end;
             background:#d4af6a;
             color:black;
+        }
+
+        .msg-bottom{
+            margin-top:5px;
+            display:flex;
+            align-items:center;
+            gap:6px;
+            font-size:11px;
+            opacity:0.8;
+        }
+
+        .info-btn{
+            background:none;
+            border:none;
+            color:#d4af6a;
+            cursor:pointer;
+            font-size:14px;
         }
 
         /* SEND */
@@ -202,6 +234,14 @@
             font-weight:bold;
         }
 
+        #typing{
+            color:#b59461;
+            padding-left:16px;
+            padding-bottom:8px;
+            font-size:12px;
+            display:none;
+        }
+
         /* MOBILE */
 
         @media(max-width:768px){
@@ -227,6 +267,7 @@
                 top:0;
                 left:0;
                 width:100%;
+                z-index:999;
             }
 
             .back-btn{
@@ -234,8 +275,8 @@
             }
 
             .messages{
-                margin-top:70px;
-                margin-bottom:85px;
+                margin-top:95px;
+                margin-bottom:90px;
                 padding-bottom:100px;
             }
 
@@ -250,14 +291,6 @@
                 left:0;
                 width:100%;
                 z-index:1000;
-            }
-
-            .send-box input{
-                font-size:16px;
-            }
-
-            .send-box button{
-                min-width:55px;
             }
 
         }
@@ -316,7 +349,7 @@
 
 
 
-        <!-- CHAT -->
+        <!-- CHAT AREA -->
 
         <div
             class="chat-area"
@@ -332,6 +365,38 @@
                     ←
                 </button>
 
+                <a
+                    href="selection.html"
+                    style="
+                    color:#d4af6a;
+                    text-decoration:none;
+                    font-size:22px;
+                    "
+                >
+                    🏠
+                </a>
+
+                <div>
+                    👁️
+                    <span id="online-count">
+                        0
+                    </span>
+                </div>
+
+                <button
+                    class="top-btn clear-btn"
+                    onclick="clearPrivateChat()"
+                >
+                    Clear
+                </button>
+
+                <button
+                    class="top-btn"
+                    onclick="logout()"
+                >
+                    Logout
+                </button>
+
                 <span id="chatTitle">
                     Select Chat
                 </span>
@@ -345,6 +410,10 @@
                 class="messages"
                 id="messages"
             ></div>
+
+            <div id="typing">
+                typing...
+            </div>
 
 
             <!-- SEND -->
@@ -388,6 +457,8 @@
 
         let selectedUser = "";
 
+        const seenMap = {};
+
 
         // PAGE LOAD
 
@@ -396,11 +467,6 @@
             loadInbox();
 
             socket.on("connect",()=>{
-
-                console.log(
-                    "✅ Private Connected:",
-                    socket.id
-                );
 
                 socket.emit(
                     "userJoined",
@@ -632,10 +698,30 @@
                     }
 
                     div.innerHTML =
-                        `<b>@${chat.sender}</b><br>${chat.text}`;
+
+                    `
+                    <b>@${chat.sender}</b><br>
+
+                    ${chat.text}
+
+                    <div class="msg-bottom">
+
+                    ${chat.time || ""}
+
+                    <button
+                    class="info-btn"
+                    onclick="showSeen('${chat._id}')"
+                    >
+                    ⓘ
+                    </button>
+
+                    </div>
+                    `;
 
                     box.appendChild(div);
+
                 }
+
             });
 
             box.scrollTop =
@@ -660,28 +746,20 @@
 
             if(!text) return;
 
-            const data = {
-
-                sender:
-                    currentUser.replace("@",""),
-
-                receiver:
-                    selectedUser.replace("@",""),
-
-                text:text
-
-            };
-
-
-            // SOCKET SEND
-
             socket.emit(
                 "private_message",
-                data
+                {
+
+                    sender:
+                    currentUser,
+
+                    receiver:
+                    selectedUser,
+
+                    text:text
+
+                }
             );
-
-
-            // CLEAR INPUT ONLY
 
             input.value = "";
         }
@@ -696,19 +774,19 @@
 
                 if(
 
-                    data.receiver ===
-                    currentUser.replace("@","")
+                    data.receiver === currentUser
 
                     ||
 
-                    data.sender ===
-                    currentUser.replace("@","")
+                    data.sender === currentUser
 
                 ){
 
                     let chats =
                         JSON.parse(
-                            localStorage.getItem("privateChats")
+                            localStorage.getItem(
+                                "privateChats"
+                            )
                         ) || [];
 
                     chats.push(data);
@@ -718,11 +796,9 @@
                         JSON.stringify(chats)
                     );
 
-
                     const otherUser =
 
-                        data.sender ===
-                        currentUser.replace("@","")
+                        data.sender === currentUser
 
                         ?
 
@@ -732,33 +808,199 @@
 
                         data.sender;
 
-
                     addInbox(otherUser);
-
 
                     if(selectedUser === otherUser){
 
                         loadMessages();
+
                     }
+
+                    // SEEN
+
+                    if(
+                        data._id &&
+                        data.sender !== currentUser
+                    ){
+
+                        socket.emit(
+                            "private_seen",
+                            {
+                                messageId:data._id,
+                                username:currentUser
+                            }
+                        );
+
+                    }
+
                 }
+
             }
         );
 
 
 
-        // ENTER SEND
+        // ONLINE COUNT
+
+        socket.on(
+            "updateUserCount",
+            (count)=>{
+
+                document.getElementById(
+                    "online-count"
+                ).innerText = count;
+
+            }
+        );
+
+
+
+        // TYPING
 
         document.getElementById(
             "messageInput"
-        ).addEventListener("keydown",(e)=>{
+        ).addEventListener(
+            "input",
+            ()=>{
 
-            if(e.key === "Enter"){
+                if(!selectedUser) return;
 
-                sendMessage();
+                socket.emit(
+                    "private_typing",
+                    {
+                        to:selectedUser,
+                        from:currentUser
+                    }
+                );
+
+                clearTimeout(
+                    window.typingTimeout
+                );
+
+                window.typingTimeout =
+                    setTimeout(()=>{
+
+                        socket.emit(
+                            "private_stop_typing",
+                            {
+                                to:selectedUser
+                            }
+                        );
+
+                    },1000);
+
             }
-        });
+        );
 
-    </script>
 
-</body>
-                    </html>
+
+        // SHOW TYPING
+
+        socket.on(
+            "private_user_typing",
+            (user)=>{
+
+                const el =
+                    document.getElementById(
+                        "typing"
+                    );
+
+                el.style.display =
+                    "block";
+
+                el.innerText =
+                    user + " typing...";
+
+            }
+        );
+
+
+
+        // STOP TYPING
+
+        socket.on(
+            "private_stop_typing",
+            ()=>{
+
+                document.getElementById(
+                    "typing"
+                ).style.display = "none";
+
+            }
+        );
+
+
+
+        // SEEN
+
+        socket.on(
+            "private_seen_update",
+            ({messageId,seenBy})=>{
+
+                seenMap[messageId] =
+                    seenBy;
+
+            }
+        );
+
+
+
+        // SHOW SEEN
+
+        function showSeen(id){
+
+            const users =
+                seenMap[id] || [];
+
+            alert(
+                "Seen by:\n" +
+                users.join("\n")
+            );
+
+        }
+
+
+
+        // CLEAR CHAT
+
+        function clearPrivateChat(){
+
+            if(!selectedUser) return;
+
+            if(confirm("Clear this chat?")){
+
+                socket.emit(
+                    "clear_private_chat",
+                    {
+                        user1:currentUser,
+                        user2:selectedUser
+                    }
+                );
+
+            }
+
+        }
+
+
+
+        socket.on(
+            "private_chat_cleared",
+            ({user1,user2})=>{
+
+                let chats =
+                    JSON.parse(
+                        localStorage.getItem(
+                            "privateChats"
+                        )
+                    ) || [];
+
+                chats =
+                    chats.filter((chat)=>{
+
+                        return !(
+
+                            (
+                                chat.sender === user1
+                                &&
+                                chat.receiver === user2
+                          
