@@ -1,21 +1,379 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<?xml version="1.0" encoding="UTF-8"?><HTML lang=en xml:lang="en" 
-xmlns="http://www.w3.org/1999/xhtml"><HEAD><TITLE></TITLE>
-<META http-equiv=Content-Type content="text/html; charset=UTF-8">
-<META content="MSHTML 6.00.2900.2180" name=GENERATOR></HEAD>
-<BODY>
-<CENTER>
-<H1 style="COLOR: red"><BR>W A R N I N G !<BR></H1>
-<H2>You are not authorized to access this page.</H2></CENTER>
-<div
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-</div>
+    <title>Private Chat</title>
 
-<div style="text-align: center; font-weight: bold; font-size: 20px;">
-    ♦️ Coming Soon 🔜 :)
-</div>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial;
+        }
+
+        body{
+            background:#0f0f0f;
+            color:white;
+            height:100vh;
+            overflow:hidden;
+        }
+
+        .container{
+            display:flex;
+            height:100vh;
+        }
+
+        /* LEFT SIDEBAR */
+
+        .sidebar{
+            width:35%;
+            background:#111;
+            border-right:1px solid #222;
+            display:flex;
+            flex-direction:column;
+        }
+
+        .sidebar-header{
+            padding:20px;
+            border-bottom:1px solid #222;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        .sidebar-header h2{
+            color:#d4af6a;
+            font-size:28px;
+        }
+
+        .online-dot{
+            width:12px;
+            height:12px;
+            border-radius:50%;
+            background:#3cff9b;
+            box-shadow:0 0 10px #3cff9b;
+        }
+
+        .user-list{
+            padding:15px;
+        }
+
+        .user{
+            background:#1a1a1a;
+            padding:14px;
+            border-radius:10px;
+            margin-bottom:10px;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .user:hover{
+            background:#242424;
+        }
+
+        /* RIGHT CHAT AREA */
+
+        .chat-area{
+            width:65%;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+        }
+
+        .chat-header{
+            padding:20px;
+            border-bottom:1px solid #222;
+            color:#d4af6a;
+            font-weight:bold;
+            background:#121212;
+        }
+
+        #messages{
+            flex:1;
+            overflow-y:auto;
+            padding:20px;
+        }
+
+        .message{
+            background:#1c1c1c;
+            padding:10px 14px;
+            border-radius:10px;
+            margin-bottom:10px;
+            width:fit-content;
+            max-width:80%;
+        }
+
+        .my-message{
+            margin-left:auto;
+            background:#d4af6a;
+            color:black;
+        }
+
+        .send-box{
+            display:flex;
+            gap:10px;
+            padding:15px;
+            border-top:1px solid #222;
+            background:#111;
+        }
+
+        .send-box input{
+            flex:1;
+            padding:14px;
+            border:none;
+            outline:none;
+            border-radius:12px;
+            background:#1c1c1c;
+            color:white;
+            font-size:16px;
+        }
+
+        .send-box button{
+            width:60px;
+            border:none;
+            border-radius:12px;
+            background:#d4af6a;
+            cursor:pointer;
+            font-size:20px;
+            font-weight:bold;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- LEFT -->
+
+        <div class="sidebar">
+
+            <div class="sidebar-header">
+                <h2>Private Chats</h2>
+                <div class="online-dot"></div>
+            </div>
+
+            <div class="user-list">
+
+                <div
+                    class="user"
+                    onclick="selectUser('@xyz')"
+                >
+                    @xyz
+                </div>
+
+                <div
+                    class="user"
+                    onclick="selectUser('@rahul')"
+                >
+                    @rahul
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+
+        <div class="chat-area">
+
+            <div class="chat-header" id="chatWith">
+                Select a contact to start
+            </div>
+
+            <div id="messages"></div>
+
+            <div class="send-box">
+
+                <input
+                    type="text"
+                    id="messageInput"
+                    placeholder="Type message..."
+                >
+
+                <button onclick="sendPrivateMessage()">
+                    ➤
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
 
 
-<P>Thank you.<BR><I>The System administrator :) </I>
-</BODY></HTML>
+    <!-- SOCKET -->
 
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+
+        const socket = io();
+
+        const currentUser =
+            localStorage.getItem("username") || "@guest";
+
+        let selectedUser = "";
+
+
+
+        // SELECT USER
+
+        function selectUser(username){
+
+            selectedUser = username;
+
+            document.getElementById(
+                "chatWith"
+            ).innerText =
+                "Chat with " + username;
+
+            loadMessages();
+        }
+
+
+
+        // LOAD OLD CHATS
+
+        function loadMessages(){
+
+            const messagesDiv =
+                document.getElementById("messages");
+
+            messagesDiv.innerHTML = "";
+
+            const chats =
+                JSON.parse(
+                    localStorage.getItem("privateChats")
+                ) || [];
+
+            chats.forEach((chat) => {
+
+                if(
+
+                    (
+                        chat.sender === currentUser &&
+                        chat.receiver === selectedUser
+                    )
+
+                    ||
+
+                    (
+                        chat.sender === selectedUser &&
+                        chat.receiver === currentUser
+                    )
+
+                ){
+
+                    const div =
+                        document.createElement("div");
+
+                    div.classList.add("message");
+
+                    if(chat.sender === currentUser){
+                        div.classList.add("my-message");
+                    }
+
+                    div.innerHTML =
+                        `<b>${chat.sender}</b><br>${chat.text}`;
+
+                    messagesDiv.appendChild(div);
+                }
+
+            });
+
+        }
+
+
+
+        // SEND MESSAGE
+
+        function sendPrivateMessage(){
+
+            if(!selectedUser) return;
+
+            const input =
+                document.getElementById("messageInput");
+
+            const text = input.value.trim();
+
+            if(!text) return;
+
+            const data = {
+
+                sender: currentUser,
+                receiver: selectedUser,
+                text: text
+
+            };
+
+
+            // SEND SOCKET
+
+            socket.emit(
+                "private_message",
+                data
+            );
+
+
+            // SAVE LOCAL
+
+            const oldChats =
+                JSON.parse(
+                    localStorage.getItem("privateChats")
+                ) || [];
+
+            oldChats.push(data);
+
+            localStorage.setItem(
+                "privateChats",
+                JSON.stringify(oldChats)
+            );
+
+
+            input.value = "";
+
+            loadMessages();
+        }
+
+
+
+        // RECEIVE MESSAGE
+
+        socket.on(
+            "receive_private_message",
+            (data) => {
+
+                if(
+                    data.receiver === currentUser
+                ){
+
+                    const oldChats =
+                        JSON.parse(
+                            localStorage.getItem("privateChats")
+                        ) || [];
+
+                    oldChats.push(data);
+
+                    localStorage.setItem(
+                        "privateChats",
+                        JSON.stringify(oldChats)
+                    );
+
+                    loadMessages();
+                }
+
+            }
+        );
+
+    </script>
+
+</body>
+    </html>
