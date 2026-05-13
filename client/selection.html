@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- SECURITY SCRIPT START -->
-    <script>
-        // Ye check karta hai ki user login hai ya nahi
-        // Agar localStorage me 'isLoggedIn' nahi hai, toh wapas bhej do
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = "index.html"; 
-        }
-    </script>
-    <!-- SECURITY SCRIPT END -->
-
+    
+<script>
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = "login.html"; 
+    }
+</script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Select Mode | Private Chat</title>
@@ -167,7 +164,7 @@
             </div>
 
             <!-- Private Room Card -->
-            <div class="card)
+            <div class="card">
                 <h3>Private Room</h3>
                 <p>Chat 1-on-1 with your friends.</p>
                 <a href="private-chat.html" class="btn">User to User</a>
@@ -181,4 +178,6 @@
     </footer>
 
 </body>
-</html>
+    </html>
+
+    
