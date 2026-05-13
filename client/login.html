@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Is code ko <head> ke andar dalein -->
+<script>
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        window.location.href = "selection.html"; 
+    }
+</script>
+    
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Private Chat Premium</title>
@@ -19,7 +27,6 @@
             --transition-smooth: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        /* --- Same styling as before --- */
         * {
             margin: 0;
             padding: 0;
@@ -38,9 +45,10 @@
             align-items: center;
             min-height: 100vh;
             padding: 20px;
-            position: relative;
+            position: relative; /* Home button ke liye */
         }
 
+        /* --- Home Button Styling --- */
         .home-btn {
             position: absolute;
             top: 25px;
@@ -66,6 +74,7 @@
             transform: scale(1.05);
         }
 
+        /* --- Login Card --- */
         .login-card {
             background-color: var(--bg-card);
             background-image: linear-gradient(145deg, var(--bg-card) 0%, var(--wood-accent-deep) 100%);
@@ -91,6 +100,7 @@
             margin-bottom: 30px;
         }
 
+        /* --- Form Styling --- */
         #loginForm {
             display: flex;
             flex-direction: column;
@@ -114,6 +124,10 @@
             box-shadow: 0 0 10px rgba(181, 148, 97, 0.1);
         }
 
+        input::placeholder {
+            color: #666;
+        }
+
         button {
             background-color: var(--accent-gold);
             color: #000;
@@ -135,6 +149,7 @@
             filter: brightness(1.1);
         }
 
+        /* --- Footer Link --- */
         .footer-text {
             margin-top: 25px;
             font-size: 0.9rem;
@@ -145,8 +160,10 @@
             color: var(--accent-gold);
             text-decoration: none;
             font-weight: 600;
+            transition: var(--transition-smooth);
         }
 
+        /* --- Registration Note with Black Outline --- */
         .reg-note {
             margin-top: 25px;
             font-size: 0.75rem;
@@ -159,16 +176,13 @@
             font-style: italic;
             text-align: center;
         }
-    </style>
 
-    <!-- REDIRECT LOGIC -->
-    <script>
-        // Agar user pehle se login hai (yani 'isLoggedIn' true hai),
-        // toh use login page mat dikhao, seedha aage bhej do.
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            window.location.href = "selection.html"; // Yahan apne next page ka naam likhein
+        @media (max-width: 480px) {
+            .login-card { padding: 30px 20px; }
+            h2 { font-size: 1.8rem; }
+            .home-btn { top: 15px; left: 15px; font-size: 0.8rem; }
         }
-    </script>
+    </style>
 </head>
 <body>
 
@@ -176,6 +190,11 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         Home
     </a>
+
+    <script>
+        const user = localStorage.getItem("username");
+        if (user) { window.location.href = "chat.html"; }
+    </script>
 
     <div class="login-card">
         <h2>Login</h2>
@@ -195,9 +214,7 @@
         </div>
     </div>
 
-    <!-- Aapki main JS file -->
     <script src="script.js"></script>
 
 </body>
-    </html>
-                
+</html>
