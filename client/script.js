@@ -112,9 +112,7 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     const data = await res.json();
 
     if (data.success) {
-        // --- NEW SECURITY ADDED HERE ---
-        localStorage.setItem("isLoggedIn", "true"); // Setting the flag
-        // -------------------------------
+        localStorage.setItem("isLoggedIn", "true"); // 'isLoggedIn' ko true set karein
         localStorage.setItem("username", username);
         window.location.href = "selection.html";
     } else {
@@ -304,10 +302,10 @@ window.clearChat = function () {
 };
 
 window.logout = function () {
-    // --- UPDATED LOGOUT ---
-    localStorage.clear(); // This will clear username AND isLoggedIn
+    localStorage.clear(); // Saara data aur login flag clear ho jayega
     window.location.href = "login.html";
 };
+
 
 document.getElementById("msg")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -315,3 +313,5 @@ document.getElementById("msg")?.addEventListener("keydown", (e) => {
         handleSend();
     }
 });
+
+                              
