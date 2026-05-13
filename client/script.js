@@ -112,6 +112,9 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     const data = await res.json();
 
     if (data.success) {
+        // --- NEW SECURITY ADDED HERE ---
+        localStorage.setItem("isLoggedIn", "true"); // Setting the flag
+        // -------------------------------
         localStorage.setItem("username", username);
         window.location.href = "selection.html";
     } else {
@@ -301,7 +304,8 @@ window.clearChat = function () {
 };
 
 window.logout = function () {
-    localStorage.clear();
+    // --- UPDATED LOGOUT ---
+    localStorage.clear(); // This will clear username AND isLoggedIn
     window.location.href = "login.html";
 };
 
@@ -311,4 +315,3 @@ document.getElementById("msg")?.addEventListener("keydown", (e) => {
         handleSend();
     }
 });
-        
