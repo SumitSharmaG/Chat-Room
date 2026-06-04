@@ -1,4 +1,9 @@
 require("dotenv").config();
+
+if (!process.env.ENCRYPTION_KEY) {
+  throw new Error("ENCRYPTION_KEY missing");
+}
+
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -18,7 +23,7 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
-// 🔥 Home route
+// Home route
 app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
 });
@@ -37,4 +42,3 @@ socketHandler(io);
 server.listen(process.env.PORT || 5000, () => {
   console.log("Server running and Keep-Alive active");
 });
-           
