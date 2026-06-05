@@ -55,9 +55,31 @@
             font-size: 3.5rem;
             font-weight: 700;
             color: var(--accent-gold);
-            margin-bottom: 15px;
+            margin-bottom: 25px;
             letter-spacing: -0.5px;
             text-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            line-height: 1.0; /* Gap khatam karne ke liye line-height tight ki */
+            display: inline-block; /* Center alignment se hata kar content ke hisab se set kiya */
+            position: relative;
+            text-align: left;
+        }
+
+        /* --- Custom Position aur Micro Size ke liye CSS --- */
+        h1 sub {
+            display: block;
+            font-size: 0.52rem; /* Size ko aur chota (micro) kar diya */
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 400;
+            color: rgba(181, 148, 97, 0.7);
+            
+            /* Isse center se hatkar "Chat" word ke niche se shuru hoga */
+            text-align: left; 
+            padding-right: 15px; 
+            
+            margin-top: 1px; /* Private Chat aur name ke bich ka gap ekdum kam kiya */
+            vertical-align: baseline;
         }
 
         .subtitle {
@@ -256,7 +278,8 @@
 <body>
 
     <div class="hero-section">
-        <h1>Private Chat</h1>
+        <h1>Private Chat<sub>BY SUMIT SHARMA...</sub></h1>
+
         <p class="subtitle">Enter the realm of secure, encrypted, and elegant messaging.</p>
         
         <div class="btn-container">
