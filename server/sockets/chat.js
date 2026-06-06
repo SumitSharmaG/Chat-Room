@@ -1,4 +1,5 @@
 const Message = require("../models/Message");
+const jwt = require("jsonwebtoken");
 
 // 🔥 UNIQUE USERS TRACK
 const onlineUsers = new Map();
@@ -7,6 +8,35 @@ const onlineUsers = new Map();
 const typingUsers = new Set();
 
 module.exports = (io) => {
+
+  io.use((socket, next) => {
+
+  try {
+
+    const token = socket.handshake.auth.token;
+
+    if (!token) {
+      return next(new Error("No Token"));
+    }
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    socket.user = decoded;
+
+    next();
+
+  } catch (err) {
+
+    return next(
+      new Error("Invalid Token")
+    );
+
+  }
+
+});
 
   io.on("connection", (socket) => {
 
