@@ -121,44 +121,36 @@ module.exports = (io) => {
 
     socket.on("userJoined", () => {
 
-  const username =
-    socket.user.username;
+  const username = socket.user.username;
 
   socket.username = username;
 
-  ...
+  if (onlineUsers.has(username)) {
+
+    onlineUsers
+      .get(username)
+      .add(socket.id);
+
+  } else {
+
+    onlineUsers.set(
+      username,
+      new Set([socket.id])
+    );
+  }
+
+  console.log(
+    "🔥 Online Users:",
+    onlineUsers
+  );
+
+  io.emit(
+    "updateUserCount",
+    onlineUsers.size
+  );
+
 });
-      // REMOVE @ IF EXISTS
-
-      username =
-        username.replace("@", "");
-
-      socket.username = username;
-
-      if (onlineUsers.has(username)) {
-
-        onlineUsers
-          .get(username)
-          .add(socket.id);
-
-      } else {
-
-        onlineUsers.set(
-          username,
-          new Set([socket.id])
-        );
-      }
-
-      console.log(
-        "🔥 Online Users:",
-        onlineUsers
-      );
-
-      io.emit(
-        "updateUserCount",
-        onlineUsers.size
-      );
-    });
+          
 
 
 
