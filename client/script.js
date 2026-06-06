@@ -9,9 +9,13 @@ const isChatPage =
 
 // ✅ Create socket
 const socket = isChatPage
-    ? io(BACKEND, { transports: ["websocket"] })
+    ? io(BACKEND, {
+        transports: ["websocket"],
+        auth: {
+            token: localStorage.getItem("token")
+        }
+    })
     : null;
-
 
 // 🔥 CONNECT (only if socket exists)
 if (socket) {
