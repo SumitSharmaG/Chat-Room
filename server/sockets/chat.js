@@ -40,7 +40,10 @@ module.exports = (io) => {
 
   io.on("connection", (socket) => {
 
-    console.log("User connected:", socket.id);
+  console.log(
+    "✅ JWT User Connected:",
+    socket.user.username
+  );
 
     // ================== TYPING ==================
 
@@ -116,8 +119,15 @@ module.exports = (io) => {
 
     // ================== USER JOIN ==================
 
-    socket.on("userJoined", (username) => {
+    socket.on("userJoined", () => {
 
+  const username =
+    socket.user.username;
+
+  socket.username = username;
+
+  ...
+});
       // REMOVE @ IF EXISTS
 
       username =
