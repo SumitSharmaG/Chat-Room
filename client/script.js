@@ -19,11 +19,9 @@ const socket = isChatPage
 if (socket) {
 
     socket.on("connect_error", (err) => {
-        console.error("❌ Socket Error:", err.message);
-    });
-
-}
-
+    console.log("❌ JWT Error:", err.message);
+});
+    
 // 🔥 CONNECT (only if socket exists)
 if (socket) {
 
