@@ -6,149 +6,124 @@ const jwt = require("jsonwebtoken");
 const router = express.Router();
 
 const SECRET_KEY = crypto
-  .createHash("sha256")
-  .update(process.env.ENCRYPTION_KEY)
-  .digest();
+.createHash("sha256")
+.update(process.env.ENCRYPTION_KEY)
+.digest();
 
 function encrypt(text) {
-  const iv = crypto.randomBytes(16);
+const iv = crypto.randomBytes(16);
 
-  const cipher = crypto.createCipheriv(
-    "aes-256-cbc",
-    SECRET_KEY,
-    iv
-  );
+const cipher = crypto.createCipheriv(
+"aes-256-cbc",
+SECRET_KEY,
+iv
+);
 
-  let encrypted = cipher.update(text, "utf8", "hex");
-  encrypted += cipher.final("hex");
+let encrypted = cipher.update(text, "utf8", "hex");
+encrypted += cipher.final("hex");
 
-  return iv.toString("hex") + ":" + encrypted;
+return iv.toString("hex") + ":" + encrypted;
 }
 
 function decrypt(encryptedText) {
-  const parts = encryptedText.split(":");
+const parts = encryptedText.split(":");
 
-  const iv = Buffer.from(parts[0], "hex");
-  const encryptedData = parts[1];
+const iv = Buffer.from(parts[0], "hex");
+const encryptedData = parts[1];
 
-  const decipher = crypto.createDecipheriv(
-    "aes-256-cbc",
-    SECRET_KEY,
-    iv
-  );
+const decipher = crypto.createDecipheriv(
+"aes-256-cbc",
+SECRET_KEY,
+iv
+);
 
-  let decrypted = decipher.update(
-    encryptedData,
-    "hex",
-    "utf8"
-  );
+let decrypted = decipher.update(
+encryptedData,
+"hex",
+"utf8"
+);
 
-  decrypted += decipher.final("utf8");
+decrypted += decipher.final("utf8");
 
-  return decrypted;
+return decrypted;
 }
 
-router.get("/check-username/:username", async (req, res) => {
-
-  const username =
-    req.params.username
-      .toLowerCase()
-      .trim();
-
-  const exists =
-    await User.findOne({ username });
-
-  res.json({
-    available: !exists
-  });
-});
 // REGISTER
 router.post("/register", async (req, res) => {
-  try {
-    let { username, password } = req.body;
+try {
+const { username, password } = req.body;
 
-username =
-  username
-    .toLowerCase()
-    .trim();
-   if (!/^[a-z0-9._]+$/.test(username)) {
+const existingUser = await User.findOne({ username });  
 
-  return res.status(400).json({
-    success: false,
-    message:
-      "Usernames can only use letters, numbers, underscores and periods."
-  });
-    }
+if (existingUser) {  
+  return res.json({  
+    success: false,  
+    message: "Username already exists"  
+  });  
+}  
 
-    const existingUser = await User.findOne({ username });
+const encryptedPassword = encrypt(password);  
 
-    if (existingUser) {
-      return res.json({
-        success: false,
-        message: "Username already exists"
-      });
-    }
+await User.create({  
+  username,  
+  password: encryptedPassword  
+});  
 
-    const encryptedPassword = encrypt(password);
+res.json({ success: true });
 
-    await User.create({
-      username,
-      password: encryptedPassword
-    });
+} catch (err) {
+console.error(err);
 
-    res.json({ success: true });
+res.status(500).json({  
+  success: false  
+});
 
-  } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      success: false
-    });
-  }
+}
 });
 
 // LOGIN
 router.post("/login", async (req, res) => {
-  try {
-    const { username, password } = req.body;
+try {
+const { username, password } = req.body;
 
-    const user = await User.findOne({ username });
+const user = await User.findOne({ username });  
 
-    if (!user) {
-      return res.json({ success: false });
-    }
+if (!user) {  
+  return res.json({ success: false });  
+}  
 
-    const originalPassword = decrypt(user.password);
+const originalPassword = decrypt(user.password);  
 
-    if (originalPassword === password) {
+if (originalPassword === password) {
 
-  const token = jwt.sign(
-    {
-      userId: user._id,
-      username: user.username
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "7d"
-    }
-  );
-
-  return res.json({
-    success: true,
-    token
-  });
+const token = jwt.sign(
+{
+userId: user._id,
+username: user.username
+},
+process.env.JWT_SECRET,
+{
+expiresIn: "7d"
 }
-    res.json({
-      success: false
-    });
+);
 
-  } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      success: false
-    });
-  }
+return res.json({
+success: true,
+token
+});
+}
+res.json({
+success: false
 });
 
-module.exports = router;
+} catch (err) {
+console.error(err);
+
+res.status(500).json({  
+  success: false  
+});
+
+}
+});
+
+module.exports = router;    
