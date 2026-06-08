@@ -79,7 +79,79 @@ window.addEventListener("keyup", (e) => {
 });
 
 // ======================================================
+const usernameInput =
+  document.getElementById("username");
 
+const usernameStatus =
+  document.getElementById("usernameStatus");
+
+let usernameTimer;
+
+usernameInput?.addEventListener(
+  "input",
+  async (e) => {
+
+    let value = e.target.value;
+
+    value = value.toLowerCase();
+
+    value = value.replace(/\s+/g, "_");
+
+    value = value.replace(
+      /[^a-z0-9._]/g,
+      ""
+    );
+
+    e.target.value = value;
+
+    if (value.length < 3) {
+
+      usernameStatus.innerHTML =
+        "Username must be at least 3 characters";
+
+      return;
+    }
+
+    usernameStatus.innerHTML =
+      "⏳ Checking...";
+
+    clearTimeout(usernameTimer);
+
+    usernameTimer =
+      setTimeout(async () => {
+
+        try {
+
+          const res =
+            await fetch(
+              BACKEND +
+              "/api/check-username/" +
+              value
+            );
+
+          const data =
+            await res.json();
+
+          if (data.available) {
+
+            usernameStatus.innerHTML =
+              "✅ Username available";
+
+          } else {
+
+            usernameStatus.innerHTML =
+              "❌ Username not available";
+          }
+
+        } catch {
+
+          usernameStatus.innerHTML =
+            "";
+        }
+
+      }, 500);
+  }
+);
 // --- LOGIN / REGISTER ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
