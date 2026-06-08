@@ -48,10 +48,37 @@ function decrypt(encryptedText) {
   return decrypted;
 }
 
+router.get("/check-username/:username", async (req, res) => {
+
+  const username =
+    req.params.username
+      .toLowerCase()
+      .trim();
+
+  const exists =
+    await User.findOne({ username });
+
+  res.json({
+    available: !exists
+  });
+});
 // REGISTER
 router.post("/register", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    let { username, password } = req.body;
+
+username =
+  username
+    .toLowerCase()
+    .trim();
+   if (!/^[a-z0-9._]+$/.test(username)) {
+
+  return res.status(400).json({
+    success: false,
+    message:
+      "Usernames can only use letters, numbers, underscores and periods."
+  });
+    }
 
     const existingUser = await User.findOne({ username });
 
