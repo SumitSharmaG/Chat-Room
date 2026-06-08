@@ -1,6 +1,7 @@
 const express = require("express");
 const crypto = require("crypto");
 const User = require("../models/User");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
@@ -93,11 +94,23 @@ router.post("/login", async (req, res) => {
     const originalPassword = decrypt(user.password);
 
     if (originalPassword === password) {
-      return res.json({
-        success: true
-      });
-    }
 
+  const token = jwt.sign(
+    {
+      userId: user._id,
+      username: user.username
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "7d"
+    }
+  );
+
+  return res.json({
+    success: true,
+    token
+  });
+}
     res.json({
       success: false
     });
