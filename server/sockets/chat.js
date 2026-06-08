@@ -120,6 +120,10 @@ module.exports = (io) => {
     // ================== USER JOIN ==================
 
     socket.on("userJoined", () => {
+      console.log(
+  "🔥 userJoined:",
+  socket.user.username
+);
 
   const username = socket.user.username;
 
