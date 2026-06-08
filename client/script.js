@@ -9,9 +9,13 @@ const isChatPage =
 
 // ✅ Create socket
 const socket = isChatPage
-    ? io(BACKEND, { transports: ["websocket"] })
+    ? io(BACKEND, {
+        transports: ["websocket"],
+        auth: {
+            token: localStorage.getItem("token")
+        }
+    })
     : null;
-
 
 // 🔥 CONNECT (only if socket exists)
 if (socket) {
@@ -112,10 +116,15 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     const data = await res.json();
 
     if (data.success) {
-        localStorage.setItem("isLoggedIn", "true"); // 'isLoggedIn' ko true set karein
-        localStorage.setItem("username", username);
-        window.location.href = "selection.html";
-    } else {
+
+    localStorage.setItem("isLoggedIn", "true");
+
+    localStorage.setItem("username", username);
+
+    localStorage.setItem("token", data.token);
+
+    window.location.href = "selection.html";
+} else {
         alert("Login failed");
     }
 });
@@ -314,5 +323,4 @@ document.getElementById("msg")?.addEventListener("keydown", (e) => {
     }
 });
 
-
-                                                       
+                              
