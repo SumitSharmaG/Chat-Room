@@ -99,7 +99,15 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
         const $ = id => document.getElementById(id);
-        const socket = io("https://chat-backend-gtg5.onrender.com", { transports: ["websocket"] });
+        const socket = io(
+    "https://chat-backend-gtg5.onrender.com",
+    {
+        transports: ["websocket"],
+        auth: {
+            token: localStorage.getItem("token")
+        }
+    }
+);
         const currentUser = localStorage.getItem("username") || "guest";
         let selectedUser = "";
         let typingTimeout;
@@ -108,7 +116,7 @@
         document.addEventListener('touchstart', e => {
             if(e.touches.length >= 3 && selectedUser) {
                 const time = formatAMPM(new Date());
-                const alertData = { sender: "system", receiver: selectedUser, text: "⚠️ Security Alert: Someone tried to take a screenshot!", time: time, type: "alert" };
+                const alertData = { sender: "SYSTEM", receiver: selectedUser, text: "⚠️ Security Alert: Someone tried to take a screenshot!", time: time, type: "alert" };
                 saveAndRender(alertData);
                 socket.emit("private_message", alertData); // Notify other user
             }
@@ -122,14 +130,40 @@
         socket.on("updateUserCount", count => $("online-count").innerText = count);
 
         // --- Typing ---
-        function handleTyping() { if(selectedUser) socket.emit("typing", { sender: currentUser, receiver: selectedUser }); }
-        socket.on("display_typing", d => {
-            if(d.sender === selectedUser) {
-                $("typing-indicator").style.display = "block";
-                clearTimeout(typingTimeout);
-                typingTimeout = setTimeout(() => $("typing-indicator").style.display="none", 2000);
-            }
-        });
+        function handleTyping() {
+
+    if (!selectedUser) return;
+
+    socket.emit("typing", currentUser);
+
+    clearTimeout(typingTimeout);
+
+    typingTimeout = setTimeout(() => {
+
+        socket.emit(
+            "stopTyping",
+            currentUser
+        );
+
+    }, 1000);
+}
+
+socket.on("userTyping", username => {
+
+    if (username === currentUser) return;
+
+    $("typing-indicator").innerText =
+        username + " typing...";
+
+    $("typing-indicator").style.display =
+        "block";
+});
+
+socket.on("userStopTyping", () => {
+
+    $("typing-indicator").style.display =
+        "none";
+});
 
         // --- Time Formatter (02:30pm) ---
         function formatAMPM(date) {
@@ -173,7 +207,7 @@
             const data = { sender: currentUser, receiver: selectedUser, text: txt, time: formatAMPM(new Date()), id: Date.now() };
             socket.emit("private_message", data);
             saveAndRender(data);
-            $("messageInput").value = "";
+            $("messageInput").focus();
         }
 
         function saveAndRender(data) {
@@ -216,7 +250,10 @@
             }
         }
 
-        function logout() { localStorage.clear(); window.location.href = "/"; }
+        function logout() {
+    localStorage.clear();
+    window.location.href = "login.html";
+}
         function goBack() { $("sidebar").style.display = "flex"; $("chatArea").style.display = "none"; }
         $("messageInput").onkeydown = e => e.key === "Enter" && sendMessage();
     </script>
