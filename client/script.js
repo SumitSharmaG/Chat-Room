@@ -16,6 +16,13 @@ const socket = isChatPage
         }
     })
     : null;
+if (socket) {
+
+    socket.on("connect_error", (err) => {
+        console.error("❌ Socket Error:", err.message);
+    });
+
+}
 
 // 🔥 CONNECT (only if socket exists)
 if (socket) {
