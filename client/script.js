@@ -79,79 +79,89 @@ window.addEventListener("keyup", (e) => {
 });
 
 // ======================================================
-const usernameInput =
-  document.getElementById("username");
 
-const usernameStatus =
-  document.getElementById("usernameStatus");
+if (
+  document.getElementById("registerForm") &&
+  document.getElementById("username") &&
+  document.getElementById("usernameStatus")
+) {
 
-let usernameTimer;
+  const usernameInput =
+    document.getElementById("username");
 
-usernameInput?.addEventListener(
-  "input",
-  async (e) => {
+  const usernameStatus =
+    document.getElementById("usernameStatus");
 
-    let value = e.target.value;
+  let usernameTimer;
 
-    value = value.toLowerCase();
+  usernameInput.addEventListener(
+    "input",
+    async (e) => {
 
-    value = value.replace(/\s+/g, "_");
+      let value = e.target.value;
 
-    value = value.replace(
-      /[^a-z0-9._]/g,
-      ""
-    );
+      value = value.toLowerCase();
 
-    e.target.value = value;
+      value = value.replace(/\s+/g, "_");
 
-    if (value.length < 3) {
+      value = value.replace(
+        /[^a-z0-9._]/g,
+        ""
+      );
+
+      e.target.value = value;
+
+      if (value.length < 3) {
+
+        usernameStatus.innerHTML =
+          "Username must be at least 3 characters";
+
+        return;
+      }
 
       usernameStatus.innerHTML =
-        "Username must be at least 3 characters";
+        "⏳ Checking...";
 
-      return;
-    }
+      clearTimeout(usernameTimer);
 
-    usernameStatus.innerHTML =
-      "⏳ Checking...";
+      usernameTimer =
+        setTimeout(async () => {
 
-    clearTimeout(usernameTimer);
+          try {
 
-    usernameTimer =
-      setTimeout(async () => {
+            const res =
+              await fetch(
+                BACKEND +
+                "/api/check-username/" +
+                value
+              );
 
-        try {
+            const data =
+              await res.json();
 
-          const res =
-            await fetch(
-              BACKEND +
-              "/api/check-username/" +
-              value
-            );
+            if (data.available) {
 
-          const data =
-            await res.json();
+              usernameStatus.innerHTML =
+                "✅ Username available";
 
-          if (data.available) {
+            } else {
+
+              usernameStatus.innerHTML =
+                "❌ Username not available";
+            }
+
+          } catch {
 
             usernameStatus.innerHTML =
-              "✅ Username available";
-
-          } else {
-
-            usernameStatus.innerHTML =
-              "❌ Username not available";
+              "";
           }
 
-        } catch {
+        }, 500);
 
-          usernameStatus.innerHTML =
-            "";
-        }
+    }
+  );
+}
 
-      }, 500);
-  }
-);
 // --- LOGIN / REGISTER ---
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
