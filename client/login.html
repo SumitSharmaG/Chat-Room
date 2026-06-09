@@ -485,12 +485,71 @@ return;
 const data =
     await res.json();
 
-alert(data.message);
+if (data.success) {
+
+    document.getElementById(
+        "successModal"
+    ).style.display = "flex";
+
+} else {
+
+    alert(data.message); }
+
+}
+
+function closeSuccessModal() {
+
+    location.reload();
+
 }
 
 </script>
 
     <script src="script.js"></script>
 
+<div id="successModal" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+z-index:9999;
+justify-content:center;
+align-items:center;
+">
+
+<div style="
+background:#141414;
+border:1px solid #b59461;
+padding:25px;
+border-radius:12px;
+width:90%;
+max-width:320px;
+text-align:center;
+">
+
+<h3 style="
+color:#b59461;
+margin-bottom:15px;
+">
+Password Changed
+</h3>
+
+<p style="
+color:#e0e0e0;
+margin-bottom:20px;
+">
+✅ Password changed successfully.
+</p>
+
+<button onclick="closeSuccessModal()">
+OK
+</button>
+
+</div>
+</div>
+
 </body>
-    </html>
+                </html>
