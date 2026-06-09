@@ -161,28 +161,32 @@ module.exports = (io) => {
     // ================== WORLD CHAT ==================
 
     socket.on(
-      "sendMessage",
-      async (data) => {
+  "sendMessage",
+  async (data) => {
 
-        try {
+    try {
 
-          const msg =
-            await Message.create(data);
+      // 🔐 Username JWT se force
+      data.username =
+        socket.user.username;
 
-          io.emit(
-            "receiveMessage",
-            msg
-          );
+      const msg =
+        await Message.create(data);
 
-        } catch (err) {
+      io.emit(
+        "receiveMessage",
+        msg
+      );
 
-          console.error(
-            "Message error:",
-            err
-          );
-        }
-      }
-    );
+    } catch (err) {
+
+      console.error(
+        "Message error:",
+        err
+      );
+    }
+  }
+);
 
 
 
