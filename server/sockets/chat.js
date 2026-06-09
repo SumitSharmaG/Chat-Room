@@ -196,6 +196,10 @@ module.exports = (io) => {
       "private_message",
       (data) => {
 
+        // 🔐 Sender JWT se force
+    data.sender =
+      socket.user.username;
+
         // REMOVE @ IF EXISTS
 
         data.sender =
