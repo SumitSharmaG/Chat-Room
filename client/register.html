@@ -189,8 +189,18 @@
 
         <form id="registerForm">
             <input type="text" id="username" placeholder="Choose Username" required autocomplete="username" />
+            <div id="usernameStatus" style="
+font-size:12px;
+text-align:left;
+min-height:18px;
+color:#999;
+margin-top:-10px;
+"></div>
             <input type="password" id="password" placeholder="Create Password" required autocomplete="new-password" />
-            <button type="submit">Create Account</button>
+            <button id="registerBtn" type="submit" disabled>
+    Create Account
+</button>
+            
         </form>
 
         <p class="footer-text">
@@ -201,6 +211,97 @@
             <strong>Note :-</strong> When You Click "CREATE ACCOUNT" Please Wait For 7-14 Sec For Connecting the Chat Server
         </div>
     </div>
+
+    <script>
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const usernameInput =
+        document.getElementById("username");
+
+    const usernameStatus =
+        document.getElementById("usernameStatus");
+
+    const registerBtn =
+        document.getElementById("registerBtn");
+
+    let timer;
+
+    registerBtn.disabled = true;
+    registerBtn.style.opacity = "0.5";
+
+    usernameInput.addEventListener("input", async (e) => {
+
+        let value = e.target.value;
+
+        value = value.toLowerCase();
+
+        value = value.replace(/\s+/g, "_");
+
+        value = value.replace(
+            /[^a-z0-9._]/g,
+            ""
+        );
+
+        e.target.value = value;
+
+        registerBtn.disabled = true;
+        registerBtn.style.opacity = "0.5";
+
+        if (value.length < 3) {
+
+            usernameStatus.innerHTML =
+                "Username must be at least 3 characters";
+
+            return;
+        }
+
+        usernameStatus.innerHTML =
+            "⏳ Checking...";
+
+        clearTimeout(timer);
+
+        timer = setTimeout(async () => {
+
+            try {
+
+                const res =
+                    await fetch(
+                        "https://chat-backend-gtg5.onrender.com/api/check-username/" +
+                        value
+                    );
+
+                const data =
+                    await res.json();
+
+                if (data.available) {
+
+                    usernameStatus.innerHTML =
+                        "✅ Username available";
+
+                    registerBtn.disabled = false;
+                    registerBtn.style.opacity = "1";
+
+                } else {
+
+                    usernameStatus.innerHTML =
+                        "❌ Username not available";
+
+                }
+
+            } catch {
+
+                usernameStatus.innerHTML =
+                    "";
+
+            }
+
+        }, 500);
+
+    });
+
+});
+    </script>
 
     <script src="script.js"></script>
 
