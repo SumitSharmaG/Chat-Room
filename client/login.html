@@ -345,6 +345,75 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <script>
 
+document.addEventListener("DOMContentLoaded", () => {
+
+    const resetUsername =
+        document.getElementById(
+            "resetUsername"
+        );
+
+    resetUsername?.addEventListener(
+        "input",
+        (e) => {
+
+            let value =
+                e.target.value;
+
+            value =
+                value.toLowerCase();
+
+            value =
+                value.replace(
+                    /\s+/g,
+                    "_"
+                );
+
+            value =
+                value.replace(
+                    /[^a-z0-9._]/g,
+                    ""
+                );
+
+            if (
+                value.startsWith("_") ||
+                value.startsWith(".")
+            ) {
+
+                value =
+                    value.slice(1);
+            }
+
+            value =
+                value.replace(
+                    /__+/g,
+                    "_"
+                );
+
+            value =
+                value.replace(
+                    /\.\.+/g,
+                    "."
+                );
+
+            value =
+                value.replace(
+                    /_\./g,
+                    "_"
+                );
+
+            value =
+                value.replace(
+                    /\._/g,
+                    "."
+                );
+
+
+            e.target.value =
+                value;
+        }
+    );
+});
+
 function toggleResetBox() {
 
     const box =
@@ -424,4 +493,4 @@ alert(data.message);
     <script src="script.js"></script>
 
 </body>
-                </html>
+    </html>
