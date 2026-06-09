@@ -48,6 +48,31 @@ function decrypt(encryptedText) {
   return decrypted;
 }
 
+// validation
+router.get("/check-username/:username", async (req, res) => {
+  try {
+
+    const username =
+      req.params.username
+        .toLowerCase()
+        .trim();
+
+    const exists =
+      await User.findOne({ username });
+
+    res.json({
+      available: !exists
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      available: false
+    });
+
+  }
+});
+
 // REGISTER
 router.post("/register", async (req, res) => {
   try {
