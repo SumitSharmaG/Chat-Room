@@ -242,6 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
             /[^a-z0-9._]/g,
             ""
         );
+        value = value.slice(0, 20);
 
         e.target.value = value;
 
@@ -254,6 +255,37 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Username must be at least 3 characters";
 
             return;
+        }
+
+        if (value.length > 20) {
+
+    usernameStatus.innerHTML =
+        "Username cannot exceed 20 characters";
+
+    registerBtn.disabled = true;
+    registerBtn.style.opacity = "0.5";
+
+    return;
+        }
+
+        if (
+    value.startsWith("_") ||
+    value.startsWith(".") ||
+    value.endsWith("_") ||
+    value.endsWith(".") ||
+    value.includes("__") ||
+    value.includes("..") ||
+    value.includes("_.") ||
+    value.includes("._")
+) {
+
+    usernameStatus.innerHTML =
+        "❌ Invalid username format";
+
+    registerBtn.disabled = true;
+    registerBtn.style.opacity = "0.5";
+
+    return;
         }
 
         usernameStatus.innerHTML =
