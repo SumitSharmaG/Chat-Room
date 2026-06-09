@@ -328,6 +328,12 @@ Checking Username...
                 const data =
                     await res.json();
 
+                if (
+    usernameInput.value !== value
+) {
+    return;
+        }
+
                 if (data.available) {
 
                     usernameStatus.innerHTML =
