@@ -157,6 +157,16 @@
             h2 { font-size: 1.8rem; }
             .home-btn { top: 15px; left: 15px; font-size: 0.8rem; }
         }
+
+        @keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+                }
+        
     </style>
 </head>
 <body>
@@ -289,8 +299,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         usernameStatus.innerHTML =
-            "⏳ Checking...";
-
+`
+<span style="
+display:inline-block;
+width:12px;
+height:12px;
+border:2px solid rgba(255,255,255,0.3);
+border-top:2px solid #ffffff;
+border-radius:50%;
+animation:spin 0.8s linear infinite;
+vertical-align:middle;
+margin-right:6px;
+"></span>
+Checking...
+`;
         clearTimeout(timer);
 
         timer = setTimeout(async () => {
