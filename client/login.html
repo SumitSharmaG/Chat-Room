@@ -201,8 +201,18 @@
 
         <form id="loginForm">
             <input type="text" id="username" placeholder="Username" required autocomplete="username" />
+            <div id="loginUsernameStatus" style="
+font-size:12px;
+text-align:left;
+min-height:18px;
+color:#999;
+margin-top:-10px;
+"></div>
             <input type="password" id="password" placeholder="Password" required autocomplete="current-password" />
-            <button type="submit">Access Chat</button>
+            <button id="loginBtn" type="submit" disabled>
+    Access Chat
+</button>
+            
         </form>
 
         <p class="footer-text">
@@ -213,6 +223,78 @@
             <strong>Note :-</strong> When You Click "ACCESS CHAT" Please Wait For 7-14 Sec For Connecting the Chat Server :)
         </div>
     </div>
+
+    <script>
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const usernameInput =
+        document.getElementById("username");
+
+    const usernameStatus =
+        document.getElementById("loginUsernameStatus");
+
+    const loginBtn =
+        document.getElementById("loginBtn");
+
+    loginBtn.disabled = true;
+    loginBtn.style.opacity = "0.5";
+
+    usernameInput.addEventListener("input", (e) => {
+
+        let value = e.target.value;
+
+        value = value.toLowerCase();
+
+        value = value.replace(/\s+/g, "_");
+
+        value = value.replace(
+            /[^a-z0-9._]/g,
+            ""
+        );
+
+        value = value.slice(0, 20);
+
+        e.target.value = value;
+
+        loginBtn.disabled = true;
+        loginBtn.style.opacity = "0.5";
+
+        if (value.length < 3) {
+
+            usernameStatus.innerHTML =
+                "Username must be at least 3 characters";
+
+            return;
+        }
+
+        if (
+            value.startsWith("_") ||
+            value.startsWith(".") ||
+            value.endsWith("_") ||
+            value.endsWith(".") ||
+            value.includes("__") ||
+            value.includes("..") ||
+            value.includes("_.") ||
+            value.includes("._")
+        ) {
+
+            usernameStatus.innerHTML =
+                "❌ Invalid username format";
+
+            return;
+        }
+
+        usernameStatus.innerHTML =
+            "✓ Username format valid";
+
+        loginBtn.disabled = false;
+        loginBtn.style.opacity = "1";
+
+    });
+
+});
+        </script>
 
     <script src="script.js"></script>
 
