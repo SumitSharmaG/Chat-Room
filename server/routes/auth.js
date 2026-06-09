@@ -148,5 +148,101 @@ router.post("/login", async (req, res) => {
     });
   }
 });
+// CHANGE PASSWORD
+router.post(
+  "/change-password",
+  async (req, res) => {
+
+    try {
+
+      const {
+        username,
+        oldPassword,
+        newPassword,
+        confirmPassword
+      } = req.body;
+
+      if (
+        !username ||
+        !oldPassword ||
+        !newPassword ||
+        !confirmPassword
+      ) {
+
+        return res.json({
+          success: false,
+          message:
+            "All fields are required"
+        });
+      }
+
+      if (
+        newPassword !==
+        confirmPassword
+      ) {
+
+        return res.json({
+          success: false,
+          message:
+            "New passwords do not match"
+        });
+      }
+
+      const user =
+        await User.findOne({
+          username
+        });
+
+      if (!user) {
+
+        return res.json({
+          success: false,
+          message:
+            "Username not found"
+        });
+      }
+
+      const currentPassword =
+        decrypt(
+          user.password
+        );
+
+      if (
+        currentPassword !==
+        oldPassword
+      ) {
+
+        return res.json({
+          success: false,
+          message:
+            "Current password is incorrect"
+        });
+      }
+
+      user.password =
+        encrypt(
+          newPassword
+        );
+
+      await user.save();
+
+      res.json({
+        success: true,
+        message:
+          "Password changed successfully"
+      });
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Server error"
+      });
+    }
+  }
+);
 
 module.exports = router;
