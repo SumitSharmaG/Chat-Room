@@ -250,44 +250,6 @@ margin-top:-10px;
     </a>
  </p>       
 
-<div id="resetBox" style="
-display:none;
-margin-top:20px;
-flex-direction:column;
-gap:10px;
-">
-
-<input
-type="text"
-id="resetUsername"
-placeholder="Username"
->
-
-<input
-type="password"
-id="oldPassword"
-placeholder="Current Password"
->
-
-<input
-type="password"
-id="newPassword"
-placeholder="New Password"
->
-<input
-type="password"
-id="confirmPassword"
-placeholder="Confirm New Password"
->
-
-<button
-type="button"
-onclick="changePassword()"
->
-Change Password
-</button>
-
-</div>
 
         <div class="reg-note">
             <strong>Note :-</strong> When You Click "ACCESS CHAT" Please Wait For 7-14 Sec For Connecting the Chat Server :)
@@ -439,29 +401,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function toggleResetBox() {
 
-    const box =
-        document.getElementById("resetBox");
+    document.getElementById(
+        "resetModal"
+    ).style.display = "flex";
+}
 
-    if (
-        box.style.display === "none" ||
-        box.style.display === ""
-    ) {
+function closeResetModal() {
 
-        box.style.display = "flex";
-
-setTimeout(() => {
-
-    box.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
-
-}, 100);
-
-    } else {
-
-        box.style.display = "none";
-    }
+    document.getElementById(
+        "resetModal"
+    ).style.display = "none";
+}
 }
 
 async function changePassword() {
@@ -518,6 +468,7 @@ const data =
     await res.json();
 
 if (data.success) {
+closeResetModal();
 
     document.getElementById(
         "successModal"
@@ -778,6 +729,78 @@ Close
 </div>
 </div>    
 
+<div id="resetModal" style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.7);
+z-index:9999;
+justify-content:center;
+align-items:center;
+"
+onclick="closeResetModal()"
+>
+
+<div style="
+background:#141414;
+border:1px solid #b59461;
+padding:25px;
+border-radius:12px;
+width:90%;
+max-width:350px;
+text-align:center;
+"
+onclick="event.stopPropagation()"
+>
+
+<h3 style="
+color:#b59461;
+margin-bottom:15px;
+">
+Reset Password
+</h3>
+
+<input
+type="text"
+id="resetUsername"
+placeholder="Username"
+>
+
+<input
+type="password"
+id="oldPassword"
+placeholder="Current Password"
+>
+
+<input
+type="password"
+id="newPassword"
+placeholder="New Password"
+>
+
+<input
+type="password"
+id="confirmPassword"
+placeholder="Confirm New Password"
+>
+
+<button
+type="button"
+onclick="changePassword()"
+>
+Change Password
+</button>
+
+<button
+type="button"
+onclick="closeResetModal()"
+>
+Close
+</button>
+
+</div>
+</div>
+
 
 </body>
-</html>
+    </html>
