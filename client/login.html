@@ -243,6 +243,13 @@ margin-top:-10px;
     </a>
 </p>
 
+ <p class="footer-text">
+    Know your User & Pass?
+    <a href="javascript:void(0)" onclick="openCredentialsModal()">
+        Click here
+    </a>
+ </p>       
+
 <div id="resetBox" style="
 display:none;
 margin-top:20px;
@@ -553,6 +560,46 @@ function closeErrorModal() {
     ).style.display = "none";
 }
 
+ function openCredentialsModal() {
+
+    document.getElementById(
+        "savedUsernameBox"
+    ).value =
+        localStorage.getItem(
+            "savedUsername"
+        ) || "";
+
+    document.getElementById(
+        "savedPasswordBox"
+    ).value =
+        localStorage.getItem(
+            "savedPassword"
+        ) || "";
+
+    document.getElementById(
+        "credentialsModal"
+    ).style.display = "flex";
+}
+
+function closeCredentialsModal() {
+
+    document.getElementById(
+        "credentialsModal"
+    ).style.display = "none";
+}
+
+function copyField(id) {
+
+    const input =
+        document.getElementById(id);
+
+    input.select();
+
+    navigator.clipboard.writeText(
+        input.value
+    );
+    }   
+
 </script>
 
     <script src="script.js"></script>
@@ -645,6 +692,91 @@ OK
 
 </div>
 </div>
+
+<div id="credentialsModal" style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.7);
+z-index:9999;
+justify-content:center;
+align-items:center;
+"
+onclick="closeCredentialsModal()"
+>
+
+<div style="
+background:#141414;
+border:1px solid #b59461;
+padding:25px;
+border-radius:12px;
+width:90%;
+max-width:350px;
+text-align:center;
+"
+onclick="event.stopPropagation()"
+>
+
+<h3 style="
+color:#b59461;
+margin-bottom:15px;
+">
+Saved Credentials
+</h3>
+
+<div style="
+display:flex;
+gap:5px;
+margin-bottom:10px;
+">
+
+<input
+id="savedUsernameBox"
+readonly
+style="flex:1;"
+>
+
+<button
+type="button"
+onclick="copyField('savedUsernameBox')"
+style="width:auto;"
+>
+📋
+</button>
+
+</div>
+
+<div style="
+display:flex;
+gap:5px;
+margin-bottom:20px;
+">
+
+<input
+id="savedPasswordBox"
+readonly
+style="flex:1;"
+>
+
+<button
+type="button"
+onclick="copyField('savedPasswordBox')"
+style="width:auto;"
+>
+📋
+</button>
+
+</div>
+
+<button
+type="button"
+onclick="closeCredentialsModal()"
+>
+Close
+</button>
+
+</div>
+</div>    
 
 
 </body>
