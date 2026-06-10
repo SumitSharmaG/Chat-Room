@@ -134,6 +134,9 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
 
     localStorage.setItem("token", data.token);
 
+   localStorage.setItem("savedUsername", username);
+   localStorage.setItem("savedPassword", password);    
+
     window.location.href = "selection.html";
 } else {
         alert("Login failed");
