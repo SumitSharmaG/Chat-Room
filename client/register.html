@@ -190,15 +190,117 @@ user-select: none;
     </a>
 
     <script>
-        const user = localStorage.getItem("username");
-        if (user) { window.location.href = "register.html"; }
 
-        function closeModal() {
-            document.getElementById('noticeModal').style.display = 'none';
+function closeModal() {
+    document.getElementById('noticeModal').style.display = 'none';
+}
+
+function logoutToLogin() {
+
+    localStorage.clear();
+
+    window.location.href =
+        "login.html";
+}
+
+function logoutToRegister() {
+
+    localStorage.clear();
+
+    location.reload();
+}
+
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const user =
+            localStorage.getItem(
+                "username"
+            );
+
+        if (user) {
+
+    document.getElementById(
+        "alreadyLoggedBox"
+    ).style.display = "block";
+
+    document.getElementById(
+        "registerFormContainer"
+    ).style.display = "none";
+
+    document.getElementById(
+        "noticeModal"
+    ).style.display = "none";
         }
-    </script>
+    }
+);
+
+</script>
 
     <div class="register-card">
+        <div id="alreadyLoggedBox" style="
+display:none;
+text-align:center;
+">
+
+<h2>Already Logged In</h2>
+
+<p>
+You have already logged in.
+</p>
+
+<p>
+To login using another account,
+please logout first.
+</p>
+
+<p>
+<a href="javascript:void(0)"
+onclick="logoutToLogin()"
+style="
+color:#b59461;
+font-weight:600;
+">
+Logout Here!
+</a>
+</p>
+
+<p>
+If you want to create a new account,
+please logout first.
+</p>
+
+<p>
+<a href="javascript:void(0)"
+onclick="logoutToRegister()"
+style="
+color:#b59461;
+font-weight:600;
+">
+Logout Here!
+</a>
+</p>
+
+<br>
+
+<p style="
+color:white;
+font-size:14px;
+">
+Thank you.
+</p>
+
+<p style="
+color:white;
+font-style:italic;
+font-size:14px;
+">
+The System Administrator
+</p>
+
+        </div>
+        <div id="registerFormContainer">
         <h2>Register</h2>
         <p class="desc">Join our premium private network</p>
 
@@ -225,6 +327,7 @@ margin-top:-10px;
         <div class="reg-note">
             <strong>Note :-</strong> When You Click "CREATE ACCOUNT" Please Wait For 7-14 Sec For Connecting the Chat Server
         </div>
+    </div>
     </div>
 
     <script>
