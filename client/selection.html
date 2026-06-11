@@ -91,6 +91,32 @@
             box-shadow: 0 20px 45px rgba(0,0,0,0.6);
         }
 
+.nav-prev,
+.nav-next{
+    position:absolute;
+    top:150px;
+    font-size:35px;
+    color:#b59461;
+    text-decoration:none;
+    font-weight:bold;
+    transition:0.3s;
+    z-index:10;
+}
+
+.nav-prev{
+    left:35px;
+}
+
+.nav-next{
+    right:35px;
+}
+
+.nav-prev:hover,
+.nav-next:hover{
+    transform:scale(1.15);
+    opacity:0.8;
+}
+
         h3 {
             font-family: 'Playfair Display', serif;
             font-size: 1.8rem;
@@ -158,6 +184,10 @@ user-select: none;
     </style>
 </head>
 <body>
+
+<a href="login.html" class="nav-prev">&#10094;</a>
+
+<a href="selection.html" class="nav-next">&#10095;</a>
 
     <div class="selection-container">
         <h2>Welcome! Choose your chat mode</h2>
