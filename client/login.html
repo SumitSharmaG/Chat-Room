@@ -1,13 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <!-- Is code ko <head> ke andar dalein -->
-<script>
-    if (localStorage.getItem('isLoggedIn') === 'true') {
-        window.location.href = "selection.html"; 
-    }
-</script>
-    
+<head>        
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -214,12 +207,98 @@ window.addEventListener("load", () => {
         Home
     </a>
 
-    <script>
-        const user = localStorage.getItem("username");
-        if (user) { window.location.href = "chat.html"; }
-    </script>
 
     <div class="login-card">
+        <div id="alreadyLoggedBox" style="
+display:none;
+text-align:center;
+">
+
+<h2>Already Logged In</h2>
+
+<p>
+You have already logged in.
+</p>
+
+<p>
+To login using another account,
+please logout first.
+</p>
+
+<p>
+<a href="javascript:void(0)"
+onclick="logoutToLogin()"
+style="
+color:#b59461;
+font-weight:600;
+">
+Logout Here!
+</a>
+</p>
+
+<p>
+If you want to create a new account,
+please logout first.
+</p>
+
+<p>
+<a href="javascript:void(0)"
+onclick="logoutToRegister()"
+style="
+color:#b59461;
+font-weight:600;
+">
+Logout Here!
+</a>
+</p>
+
+<hr style="
+margin:25px 0;
+border-color:rgba(255,255,255,0.1);
+">
+
+<h3 style="
+color:#b59461;
+margin-bottom:15px;
+">
+Troubleshoot
+</h3>
+
+<p>
+Reset old password?
+<a href="javascript:void(0)"
+onclick="toggleResetBox()">
+Click here
+</a>
+</p>
+
+<p>
+Know your User & Pass?
+<a href="javascript:void(0)"
+onclick="openCredentialsModal()">
+Click here
+</a>
+</p>
+
+<br>
+
+<p style="
+color:white;
+font-size:14px;
+">
+Thank you.
+</p>
+
+<p style="
+color:white;
+font-style:italic;
+font-size:14px;
+">
+The System Administrator
+</p>
+
+        </div>
+        <div id="loginFormContainer">
         <h2>Login</h2>
 
         <form id="loginForm">
@@ -259,7 +338,9 @@ margin-top:-10px;
         <div class="reg-note">
             <strong>Note :-</strong> When You Click "ACCESS CHAT" Please Wait For 7-14 Sec For Connecting the Chat Server :)
         </div>
-    </div>
+    
+</div>
+</div>
 
     <script>
 
@@ -831,6 +912,49 @@ document.addEventListener("cut", function(e) {
 document.addEventListener("dragstart", function(e) {
     e.preventDefault();
 });
+
+</script>    
+
+<script>
+
+function logoutToLogin() {
+
+    localStorage.clear();
+
+    location.reload();
+}
+
+function logoutToRegister() {
+
+    localStorage.clear();
+
+    window.location.href =
+        "register.html";
+}
+
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const user =
+            localStorage.getItem(
+                "username"
+            );
+
+        if (user) {
+
+            document.getElementById(
+                "alreadyLoggedBox"
+            ).style.display =
+                "block";
+
+            document.getElementById(
+                "loginFormContainer"
+            ).style.display =
+                "none";
+        }
+    }
+);
 
 </script>    
 
