@@ -403,47 +403,21 @@ usernameInput.addEventListener("input", async (e) => {
 
     if (value.length < 3) {  
 
-        usernameStatus.innerHTML =  
-            "Username must be at least 3 characters";  
-
-        return;  
-    }  
-
-    if (value.length > 20) {  
-
-usernameStatus.innerHTML =  
-    "Username cannot exceed 20 characters";  
-
-registerBtn.disabled = true;  
-registerBtn.style.opacity = "0.5";  
-
-return;  
-    }  
-
-    if (  
-value.startsWith("_") ||  
-value.startsWith(".") ||  
-value.endsWith("_") ||  
-value.endsWith(".") ||  
-value.includes("__") ||  
-value.includes("..") ||  
-value.includes("_.") ||  
-value.includes("._")
-
-) {
-
-usernameStatus.innerHTML =  
-    "❌ Invalid username format";  
-
-registerBtn.disabled = true;  
-registerBtn.style.opacity = "0.5";  
-
-return;  
-    }  
-
-    usernameStatus.innerHTML =
-
-  <span style="   display:inline-block;   width:12px;   height:12px;   border:2px solid rgba(255,255,255,0.3);   border-top:2px solid #ffffff;   border-radius:50%;   animation:spin 0.8s linear infinite;   vertical-align:middle;   margin-right:6px;   "></span>   Checking Username...  ;
+        usernameStatus.innerHTML =
+`
+<span style="
+display:inline-block;
+width:12px;
+height:12px;
+border:2px solid rgba(255,255,255,0.3);
+border-top:2px solid #ffffff;
+border-radius:50%;
+animation:spin 0.8s linear infinite;
+vertical-align:middle;
+margin-right:6px;
+"></span>
+Checking Username...
+`;
 clearTimeout(timer);
 
 timer = setTimeout(async () => {  
