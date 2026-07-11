@@ -73,6 +73,25 @@ router.get("/check-username/:username", async (req, res) => {
   }
 });
 
+// WARMUP MONGODB
+router.get("/warmup", async (req, res) => {
+    try {
+
+        await User.findOne().lean();
+
+        res.json({
+            success: true
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            success: false
+        });
+
+    }
+});
+
 // REGISTER
 router.post("/register", async (req, res) => {
   try {
