@@ -391,6 +391,10 @@ margin-top:-10px;
 
 document.addEventListener("DOMContentLoaded", () => {
 
+// MongoDB Warmup
+fetch("https://chat-backend-gtg5.onrender.com/api/warmup")
+.catch(() => {});
+    
     const usernameInput =
         document.getElementById("username");
 
