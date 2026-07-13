@@ -112,14 +112,17 @@ function prepareFile(file, type){
 
         const data = {
 
-            fileType:type,
+    fileType: type,
 
-            fileName:file.name,
+    fileName: file.name,
 
-            fileData:reader.result
+    fileData: reader.result,
 
-        };
+    mimeType: file.type,
 
+    fileSize: file.size
+
+};
         if(window.sendAttachment){
 
             window.sendAttachment(data);
