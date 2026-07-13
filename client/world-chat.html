@@ -129,6 +129,106 @@
     background: #b59461;
     color: black;
 }
+
+/* ===== Attachment UI ===== */
+
+.attach-btn{
+    width:45px;
+    height:45px;
+    border:none;
+    border-radius:50%;
+    background:#202020;
+    color:#b59461;
+    font-size:28px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+}
+
+.attach-btn:active{
+    transform:scale(.95);
+}
+
+.attach-menu{
+
+    position:fixed;
+
+    bottom:82px;
+
+    left:12px;
+
+    background:#141414;
+
+    border:1px solid rgba(181,148,97,.3);
+
+    border-radius:16px;
+
+    padding:10px;
+
+    display:none;
+
+    flex-direction:column;
+
+    gap:10px;
+
+    z-index:9999;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+
+}
+
+.attach-menu.show{
+
+    display:flex;
+
+}
+
+.attach-item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    color:white;
+
+    cursor:pointer;
+
+    padding:8px 12px;
+
+    border-radius:10px;
+
+}
+
+.attach-item:hover{
+
+    background:#202020;
+
+}
+
+.attach-icon{
+
+    width:38px;
+
+    height:38px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:#2a2a2a;
+
+    font-size:18px;
+
+}        
+        
     </style>
 </head>
 <body oncontextmenu="return false;">
