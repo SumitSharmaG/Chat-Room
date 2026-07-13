@@ -1,3 +1,7 @@
+if (!document.getElementById("attachBtn")) {
+    console.log("Attachment UI skipped.");
+} else {
+
 // ================= ATTACHMENTS =================
 
 const attachBtn = document.getElementById("attachBtn");
@@ -126,4 +130,5 @@ function prepareFile(file, type){
 
     reader.readAsDataURL(file);
 
+}
 }
