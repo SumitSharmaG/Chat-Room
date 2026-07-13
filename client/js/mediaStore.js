@@ -198,3 +198,41 @@ async function getMedia(id) {
     });
 
     }
+
+// ================= EXTRA HELPERS =================
+
+// Save attachment with auto id
+
+async function saveAttachment(data) {
+
+    data.id =
+        data.id ||
+        crypto.randomUUID();
+
+    await saveMedia(data);
+
+    return data.id;
+
+}
+
+// Restore all attachments
+
+async function restoreAttachments() {
+
+    const media =
+        await getAllMedia();
+
+    media.forEach(item => {
+
+        if (
+            typeof displayAttachment ===
+            "function"
+        ) {
+
+            displayAttachment(item);
+
+        }
+
+    });
+
+            }
