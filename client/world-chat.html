@@ -270,7 +270,40 @@ id="attachBtn">
         </button>
     </div>
 
+    <input
+type="file"
+id="cameraInput"
+accept="image/*"
+capture="environment"
+hidden>
+
+<input
+type="file"
+id="galleryInput"
+accept="image/*"
+hidden>
+
+<input
+type="file"
+id="videoInput"
+accept="video/*"
+hidden>
+
+<input
+type="file"
+id="audioInput"
+accept="audio/*"
+hidden>
+
+<input
+type="file"
+id="documentInput"
+accept=".pdf,.doc,.docx,.txt,.zip,.rar,.ppt,.pptx,.xls,.xlsx"
+hidden>
+
     <script src="https://chat-backend-gtg5.onrender.com/socket.io/socket.io.js"></script>
+    <script src="js/mediaStore.js"></script>
+<script src="js/attachments.js"></script>
     <script src="script.js"></script>
 
 <div
