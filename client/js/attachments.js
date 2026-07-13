@@ -37,8 +37,9 @@ document.querySelectorAll(".attach-item").forEach(item => {
         switch (item.dataset.type) {
 
             case "camera":
-                cameraInput.click();
-                break;
+    cameraInput.value = "";
+    cameraInput.click();
+    break;
 
             case "gallery":
                 galleryInput.click();
