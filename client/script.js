@@ -177,7 +177,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 if (typeof restoreAttachments === "function") {
 
+    setTimeout(() => {
+
     restoreAttachments();
+
+},300);
 
 }
 });
@@ -263,13 +267,21 @@ if (socket) {
 
 socket.on("receiveAttachment", async (data) => {
 
+    if (!data.id) {
+
+        data.id = crypto.randomUUID();
+
+    }
+
     if (typeof saveAttachment === "function") {
+
         await saveAttachment(data);
+
     }
 
     displayAttachment(data);
 
-  });
+});
 }
 
 // DISPLAY MESSAGE
@@ -310,8 +322,7 @@ function displayMessage(data) {
     messagesUl.appendChild(li);
     scrollToBottom();
 
-    localStorage.setItem("chat_history", messagesUl.innerHTML);
-}
+  
 
 // ================= ATTACHMENT PREVIEW =================
 
@@ -481,6 +492,8 @@ window.sendAttachment = function(fileData){
     if(!socket) return;
 
     socket.emit("sendAttachment",{
+
+        id: crypto.randomUUID(),
 
         username:localStorage.getItem("username"),
 
