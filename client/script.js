@@ -252,6 +252,15 @@ if (socket) {
         if (messagesUl) messagesUl.innerHTML = "";
         localStorage.removeItem("chat_history");
     });
+
+
+// ================= ATTACHMENTS =================
+
+socket.on("receiveAttachment", (data) => {
+
+    displayAttachment(data);
+
+  });
 }
 
 // DISPLAY MESSAGE
@@ -293,6 +302,107 @@ function displayMessage(data) {
     scrollToBottom();
 
     localStorage.setItem("chat_history", messagesUl.innerHTML);
+}
+
+// ================= ATTACHMENT PREVIEW =================
+
+function displayAttachment(data) {
+
+    if (!messagesUl) return;
+
+    const li = document.createElement("li");
+
+    const myUser = localStorage.getItem("username");
+
+    if (data.username === myUser) {
+        li.classList.add("my-message");
+    }
+
+    let preview = "";
+
+    switch (data.fileType) {
+
+        case "image":
+
+            preview = `
+                <img
+                    src="${data.fileData}"
+                    style="
+                        max-width:220px;
+                        border-radius:10px;
+                        cursor:pointer;
+                    "
+                >
+            `;
+            break;
+
+        case "video":
+
+            preview = `
+                <video
+                    controls
+                    style="
+                        max-width:240px;
+                        border-radius:10px;
+                    ">
+                    <source src="${data.fileData}">
+                </video>
+            `;
+            break;
+
+        case "audio":
+
+            preview = `
+                <audio controls>
+                    <source src="${data.fileData}">
+                </audio>
+            `;
+            break;
+
+        default:
+
+            preview = `
+                <a
+                    href="${data.fileData}"
+                    download="${data.fileName}"
+                    style="
+                        color:#b59461;
+                        text-decoration:none;
+                        font-weight:bold;
+                    ">
+                    📄 ${data.fileName}
+                </a>
+            `;
+    }
+
+    li.innerHTML = `
+
+        <strong>${data.username}</strong>
+
+        <div style="margin-top:8px;">
+            ${preview}
+        </div>
+
+        <span
+            style="
+                font-size:11px;
+                opacity:.7;
+                margin-top:6px;
+            ">
+            ${data.time}
+        </span>
+
+    `;
+
+    messagesUl.appendChild(li);
+
+    scrollToBottom();
+
+    localStorage.setItem(
+        "chat_history",
+        messagesUl.innerHTML
+    );
+
 }
 
 // Seen popup
@@ -337,4 +447,25 @@ document.getElementById("msg")?.addEventListener("keydown", (e) => {
     }
 });
 
+// ================= ATTACHMENT SEND =================
+
+window.sendAttachment = function(fileData){
+
+    if(!socket) return;
+
+    socket.emit("sendAttachment",{
+
+        username:localStorage.getItem("username"),
+
+        fileType:fileData.fileType,
+
+        fileName:fileData.fileName,
+
+        fileData:fileData.fileData,
+
+        time:getCurrentTime()
+
+    });
+
+};
                               
