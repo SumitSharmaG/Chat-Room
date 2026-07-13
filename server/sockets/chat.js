@@ -189,6 +189,22 @@ module.exports = (io) => {
 );
 
 
+    // ================== ATTACHMENTS ==================
+
+socket.on(
+    "sendAttachment",
+    (data) => {
+
+        data.username =
+            socket.user.username;
+
+        io.emit(
+            "receiveAttachment",
+            data
+        );
+
+    }
+);
 
     // ================== PRIVATE CHAT ==================
 
