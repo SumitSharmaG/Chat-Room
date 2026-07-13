@@ -508,4 +508,4 @@ window.sendAttachment = function(fileData){
     });
 
 };
-                              
+};                                                 }                              
