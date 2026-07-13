@@ -18,7 +18,7 @@ module.exports = function attachmentSocket(io, socket) {
 
             mimeType: data.mimeType,
 
-            dataUrl: data.dataUrl,
+            fileData: data.fileData,
 
             time: data.time
         });
