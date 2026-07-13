@@ -320,13 +320,8 @@ function displayMessage(data) {
     }
 
     messagesUl.appendChild(li);
-scrollToBottom();
+    scrollToBottom();
 
-localStorage.setItem(
-    "chat_history",
-    messagesUl.innerHTML
-);
-}
   
 
 // ================= ATTACHMENT PREVIEW =================
@@ -511,4 +506,6 @@ window.sendAttachment = function(fileData){
         time:getCurrentTime()
 
     });
-};                                                }                              
+
+};
+                                             
