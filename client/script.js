@@ -175,6 +175,11 @@ document.addEventListener("DOMContentLoaded", () => {
         messagesUl.innerHTML = savedChat;
         scrollToBottom();
     }
+if (typeof restoreAttachments === "function") {
+
+    restoreAttachments();
+
+}
 });
 
 // ================== TYPING ==================
@@ -256,7 +261,11 @@ if (socket) {
 
 // ================= ATTACHMENTS =================
 
-socket.on("receiveAttachment", (data) => {
+socket.on("receiveAttachment", async (data) => {
+
+    if (typeof saveAttachment === "function") {
+        await saveAttachment(data);
+    }
 
     displayAttachment(data);
 
@@ -428,17 +437,35 @@ window.handleSend = function () {
     }
 };
 
-window.clearChat = function () {
+window.clearChat = async function () {
+
     if (confirm("Clear chat?")) {
+
         socket?.emit("clearAllChat");
+
+        if (typeof clearAllMedia === "function") {
+
+            await clearAllMedia();
+
+        }
+
     }
+
 };
 
-window.logout = function () {
-    localStorage.clear(); // Saara data aur login flag clear ho jayega
+window.logout = async function () {
+
+    if (typeof clearAllMedia === "function") {
+
+        await clearAllMedia();
+
+    }
+
+    localStorage.clear();
+
     window.location.href = "login.html";
-};
 
+};
 
 document.getElementById("msg")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
