@@ -321,7 +321,7 @@ function displayMessage(data) {
 
     messagesUl.appendChild(li);
     scrollToBottom();
-
+            }
   
 
 // ================= ATTACHMENT PREVIEW =================
