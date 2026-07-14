@@ -24,79 +24,48 @@ const ChunkSender = {
             );
 
         // Upload Start
-        socket.emit("chunk-upload-start", {
+        await new Promise((resolve)=>{
 
-            transferId,
+    socket.emit("chunk-upload",{
 
-            fileName: file.name,
+        transferId,
 
-            fileSize: file.size,
+        chunkIndex,
 
-            mimeType: file.type,
+        bytes
 
-            fileType: category,
+    });
 
-            totalChunks,
+    socket.once("chunk-ack",(ack)=>{
 
-            username:
-                localStorage.getItem("username"),
+        if(
+            ack.transferId===transferId &&
+            ack.chunkIndex===chunkIndex
+        ){
 
-            time:
-                getCurrentTime()
+            resolve();
 
-        });
+        }
 
-        let chunkIndex = 0;
+    });
 
-        while (
-            chunkIndex <
-            totalChunks
-        ) {
+});
 
-            const start =
-                chunkIndex *
-                this.CHUNK_SIZE;
+chunkIndex++;
 
-            const end =
-                Math.min(
-                    start +
-                    this.CHUNK_SIZE,
-                    file.size
-                );
+UploadUI.update(
 
-            const blob =
-                file.slice(start, end);
+    transferId,
 
-            const buffer =
-                await blob.arrayBuffer();
+    Math.floor(
 
-            const bytes =
-                Array.from(
-                    new Uint8Array(buffer)
-                );
+        chunkIndex/
 
-            socket.emit("chunk-upload", {
+        totalChunks*100
 
-                transferId,
+    )
 
-                chunkIndex,
-
-                bytes
-
-            });
-
-            chunkIndex++;
-
-            const percent =
-                Math.floor(
-                    (chunkIndex /
-                    totalChunks) * 100
-                );
-
-            UploadUI.update(
-                transferId,
-                percent
-            );
+);
 
         }
 
