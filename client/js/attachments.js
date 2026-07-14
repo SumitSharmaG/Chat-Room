@@ -108,28 +108,7 @@ function prepareFile(file, type){
 
     const reader = new FileReader();
 
-    reader.onload = () => {
-
-        const data = {
-
-    fileType: type,
-
-    fileName: file.name,
-
-    fileData: reader.result,
-
-    mimeType: file.type,
-
-    fileSize: file.size
-
-};
-        if(window.sendAttachment){
-
-            window.sendAttachment(data);
-
-        }
-
-    };
+    ChunkSender.send(file);
 
     reader.readAsDataURL(file);
 
