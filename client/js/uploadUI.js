@@ -1,105 +1,83 @@
-// ===========================================
-// Secure Ultra Chat
-// uploadUI.js
-// Upload Progress UI
-// ===========================================
+// ==========================================
+// Upload UI Manager
+// ==========================================
 
-const uploadItems = {};
+const UploadUI = {
 
+    uploads: new Map(),
 
+    create(file) {
 
-// Create Upload Bubble
+        const messages = document.getElementById("messages");
 
-function createUploadBubble(file){
+        if (!messages) return null;
 
-    const messages =
+        const id = ChunkProtocol.generateTransferId();
 
-        document.getElementById("messages");
+        const li = document.createElement("li");
 
-    if(!messages) return null;
+        li.className = "my-message";
 
+        li.dataset.uploadId = id;
 
+        li.innerHTML = `
 
-    const id =
-
-        MediaUtils.generateMediaId();
-
-
-
-    const li =
-
-        document.createElement("li");
-
-
-
-    li.className = "my-message";
-
-
-
-    li.dataset.uploadId = id;
-
-
-
-    li.innerHTML = `
-
-<div style="display:flex;align-items:center;gap:12px;">
-
-<div style="font-size:34px;">
-
-${MediaUtils.getFileIcon(file.fileType)}
-
-</div>
-
-
-
-<div style="flex:1;">
-
-<div style="font-weight:bold;word-break:break-word;">
-
-${file.fileName}
-
-</div>
-
-
-
-<div style="font-size:12px;opacity:.8;">
-
-${MediaUtils.formatFileSize(file.fileSize)}
-
-</div>
-
-
-
-<progress
-
-value="0"
-
-max="100"
-
-style="
-
-width:100%;
-
-height:8px;
-
-margin-top:8px;
-
+<div style="
+display:flex;
+align-items:center;
+gap:12px;
 ">
 
-</progress>
+<div style="
+width:46px;
+height:46px;
+border-radius:50%;
+border:3px solid #444;
+border-top:3px solid #b59461;
+animation:uploadSpin 1s linear infinite;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+">
 
+${ChunkProtocol.getIcon(
+ChunkProtocol.getCategory(file.type)
+)}
 
+</div>
 
-<div
+<div style="
+flex:1;
+overflow:hidden;
+">
 
-class="upload-percent"
+<div style="
+font-weight:600;
+font-size:14px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+">
 
-style="
+${file.name}
 
+</div>
+
+<div style="
 font-size:12px;
+opacity:.75;
+">
 
-margin-top:4px;
+${ChunkProtocol.formatSize(file.size)}
 
+</div>
+
+<div class="uploadPercent"
+style="
+margin-top:6px;
+font-size:12px;
+color:#b59461;
 ">
 
 0%
@@ -112,198 +90,67 @@ margin-top:4px;
 
 `;
 
+        messages.appendChild(li);
 
+        messages.scrollTop = messages.scrollHeight;
 
-    messages.appendChild(li);
+        this.uploads.set(id, li);
 
+        return id;
 
+    },
 
-    messages.scrollTop =
 
-        messages.scrollHeight;
 
+    update(id, percent) {
 
+        const li = this.uploads.get(id);
 
-    uploadItems[id] = li;
+        if (!li) return;
 
+        const text = li.querySelector(".uploadPercent");
 
+        if (text) {
 
-    return id;
+            text.innerText = percent + "%";
 
-}
+        }
 
+    },
 
 
 
+    finish(id) {
 
-// Update Progress
+        const li = this.uploads.get(id);
 
-function updateUploadProgress(
+        if (!li) return;
 
-id,
+        li.remove();
 
-percent
+        this.uploads.delete(id);
 
-){
+    },
 
-    const bubble =
 
-        uploadItems[id];
 
+    fail(id) {
 
+        const li = this.uploads.get(id);
 
-    if(!bubble) return;
+        if (!li) return;
 
+        const text = li.querySelector(".uploadPercent");
 
+        if (text) {
 
-    const progress =
+            text.innerHTML =
+            "<span style='color:red'>Failed</span>";
 
-        bubble.querySelector("progress");
+        }
 
-
-
-    const label =
-
-        bubble.querySelector(
-
-            ".upload-percent"
-
-        );
-
-
-
-    progress.value = percent;
-
-
-
-    label.innerText =
-
-        percent + "%";
-
-}
-
-
-
-
-
-// Finish Upload
-
-function finishUpload(id){
-
-    const bubble =
-
-        uploadItems[id];
-
-
-
-    if(!bubble) return;
-
-
-
-    const label =
-
-        bubble.querySelector(
-
-            ".upload-percent"
-
-        );
-
-
-
-    const progress =
-
-        bubble.querySelector(
-
-            "progress"
-
-        );
-
-
-
-    progress.value = 100;
-
-
-
-    label.innerHTML =
-
-        "✅ Uploaded";
-
-}
-
-
-
-
-
-// Remove Upload Bubble
-
-function removeUploadBubble(id){
-
-    const bubble =
-
-        uploadItems[id];
-
-
-
-    if(!bubble) return;
-
-
-
-    bubble.remove();
-
-
-
-    delete uploadItems[id];
-
-}
-
-
-
-
-
-// Fail Upload
-
-function failUpload(id){
-
-    const bubble =
-
-        uploadItems[id];
-
-
-
-    if(!bubble) return;
-
-
-
-    const label =
-
-        bubble.querySelector(
-
-            ".upload-percent"
-
-        );
-
-
-
-    label.innerHTML =
-
-        "❌ Failed";
-
-}
-
-
-
-
-
-window.UploadUI={
-
-createUploadBubble,
-
-updateUploadProgress,
-
-finishUpload,
-
-removeUploadBubble,
-
-failUpload
+    }
 
 };
+
+window.UploadUI = UploadUI;
