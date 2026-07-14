@@ -1,92 +1,76 @@
 // ==========================================
 // Secure Ultra Chat
-// Chunk Protocol v2
+// Chunk Protocol
+// Version 2.0 (FINAL)
 // ==========================================
 
 const ChunkProtocol = {
 
-    VERSION: 1,
+    VERSION: "2.0",
 
-    // 256 KB per chunk
-    CHUNK_SIZE: 256 * 1024,
+    // ---------- Chunk Settings ----------
 
-    // Retry if ACK not received
-    MAX_RETRY: 3,
+    CHUNK_SIZE: 256 * 1024,      // 256 KB
 
-    // ACK timeout
+    MAX_RETRY: 5,
+
     ACK_TIMEOUT: 5000,
 
-    // Upload queue
-    uploads: new Map(),
+    PARALLEL_UPLOADS: 1,
 
-    // Download queue
-    downloads: new Map(),
 
-    // Generate Unique Transfer ID
-    generateTransferId() {
 
-        if (window.crypto?.randomUUID) {
+    // ---------- Upload Status ----------
 
-            return crypto.randomUUID();
+    STATUS: {
 
-        }
+        WAITING: "waiting",
 
-        return (
+        UPLOADING: "uploading",
 
-            Date.now().toString(36) +
+        PAUSED: "paused",
 
-            Math.random()
-                .toString(36)
-                .substring(2, 10)
+        COMPLETED: "completed",
 
-        );
+        FAILED: "failed",
+
+        CANCELLED: "cancelled"
 
     },
 
-    // Total Chunks
-    getChunkCount(fileSize) {
 
-        return Math.ceil(
 
-            fileSize /
+    // ---------- File Type ----------
 
-            this.CHUNK_SIZE
+    getFileType(mime){
 
-        );
-
-    },
-
-    // File Category
-    getCategory(mime) {
-
-        if (!mime)
-
+        if(!mime)
             return "document";
 
-        if (mime.startsWith("image/"))
-
+        if(mime.startsWith("image/"))
             return "image";
 
-        if (mime.startsWith("video/"))
-
+        if(mime.startsWith("video/"))
             return "video";
 
-        if (mime.startsWith("audio/"))
-
+        if(mime.startsWith("audio/"))
             return "audio";
 
         return "document";
 
     },
 
-    // File Icon
-    getIcon(type) {
 
-        switch (type) {
+
+    // ---------- Icons ----------
+
+    getIcon(type){
+
+        switch(type){
 
             case "image":
 
-                return "📷";
+                return "🖼️";
 
             case "video":
 
@@ -104,14 +88,19 @@ const ChunkProtocol = {
 
     },
 
-    // Format Size
-    formatSize(bytes) {
 
-        if (!bytes)
 
+    // ---------- File Size ----------
+
+    formatSize(bytes){
+
+        if(bytes===0)
             return "0 B";
 
-        const units = [
+        if(!bytes)
+            return "0 B";
+
+        const sizes=[
 
             "B",
 
@@ -125,43 +114,155 @@ const ChunkProtocol = {
 
         ];
 
-        let index = 0;
+        const i=Math.floor(
 
-        let size = bytes;
+            Math.log(bytes)/
 
-        while (
+            Math.log(1024)
 
-            size >= 1024 &&
+        );
 
-            index < units.length - 1
+        return (
 
-        ) {
+            bytes/
 
-            size /= 1024;
+            Math.pow(1024,i)
 
-            index++;
+        ).toFixed(2)
 
-        }
+        +" "+
 
-        return size.toFixed(2) +
-
-            " " +
-
-            units[index];
+        sizes[i];
 
     },
 
-    // Upload %
-    getProgress(current, total) {
+
+
+    // ---------- Progress ----------
+
+    getPercent(current,total){
+
+        if(total===0)
+            return 0;
 
         return Math.floor(
 
-            (current / total) * 100
+            (current/total)*100
 
         );
+
+    },
+
+
+
+    // ---------- Transfer ID ----------
+
+    createTransferId(){
+
+        if(window.crypto?.randomUUID){
+
+            return crypto.randomUUID();
+
+        }
+
+        return (
+
+            Date.now().toString(36)+
+
+            Math.random()
+
+            .toString(36)
+
+            .substring(2,12)
+
+        );
+
+    },
+
+
+
+    // ---------- Total Chunks ----------
+
+    getChunkCount(size){
+
+        return Math.ceil(
+
+            size/
+
+            this.CHUNK_SIZE
+
+        );
+
+    },
+
+
+
+    // ---------- Chunk Range ----------
+
+    getChunkRange(index){
+
+        const start=
+
+            index*
+
+            this.CHUNK_SIZE;
+
+        const end=
+
+            start+
+
+            this.CHUNK_SIZE;
+
+        return{
+
+            start,
+
+            end
+
+        };
+
+    },
+
+
+
+    // ---------- File Validation ----------
+
+    validate(file){
+
+        if(!file){
+
+            return{
+
+                ok:false,
+
+                message:"No file selected."
+
+            };
+
+        }
+
+        if(file.size<=0){
+
+            return{
+
+                ok:false,
+
+                message:"Empty file."
+
+            };
+
+        }
+
+        return{
+
+            ok:true,
+
+            message:"OK"
+
+        };
 
     }
 
 };
 
-window.ChunkProtocol = ChunkProtocol;
+window.ChunkProtocol=ChunkProtocol;
