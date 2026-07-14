@@ -1,155 +1,114 @@
-// ===========================================
-// Secure Ultra Chat
-// chunkSender.js
-// Chunk Upload Engine
-// ===========================================
+// =======================================
+// Chunk Sender
+// =======================================
 
-async function sendFileInChunks(file){
+const ChunkSender = {
 
-    if(!window.socket){
+    CHUNK_SIZE: 256 * 1024, // 256 KB
 
-        alert("Socket not connected.");
+    async send(file) {
 
-        return;
+        if (!socket) return;
 
-    }
+        // Upload bubble create
+        const transferId =
+            UploadUI.create(file);
 
-    const fileId =
-        MediaUtils.generateMediaId();
+        const category =
+            ChunkProtocol.getCategory(file.type);
 
-    const totalChunks =
-        MediaUtils.getChunkCount(file.size);
+        const totalChunks =
+            Math.ceil(
+                file.size /
+                this.CHUNK_SIZE
+            );
 
-    const uploadId =
-        UploadUI.createUploadBubble({
+        // Upload Start
+        socket.emit("chunk-upload-start", {
 
-            fileName:file.name,
+            transferId,
 
-            fileSize:file.size,
+            fileName: file.name,
 
-            fileType:
-                MediaUtils.getFileCategory(
-                    file.type
-                )
+            fileSize: file.size,
+
+            mimeType: file.type,
+
+            fileType: category,
+
+            totalChunks,
+
+            username:
+                localStorage.getItem("username"),
+
+            time:
+                getCurrentTime()
 
         });
 
-    let chunkIndex = 0;
+        let chunkIndex = 0;
 
-    while(chunkIndex < totalChunks){
+        while (
+            chunkIndex <
+            totalChunks
+        ) {
 
-        const start =
-            chunkIndex *
-            MediaUtils.CHUNK_SIZE;
+            const start =
+                chunkIndex *
+                this.CHUNK_SIZE;
 
-        const end =
-            Math.min(
+            const end =
+                Math.min(
+                    start +
+                    this.CHUNK_SIZE,
+                    file.size
+                );
 
-                start +
+            const blob =
+                file.slice(start, end);
 
-                MediaUtils.CHUNK_SIZE,
+            const buffer =
+                await blob.arrayBuffer();
 
-                file.size
+            const bytes =
+                Array.from(
+                    new Uint8Array(buffer)
+                );
 
-            );
+            socket.emit("chunk-upload", {
 
-        const blob =
-            file.slice(start,end);
-
-        const buffer =
-            await blob.arrayBuffer();
-
-        const base64 =
-            MediaUtils.arrayBufferToBase64(
-                buffer
-            );
-
-        socket.emit(
-
-            "uploadChunk",
-
-            {
-
-                fileId,
-
-                fileName:file.name,
-
-                fileSize:file.size,
-
-                mimeType:file.type,
-
-                fileType:
-                MediaUtils.getFileCategory(
-                    file.type
-                ),
+                transferId,
 
                 chunkIndex,
 
-                totalChunks,
+                bytes
 
-                chunkData:base64,
+            });
 
-                username:
-                localStorage.getItem(
-                    "username"
-                ),
+            chunkIndex++;
 
-                time:getCurrentTime()
+            const percent =
+                Math.floor(
+                    (chunkIndex /
+                    totalChunks) * 100
+                );
 
-            }
-
-        );
-
-        chunkIndex++;
-
-        UploadUI.updateUploadProgress(
-
-            uploadId,
-
-            MediaUtils.getUploadPercent(
-
-                chunkIndex,
-
-                totalChunks
-
-            )
-
-        );
-
-        await MediaUtils.wait(1);
-
-    }
-
-    socket.emit(
-
-        "uploadComplete",
-
-        {
-
-            fileId,
-
-            username:
-            localStorage.getItem(
-                "username"
-            )
+            UploadUI.update(
+                transferId,
+                percent
+            );
 
         }
 
-    );
-
-    UploadUI.finishUpload(
-        uploadId
-    );
-
-    setTimeout(()=>{
-
-        UploadUI.removeUploadBubble(
-            uploadId
+        socket.emit(
+            "chunk-upload-complete",
+            {
+                transferId
+            }
         );
 
-    },700);
+    }
 
-}
+};
 
-window.sendFileInChunks =
-sendFileInChunks;
+window.ChunkSender = ChunkSender;
