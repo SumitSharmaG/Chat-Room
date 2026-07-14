@@ -15,7 +15,12 @@ const ChunkSender = {
         if(!socket) return;
 
         const transferId =
-            UploadUI.create(file);
+    ChunkProtocol.generateTransferId();
+
+UploadUI.create(
+    file,
+    transferId
+);
 
         const category =
             ChunkProtocol.getCategory(file.type);
