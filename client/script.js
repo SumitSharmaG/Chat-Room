@@ -264,6 +264,10 @@ if (socket) {
             await saveAttachment(data);
         }
 
+         if(document.querySelector('[data-media-id="'+data.id+'"]')){
+    return;
+         }
+        
         displayAttachment(data);
     });
 }
@@ -273,6 +277,7 @@ function displayMessage(data) {
     if (!messagesUl) return;
 
     const li = document.createElement("li");
+    li.dataset.mediaId=data.id;
     const myUser = localStorage.getItem("username");
 
     if (data.isAlert || data.username === "SYSTEM") {
