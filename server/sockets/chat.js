@@ -1,3 +1,4 @@
+const chunkReceiver = require("./chunkReceiver");
 const Message = require("../models/Message");
 const jwt = require("jsonwebtoken");
 
@@ -286,7 +287,7 @@ socket.on(
       }
     );
 
-
+chunkReceiver(io, socket);
 
     // ================== DISCONNECT ==================
 
