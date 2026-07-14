@@ -1,24 +1,22 @@
 // ==========================================
-// Upload UI Manager
+// Upload UI Manager (FINAL)
 // ==========================================
 
 const UploadUI = {
 
     uploads: new Map(),
 
-    create(file) {
+    create(file, transferId) {
 
         const messages = document.getElementById("messages");
 
-        if (!messages) return null;
-
-        const id = ChunkProtocol.generateTransferId();
+        if (!messages) return;
 
         const li = document.createElement("li");
 
         li.className = "my-message";
 
-        li.dataset.uploadId = id;
+        li.dataset.uploadId = transferId;
 
         li.innerHTML = `
 
@@ -28,17 +26,18 @@ align-items:center;
 gap:12px;
 ">
 
-<div style="
-width:46px;
-height:46px;
+<div class="uploadSpinner"
+style="
+width:48px;
+height:48px;
 border-radius:50%;
 border:3px solid #444;
 border-top:3px solid #b59461;
-animation:uploadSpin 1s linear infinite;
 display:flex;
 align-items:center;
 justify-content:center;
 font-size:22px;
+animation:uploadSpin 1s linear infinite;
 ">
 
 ${ChunkProtocol.getIcon(
@@ -47,17 +46,12 @@ ChunkProtocol.getCategory(file.type)
 
 </div>
 
-<div style="
-flex:1;
-overflow:hidden;
-">
+<div style="flex:1;">
 
 <div style="
 font-weight:600;
 font-size:14px;
-white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis;
+word-break:break-word;
 ">
 
 ${file.name}
@@ -67,6 +61,7 @@ ${file.name}
 <div style="
 font-size:12px;
 opacity:.75;
+margin-top:2px;
 ">
 
 ${ChunkProtocol.formatSize(file.size)}
@@ -84,6 +79,38 @@ color:#b59461;
 
 </div>
 
+<div style="
+margin-top:8px;
+display:flex;
+gap:6px;
+">
+
+<button
+class="pauseBtn"
+onclick="ChunkSender.pause('${transferId}')">
+
+⏸
+
+</button>
+
+<button
+class="resumeBtn"
+onclick="ChunkSender.resume('${transferId}')">
+
+▶
+
+</button>
+
+<button
+class="cancelBtn"
+onclick="ChunkSender.cancel('${transferId}')">
+
+✖
+
+</button>
+
+</div>
+
 </div>
 
 </div>
@@ -94,9 +121,9 @@ color:#b59461;
 
         messages.scrollTop = messages.scrollHeight;
 
-        this.uploads.set(id, li);
+        this.uploads.set(transferId, li);
 
-        return id;
+        return transferId;
 
     },
 
@@ -140,12 +167,20 @@ color:#b59461;
 
         if (!li) return;
 
+        const spinner = li.querySelector(".uploadSpinner");
+
+        if (spinner) {
+
+            spinner.style.animation = "none";
+
+        }
+
         const text = li.querySelector(".uploadPercent");
 
         if (text) {
 
             text.innerHTML =
-            "<span style='color:red'>Failed</span>";
+            "<span style='color:red'>Upload Failed</span>";
 
         }
 
