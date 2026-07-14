@@ -1,8 +1,10 @@
-if (!document.getElementById("attachBtn")) {
-    console.log("Attachment UI skipped.");
-} else {
-
 // ================= ATTACHMENTS =================
+
+if (!document.getElementById("attachBtn")) {
+
+    console.log("Attachment UI skipped.");
+
+} else {
 
 const attachBtn = document.getElementById("attachBtn");
 const attachMenu = document.getElementById("attachMenu");
@@ -13,17 +15,21 @@ const videoInput = document.getElementById("videoInput");
 const audioInput = document.getElementById("audioInput");
 const documentInput = document.getElementById("documentInput");
 
-// Open / Close Menu
-attachBtn?.addEventListener("click", () => {
+// ================= MENU =================
+
+attachBtn.onclick = () => {
+
     attachMenu.classList.toggle("show");
-});
 
-document.addEventListener("click", (e) => {
+};
 
-    if (
-        !attachMenu.contains(e.target) &&
-        e.target !== attachBtn
-    ) {
+document.addEventListener("click",(e)=>{
+
+    if(
+        !attachMenu.contains(e.target)
+        &&
+        e.target!==attachBtn
+    ){
 
         attachMenu.classList.remove("show");
 
@@ -31,86 +37,80 @@ document.addEventListener("click", (e) => {
 
 });
 
-// Menu Click
-document.querySelectorAll(".attach-item").forEach(item => {
+// ================= PICK =================
 
-    item.onclick = () => {
+document.querySelectorAll(".attach-item")
+.forEach(item=>{
 
-        attachMenu.classList.remove("show");
+item.onclick=()=>{
 
-        switch (item.dataset.type) {
+attachMenu.classList.remove("show");
 
-            case "camera":
-    cameraInput.value = "";
-    cameraInput.click();
-    break;
+switch(item.dataset.type){
 
-            case "gallery":
-                galleryInput.click();
-                break;
+case "camera":
 
-            case "video":
-                videoInput.click();
-                break;
+cameraInput.value="";
+cameraInput.click();
 
-            case "audio":
-                audioInput.click();
-                break;
+break;
 
-            case "document":
-                documentInput.click();
-                break;
+case "gallery":
 
-        }
+galleryInput.value="";
+galleryInput.click();
 
-    };
+break;
+
+case "video":
+
+videoInput.value="";
+videoInput.click();
+
+break;
+
+case "audio":
+
+audioInput.value="";
+audioInput.click();
+
+break;
+
+case "document":
+
+documentInput.value="";
+documentInput.click();
+
+break;
+
+}
+
+};
 
 });
 
-// ================= FILE PICK =================
+// ================= FILE EVENTS =================
 
-cameraInput.onchange = () =>
-    prepareFile(cameraInput.files[0], "image");
+cameraInput.onchange=()=>prepare(cameraInput.files[0]);
 
-galleryInput.onchange = () =>
-    prepareFile(galleryInput.files[0], "image");
+galleryInput.onchange=()=>prepare(galleryInput.files[0]);
 
-videoInput.onchange = () =>
-    prepareFile(videoInput.files[0], "video");
+videoInput.onchange=()=>prepare(videoInput.files[0]);
 
-audioInput.onchange = () =>
-    prepareFile(audioInput.files[0], "audio");
+audioInput.onchange=()=>prepare(audioInput.files[0]);
 
-documentInput.onchange = () =>
-    prepareFile(documentInput.files[0], "document");
+documentInput.onchange=()=>prepare(documentInput.files[0]);
 
 // ================= SEND =================
 
-function prepareFile(file, type){
+function prepare(file){
 
-    if(!file) return;
+if(!file) return;
 
-    let limit = 0;
+// ChunkSender sab handle karega
 
-    if(type==="image")
-        limit = 25 * 1024 * 1024;
-
-    else
-        limit = 50 * 1024 * 1024;
-
-    if(file.size > limit){
-
-        alert("File is too large.");
-
-        return;
-
-    }
-
-    const reader = new FileReader();
-
-    ChunkSender.send(file);
-
-    reader.readAsDataURL(file);
+ChunkSender.send(file);
 
 }
+
 }
