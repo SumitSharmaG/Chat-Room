@@ -1,42 +1,77 @@
 // ==========================================
 // Secure Ultra Chat
-// Upload Queue
-// Version 2.0 FINAL
+// Version 4.0
+// uploadQueue.js
+// STEP 1 / 3
 // ==========================================
 
-const UploadQueue = {
+"use strict";
 
-    queue: [],
+const UploadQueue={
 
-    working: false,
+    queue:[],
+
+    working:false,
 
 
+
+    // ==========================
+    // Add Upload
+    // ==========================
 
     add(upload){
 
-        UploadState.add(upload);
+        if(!upload)
 
-        UploadUI.create(upload);
+            return false;
 
-        this.queue.push(upload);
+        UploadState.add(
+
+            upload
+
+        );
+
+        this.queue.push(
+
+            upload.id
+
+        );
 
         this.run();
+
+        return true;
 
     },
 
 
 
+    // ==========================
+    // Run Queue
+    // ==========================
+
     async run(){
 
-        if(this.working) return;
+        if(this.working)
 
-        this.working = true;
+            return;
 
-        while(this.queue.length){
+        this.working=true;
 
-            const upload = this.queue[0];
+        while(
 
-            if(upload.cancelled){
+            this.queue.length>0
+
+        ){
+
+            const id=
+
+                this.queue[0];
+
+            const upload=
+
+                UploadState.get(id);
+
+            if(!upload){
 
                 this.queue.shift();
 
@@ -44,82 +79,37 @@ const UploadQueue = {
 
             }
 
-            UploadState.setStatus(
-                upload.id,
-                "uploading"
-            );
+            await this.process(
 
-            await this.process(upload);
+                upload
+
+            );
 
             this.queue.shift();
 
         }
 
-        this.working = false;
+        this.working=false;
 
     },
 
 
 
+    // ==========================
+    // Process Upload
+    // ==========================
+
     async process(upload){
 
-        const chunks =
-            ChunkProtocol.split(
-                upload.file
-            );
+        if(
 
-        for(
+            upload.completed ||
 
-            let i=0;
-
-            i<chunks.length;
-
-            i++
+            upload.cancelled
 
         ){
 
-            while(upload.paused){
-
-                await new Promise(r=>
-                    setTimeout(r,200)
-                );
-            }
-
-            if(upload.cancelled){
-
-                return;
-            }
-
-            await window.sendChunk(
-
-                upload,
-
-                chunks[i],
-
-                i,
-
-                chunks.length
-
-            );
-
-            UploadState.setProgress(
-
-                upload.id,
-
-                i+1,
-
-                chunks.length
-
-            );
-
-            UploadUI.update(
-
-                upload.id,
-
-                UploadState.get(upload.id)
-                .progress
-
-            );
+            return;
 
         }
 
@@ -127,65 +117,290 @@ const UploadQueue = {
 
             upload.id,
 
-            "completed"
+            ChunkProtocol.STATUS.UPLOADING
 
         );
 
-        UploadUI.complete(
+        await ChunkSender.send(
 
-            upload.id
+            upload
 
         );
 
     },
 
+    // ==========================
+    // Remove Upload
+    // ==========================
 
+    remove(id){
 
-    pause(id){
+        this.queue=
 
-        const upload =
-            UploadState.get(id);
+            this.queue.filter(
 
-        if(!upload) return;
+                item=>item!==id
 
-        upload.paused = true;
-
-        UploadUI.pause(id);
-
-    },
-
-
-
-    resume(id){
-
-        const upload =
-            UploadState.get(id);
-
-        if(!upload) return;
-
-        upload.paused = false;
-
-        UploadUI.resume(id);
-
-    },
-
-
-
-    cancel(id){
-
-        const upload =
-            UploadState.get(id);
-
-        if(!upload) return;
-
-        upload.cancelled = true;
+            );
 
         UploadState.remove(id);
 
-        UploadUI.complete(id);
+    },
+
+
+
+    // ==========================
+    // Clear Queue
+    // ==========================
+
+    clear(){
+
+        this.queue.length=0;
+
+        this.working=false;
+
+        UploadState.clear();
+
+    },
+
+
+
+    // ==========================
+    // Queue Size
+    // ==========================
+
+    size(){
+
+        return this.queue.length;
+
+    },
+
+
+
+    // ==========================
+    // Is Empty
+    // ==========================
+
+    isEmpty(){
+
+        return this.queue.length===0;
+
+    },
+
+
+
+    // ==========================
+    // Current Upload
+    // ==========================
+
+    current(){
+
+        if(
+
+            this.queue.length===0
+
+        ){
+
+            return null;
+
+        }
+
+        return UploadState.get(
+
+            this.queue[0]
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Has Upload
+    // ==========================
+
+    has(id){
+
+        return this.queue.includes(id);
+
+    },
+
+
+
+    // ==========================
+    // Queue List
+    // ==========================
+
+    list(){
+
+        return this.queue.map(
+
+            id=>
+
+                UploadState.get(id)
+
+        ).filter(Boolean);
+
+    },
+
+
+
+    // ==========================
+    // Waiting Uploads
+    // ==========================
+
+    waiting(){
+
+        return this.list().filter(
+
+            upload=>
+
+                upload.status===
+
+                ChunkProtocol.STATUS.WAITING
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Active Upload
+    // ==========================
+
+    active(){
+
+        return this.list().find(
+
+            upload=>
+
+                upload.status===
+
+                ChunkProtocol.STATUS.UPLOADING
+
+        )||null;
+
+    },
+
+    // ==========================
+    // Pause Upload
+    // ==========================
+
+    pause(id){
+
+        UploadState.pause(id);
+
+        ChunkSender.pause(id);
+
+    },
+
+
+
+    // ==========================
+    // Resume Upload
+    // ==========================
+
+    resume(id){
+
+        UploadState.resume(id);
+
+        return ChunkSender.resume(id);
+
+    },
+
+
+
+    // ==========================
+    // Cancel Upload
+    // ==========================
+
+    cancel(id){
+
+        UploadState.cancel(id);
+
+        ChunkSender.cancel(id);
+
+        this.remove(id);
+
+    },
+
+
+
+    // ==========================
+    // Retry Upload
+    // ==========================
+
+    async retry(id){
+
+        const upload=
+
+            UploadState.get(id);
+
+        if(!upload)
+
+            return false;
+
+        UploadState.reset(id);
+
+        if(!this.has(id)){
+
+            this.queue.push(id);
+
+        }
+
+        this.run();
+
+        return true;
+
+    },
+
+
+
+    // ==========================
+    // Queue Statistics
+    // ==========================
+
+    stats(){
+
+        return{
+
+            total:this.size(),
+
+            waiting:this.waiting().length,
+
+            active:this.active()?1:0,
+
+            completed:
+
+                UploadState.completed()
+
+                .length
+
+        };
+
+    },
+
+
+
+    // ==========================
+    // Is Working
+    // ==========================
+
+    isWorking(){
+
+        return this.working;
 
     }
 
 };
 
-window.UploadQueue = UploadQueue;
+Object.freeze(
+
+    UploadQueue
+
+);
+
+window.UploadQueue=
+
+UploadQueue;
