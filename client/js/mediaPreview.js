@@ -1,25 +1,32 @@
 // ==========================================
 // Secure Ultra Chat
-// Media Preview
-// Version 2.0 FINAL
+// FINAL VERSION
+// mediaPreview.js
+// DO NOT MODIFY
 // ==========================================
 
 const MediaPreview = {
+
+    // ================= CREATE =================
 
     create(upload){
 
         switch(upload.type){
 
             case "image":
+
                 return this.image(upload);
 
             case "video":
+
                 return this.video(upload);
 
             case "audio":
+
                 return this.audio(upload);
 
             default:
+
                 return this.document(upload);
 
         }
@@ -28,84 +35,135 @@ const MediaPreview = {
 
 
 
+    // ================= IMAGE =================
+
     image(upload){
 
         return `
-        <img
-            src="${URL.createObjectURL(upload.file)}"
-            class="preview-image"
-            loading="lazy"
-        >
-        `;
+
+<img
+src="${upload.previewURL}"
+class="preview-image"
+loading="lazy"
+draggable="false"
+>
+
+`;
+
     },
 
 
+
+    // ================= VIDEO =================
 
     video(upload){
 
         return `
-        <video
-            class="preview-video"
-            controls
-            preload="metadata"
-        >
-            <source
-                src="${URL.createObjectURL(upload.file)}"
-                type="${upload.mime}">
-        </video>
-        `;
+
+<video
+class="preview-video"
+controls
+preload="metadata"
+>
+
+<source
+src="${upload.previewURL}"
+type="${upload.mime}">
+
+</video>
+
+`;
+
     },
 
 
+
+    // ================= AUDIO =================
 
     audio(upload){
 
         return `
-        <audio
-            controls
-            preload="metadata"
-            class="preview-audio"
-        >
-            <source
-                src="${URL.createObjectURL(upload.file)}"
-                type="${upload.mime}">
-        </audio>
-        `;
+
+<audio
+controls
+preload="metadata"
+class="preview-audio"
+>
+
+<source
+src="${upload.previewURL}"
+type="${upload.mime}">
+
+</audio>
+
+`;
+
     },
 
 
 
+    // ================= DOCUMENT =================
+
     document(upload){
 
         return `
-        <div class="preview-document">
 
-            <div class="preview-doc-icon">
+<div class="preview-document">
 
-                ${MediaUtils.getIcon(upload.type)}
+<div class="preview-doc-icon">
 
-            </div>
+${upload.icon}
 
-            <div class="preview-doc-info">
+</div>
 
-                <div class="preview-doc-name">
+<div class="preview-doc-body">
 
-                    ${upload.name}
+<div class="preview-doc-name">
 
-                </div>
+${upload.name}
 
-                <div class="preview-doc-size">
+</div>
 
-                    ${MediaUtils.formatSize(upload.size)}
+<div class="preview-doc-size">
 
-                </div>
+${MediaUtils.formatSize(upload.size)}
 
-            </div>
+</div>
 
-        </div>
-        `;
+</div>
+
+</div>
+
+`;
+
+    },
+
+
+
+    // ================= CLEANUP =================
+
+    destroy(upload){
+
+        if(
+
+            upload &&
+
+            upload.previewURL
+
+        ){
+
+            URL.revokeObjectURL(
+
+                upload.previewURL
+
+            );
+
+        }
+
     }
 
 };
 
-window.MediaPreview = MediaPreview;
+Object.freeze(MediaPreview);
+
+window.MediaPreview=MediaPreview;
