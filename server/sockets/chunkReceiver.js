@@ -4,75 +4,110 @@
 // Version 2.0 FINAL
 // ==========================================
 
-const uploads = new Map();
+const UploadAck = require("./uploadAck");
 
-module.exports = function(io, socket){
+const activeUploads = new Map();
 
-    socket.on("uploadChunk", (data, callback)=>{
+module.exports = function(io,socket){
+
+    socket.on("uploadChunk",(data,callback)=>{
 
         try{
 
-            let upload = uploads.get(data.uploadId);
+            let upload=
+                activeUploads.get(
+                    data.uploadId
+                );
 
             if(!upload){
 
-                upload = {
+                upload={
 
-                    username: data.username,
+                    id:data.uploadId,
 
-                    fileName: data.fileName,
+                    username:data.username,
 
-                    fileType: data.fileType,
+                    fileName:data.fileName,
 
-                    fileSize: data.fileSize,
+                    fileType:data.fileType,
 
-                    totalChunks: data.totalChunks,
+                    fileSize:data.fileSize,
 
-                    time: data.time,
+                    totalChunks:data.totalChunks,
 
-                    chunks: new Array(data.totalChunks),
+                    chunks:new Array(
+                        data.totalChunks
+                    ),
 
-                    received: 0
+                    received:0,
+
+                    time:data.time
 
                 };
 
-                uploads.set(
+                activeUploads.set(
                     data.uploadId,
                     upload
                 );
 
+                UploadAck.create(
+                    data.uploadId,
+                    data.totalChunks
+                );
+
             }
 
-            if(!upload.chunks[data.chunkIndex]){
+            if(
 
-                upload.chunks[data.chunkIndex] =
-                    Buffer.from(data.chunkData);
+                !upload.chunks[
+                    data.chunkIndex
+                ]
+
+            ){
+
+                upload.chunks[
+                    data.chunkIndex
+                ]=
+
+                Buffer.from(
+                    data.chunkData
+                );
 
                 upload.received++;
 
             }
 
+            const finished=
+
+                UploadAck.receive(
+                    data.uploadId
+                );
+
             callback({
-                success:true
+
+                success:true,
+
+                progress:
+
+                UploadAck.progress(
+                    data.uploadId
+                )
+
             });
 
-            if(upload.received !== upload.totalChunks){
+            if(!finished){
 
                 return;
 
             }
 
-            // Merge all chunks
+            const fileBuffer=
 
-            const fileBuffer =
-                Buffer.concat(upload.chunks);
+                Buffer.concat(
+                    upload.chunks
+                );
 
-            // Convert Base64
-
-            const base64 =
-                fileBuffer.toString("base64");
-
-            const mime = {
+            const mime={
 
                 image:"image/jpeg",
 
@@ -80,34 +115,55 @@ module.exports = function(io, socket){
 
                 audio:"audio/mpeg",
 
-                document:"application/octet-stream"
+                document:
+                "application/octet-stream"
 
             };
 
-            const dataUrl =
+            const dataUrl=
 
-                `data:${mime[upload.fileType] || "application/octet-stream"};base64,${base64}`;
+                `data:${mime[upload.fileType]||"application/octet-stream"};base64,${fileBuffer.toString("base64")}`;
 
-            io.emit("receiveAttachment",{
+            io.emit(
 
-                id:data.uploadId,
+                "receiveAttachment",
 
-                username:upload.username,
+                {
 
-                fileName:upload.fileName,
+                    id:upload.id,
 
-                fileType:upload.fileType,
+                    username:
+                    upload.username,
 
-                fileSize:upload.fileSize,
+                    fileName:
+                    upload.fileName,
 
-                fileData:dataUrl,
+                    fileType:
+                    upload.fileType,
 
-                time:upload.time
+                    fileSize:
+                    upload.fileSize,
 
-            });
+                    fileData:
+                    dataUrl,
 
-            uploads.delete(
-                data.uploadId
+                    time:
+                    upload.time
+
+                }
+
+            );
+
+            UploadAck.complete(
+                upload.id
+            );
+
+            UploadAck.remove(
+                upload.id
+            );
+
+            activeUploads.delete(
+                upload.id
             );
 
         }
@@ -117,7 +173,9 @@ module.exports = function(io, socket){
             console.log(err);
 
             callback({
+
                 success:false
+
             });
 
         }
