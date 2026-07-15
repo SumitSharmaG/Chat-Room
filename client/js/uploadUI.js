@@ -1,109 +1,79 @@
 // ==========================================
-// Upload UI Manager (FINAL)
+// Secure Ultra Chat
+// Upload UI
+// Version 2.0 FINAL
 // ==========================================
 
 const UploadUI = {
 
-    uploads: new Map(),
+    items: new Map(),
 
-    create(file, transferId) {
+    create(upload){
 
-        const messages = document.getElementById("messages");
+        const messages =
+            document.getElementById("messages");
 
-        if (!messages) return;
+        if(!messages) return;
 
-        const li = document.createElement("li");
+        const li =
+            document.createElement("li");
 
         li.className = "my-message";
 
-        li.dataset.uploadId = transferId;
+        li.dataset.uploadId =
+            upload.id;
 
         li.innerHTML = `
 
-<div style="
-display:flex;
-align-items:center;
-gap:12px;
-">
+<div class="upload-card">
 
-<div class="uploadSpinner"
-style="
-width:48px;
-height:48px;
-border-radius:50%;
-border:3px solid #444;
-border-top:3px solid #b59461;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:22px;
-animation:uploadSpin 1s linear infinite;
-">
+<div class="upload-icon">
 
-${ChunkProtocol.getIcon(
-ChunkProtocol.getCategory(file.type)
-)}
+${ChunkProtocol.getIcon(upload.type)}
 
 </div>
 
-<div style="flex:1;">
+<div class="upload-info">
 
-<div style="
-font-weight:600;
-font-size:14px;
-word-break:break-word;
-">
+<div class="upload-name">
 
-${file.name}
+${upload.name}
 
 </div>
 
-<div style="
-font-size:12px;
-opacity:.75;
-margin-top:2px;
-">
+<div class="upload-size">
 
-${ChunkProtocol.formatSize(file.size)}
+${ChunkProtocol.formatSize(upload.size)}
 
 </div>
 
-<div class="uploadPercent"
-style="
-margin-top:6px;
-font-size:12px;
-color:#b59461;
-">
+<div class="upload-progress-text">
 
-0%
+Waiting...
 
 </div>
 
-<div style="
-margin-top:8px;
-display:flex;
-gap:6px;
-">
+<div class="upload-bar">
 
-<button
-class="pauseBtn"
-onclick="ChunkSender.pause('${transferId}')">
+<div class="upload-fill"></div>
+
+</div>
+
+<div class="upload-actions">
+
+<button class="upload-btn pause">
 
 ⏸
 
 </button>
 
-<button
-class="resumeBtn"
-onclick="ChunkSender.resume('${transferId}')">
+<button class="upload-btn resume">
 
 ▶
 
 </button>
 
-<button
-class="cancelBtn"
-onclick="ChunkSender.cancel('${transferId}')">
+<button class="upload-btn cancel">
 
 ✖
 
@@ -119,73 +89,87 @@ onclick="ChunkSender.cancel('${transferId}')">
 
         messages.appendChild(li);
 
-        messages.scrollTop = messages.scrollHeight;
+        messages.scrollTop =
+            messages.scrollHeight;
 
-        this.uploads.set(transferId, li);
-
-        return transferId;
-
-    },
-
-
-
-    update(id, percent) {
-
-        const li = this.uploads.get(id);
-
-        if (!li) return;
-
-        const text = li.querySelector(".uploadPercent");
-
-        if (text) {
-
-            text.innerText = percent + "%";
-
-        }
+        this.items.set(upload.id,li);
 
     },
 
 
 
-    finish(id) {
+    update(id,percent){
 
-        const li = this.uploads.get(id);
+        const li=this.items.get(id);
 
-        if (!li) return;
+        if(!li) return;
+
+        li.querySelector(".upload-fill")
+        .style.width=
+        percent+"%";
+
+        li.querySelector(".upload-progress-text")
+        .innerText=
+        percent+"% Uploading...";
+
+    },
+
+
+
+    pause(id){
+
+        const li=this.items.get(id);
+
+        if(!li) return;
+
+        li.querySelector(".upload-progress-text")
+        .innerText=
+        "Paused";
+
+    },
+
+
+
+    resume(id){
+
+        const li=this.items.get(id);
+
+        if(!li) return;
+
+        li.querySelector(".upload-progress-text")
+        .innerText=
+        "Uploading...";
+
+    },
+
+
+
+    fail(id){
+
+        const li=this.items.get(id);
+
+        if(!li) return;
+
+        li.querySelector(".upload-progress-text")
+        .innerText=
+        "Upload Failed";
+
+    },
+
+
+
+    complete(id){
+
+        const li=this.items.get(id);
+
+        if(!li) return;
 
         li.remove();
 
-        this.uploads.delete(id);
-
-    },
-
-
-
-    fail(id) {
-
-        const li = this.uploads.get(id);
-
-        if (!li) return;
-
-        const spinner = li.querySelector(".uploadSpinner");
-
-        if (spinner) {
-
-            spinner.style.animation = "none";
-
-        }
-
-        const text = li.querySelector(".uploadPercent");
-
-        if (text) {
-
-            text.innerHTML =
-            "<span style='color:red'>Upload Failed</span>";
-
-        }
+        this.items.delete(id);
 
     }
 
 };
 
-window.UploadUI = UploadUI;
+window.UploadUI=UploadUI;
