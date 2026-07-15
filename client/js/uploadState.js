@@ -1,76 +1,90 @@
 // ==========================================
-// Upload State Manager
+// Secure Ultra Chat
+// Upload State
+// Version 2.0 FINAL
 // ==========================================
 
 const UploadState = {
 
-KEY:"active_uploads",
+    uploads: new Map(),
 
-save(state){
+    add(upload){
 
-let uploads=this.load();
+        this.uploads.set(
+            upload.id,
+            upload
+        );
 
-uploads[state.transferId]=state;
+    },
 
-localStorage.setItem(
+    get(id){
 
-this.KEY,
+        return this.uploads.get(id);
 
-JSON.stringify(uploads)
+    },
 
-);
+    has(id){
 
-},
+        return this.uploads.has(id);
 
-update(id,data){
+    },
 
-let uploads=this.load();
+    remove(id){
 
-if(!uploads[id]) return;
+        this.uploads.delete(id);
 
-Object.assign(
+    },
 
-uploads[id],
+    clear(){
 
-data
+        this.uploads.clear();
 
-);
+    },
 
-localStorage.setItem(
+    update(id,data){
 
-this.KEY,
+        const upload=this.uploads.get(id);
 
-JSON.stringify(uploads)
+        if(!upload) return;
 
-);
+        Object.assign(upload,data);
 
-},
+    },
 
-remove(id){
+    setProgress(id,current,total){
 
-let uploads=this.load();
+        const upload=this.uploads.get(id);
 
-delete uploads[id];
+        if(!upload) return;
 
-localStorage.setItem(
+        upload.current=current;
+        upload.total=total;
 
-this.KEY,
+        upload.progress=
+            ChunkProtocol.getPercent(
+                current,
+                total
+            );
 
-JSON.stringify(uploads)
+    },
 
-);
+    setStatus(id,status){
 
-},
+        const upload=this.uploads.get(id);
 
-load(){
+        if(!upload) return;
 
-return JSON.parse(
+        upload.status=status;
 
-localStorage.getItem(this.KEY)||"{}"
+    },
 
-);
+    all(){
 
-}
+        return Array.from(
+            this.uploads.values()
+        );
+
+    }
 
 };
 
