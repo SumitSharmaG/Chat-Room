@@ -1,31 +1,63 @@
 // ==========================================
 // Secure Ultra Chat
-// FINAL VERSION
+// Version 4.0
 // uploadUI.js
-// DO NOT MODIFY
+// STEP 1 / 3
 // ==========================================
 
-const UploadUI = {
+"use strict";
+
+const UploadUI={
 
     items:new Map(),
 
-    // ================= CREATE =================
+    container:null,
+
+
+
+    // ==========================
+    // Init
+    // ==========================
+
+    init(){
+
+        this.container=
+
+            document.getElementById(
+
+                "messages"
+
+            );
+
+    },
+
+
+
+    // ==========================
+    // Create Upload Card
+    // ==========================
 
     create(upload){
 
-        const messages=
+        if(!this.container)
 
-            document.getElementById("messages");
+            this.init();
 
-        if(!messages) return;
+        if(!this.container)
+
+            return;
 
         const li=
 
             document.createElement("li");
 
-        li.className="my-message";
+        li.className=
 
-        li.dataset.uploadId=upload.id;
+            "my-message upload-message";
+
+        li.dataset.uploadId=
+
+            upload.id;
 
         li.innerHTML=`
 
@@ -39,21 +71,25 @@ ${upload.icon}
 
 </div>
 
-<div class="upload-title">
+<div class="upload-details">
+
+<div class="upload-name">
 
 ${upload.name}
 
 </div>
 
-</div>
+<div class="upload-size">
 
-<div class="upload-meta">
-
-${MediaUtils.formatSize(upload.size)}
+${ChunkProtocol.formatSize(upload.size)}
 
 </div>
 
-<div class="upload-status">
+</div>
+
+</div>
+
+<div class="upload-progress-text">
 
 Waiting...
 
@@ -61,47 +97,34 @@ Waiting...
 
 <div class="upload-progress">
 
-<div class="upload-progress-fill"></div>
+<div class="upload-fill"></div>
 
 </div>
 
-<div class="upload-footer">
+<div class="upload-actions">
 
-<div class="upload-percent">
-
-0%
-
-</div>
-
-<div class="upload-speed">
-
-0 KB/s
-
-</div>
-
-<div class="upload-eta">
-
---
-
-</div>
-
-</div>
-
-<div class="upload-buttons">
-
-<button class="upload-btn pause">
+<button
+class="upload-btn pause"
+data-id="${upload.id}"
+>
 
 ⏸
 
 </button>
 
-<button class="upload-btn resume">
+<button
+class="upload-btn resume"
+data-id="${upload.id}"
+>
 
 ▶
 
 </button>
 
-<button class="upload-btn cancel">
+<button
+class="upload-btn cancel"
+data-id="${upload.id}"
+>
 
 ✖
 
@@ -113,209 +136,251 @@ Waiting...
 
 `;
 
-        messages.appendChild(li);
+        this.container.appendChild(
 
-        messages.scrollTop=
+            li
 
-            messages.scrollHeight;
+        );
 
-        this.items.set(upload.id,li);
+        this.container.scrollTop=
 
+            this.container.scrollHeight;
 
+        this.items.set(
 
-        // Pause
+            upload.id,
 
-        li.querySelector(".pause")
-
-        .onclick=()=>{
-
-            UploadQueue.pause(upload.id);
-
-        };
-
-
-
-        // Resume
-
-        li.querySelector(".resume")
-
-        .onclick=()=>{
-
-            UploadQueue.resume(upload.id);
-
-        };
-
-
-
-        // Cancel
-
-        li.querySelector(".cancel")
-
-        .onclick=()=>{
-
-            UploadQueue.cancel(upload.id);
-
-        };
-
-    },
-
-
-
-    // ================= UPDATE =================
-
-    update(id){
-
-        const upload=
-
-            UploadState.get(id);
-
-        if(!upload) return;
-
-        const li=
-
-            this.items.get(id);
-
-        if(!li) return;
-
-        li.querySelector(
-
-            ".upload-progress-fill"
-
-        ).style.width=
-
-        upload.progress+"%";
-
-
-
-        li.querySelector(
-
-            ".upload-percent"
-
-        ).innerText=
-
-        upload.progress+"%";
-
-
-
-        li.querySelector(
-
-            ".upload-status"
-
-        ).innerText=
-
-        "Uploading...";
-
-
-
-        li.querySelector(
-
-            ".upload-speed"
-
-        ).innerText=
-
-        ChunkProtocol.formatSize(
-
-            upload.speed
-
-        )+"/s";
-
-
-
-        li.querySelector(
-
-            ".upload-eta"
-
-        ).innerText=
-
-        upload.eta;
-
-    },
-
-
-
-    // ================= STATUS =================
-
-    waiting(id){
-
-        this.setText(
-
-            id,
-
-            "Waiting..."
+            li
 
         );
 
     },
 
 
+
+    // ==========================
+    // Get Element
+    // ==========================
+
+    get(id){
+
+        return this.items.get(id);
+
+    },
+
+    // ==========================
+    // Update Progress
+    // ==========================
+
+    update(id,progress,text="Uploading..."){
+
+        const item=this.get(id);
+
+        if(!item)
+
+            return;
+
+        const fill=
+
+            item.querySelector(
+
+                ".upload-fill"
+
+            );
+
+        const label=
+
+            item.querySelector(
+
+                ".upload-progress-text"
+
+            );
+
+        if(fill){
+
+            fill.style.width=
+
+                progress+"%";
+
+        }
+
+        if(label){
+
+            label.innerText=
+
+                `${progress}% ${text}`;
+
+        }
+
+    },
+
+
+
+    // ==========================
+    // Pause UI
+    // ==========================
 
     pause(id){
 
-        this.setText(
+        const item=this.get(id);
 
-            id,
+        if(!item)
 
-            "Paused"
+            return;
 
-        );
+        const label=
+
+            item.querySelector(
+
+                ".upload-progress-text"
+
+            );
+
+        if(label){
+
+            label.innerText=
+
+                "Paused";
+
+        }
 
     },
 
 
+
+    // ==========================
+    // Resume UI
+    // ==========================
 
     resume(id){
 
-        this.setText(
+        const item=this.get(id);
 
-            id,
+        if(!item)
 
-            "Uploading..."
+            return;
 
-        );
+        const label=
 
-    },
+            item.querySelector(
 
+                ".upload-progress-text"
 
+            );
 
-    fail(id){
+        if(label){
 
-        this.setText(
+            label.innerText=
 
-            id,
+                "Uploading...";
 
-            "Upload Failed"
-
-        );
-
-    },
-
-
-
-    cancel(id){
-
-        this.setText(
-
-            id,
-
-            "Cancelled"
-
-        );
+        }
 
     },
 
 
 
-    // ================= COMPLETE =================
+    // ==========================
+    // Complete UI
+    // ==========================
 
     complete(id){
 
-        const li=
+        const item=this.get(id);
 
-            this.items.get(id);
+        if(!item)
 
-        if(!li) return;
+            return;
 
-        li.remove();
+        this.update(
+
+            id,
+
+            100,
+
+            "Completed"
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Failed UI
+    // ==========================
+
+    fail(id,message="Upload Failed"){
+
+        const item=this.get(id);
+
+        if(!item)
+
+            return;
+
+        const label=
+
+            item.querySelector(
+
+                ".upload-progress-text"
+
+            );
+
+        if(label){
+
+            label.innerText=
+
+                message;
+
+        }
+
+    },
+
+
+
+    // ==========================
+    // Cancel UI
+    // ==========================
+
+    cancel(id){
+
+        const item=this.get(id);
+
+        if(!item)
+
+            return;
+
+        const label=
+
+            item.querySelector(
+
+                ".upload-progress-text"
+
+            );
+
+        if(label){
+
+            label.innerText=
+
+                "Cancelled";
+
+        }
+
+    },
+
+    // ==========================
+    // Remove Upload Card
+    // ==========================
+
+    remove(id){
+
+        const item=this.get(id);
+
+        if(!item)
+
+            return;
+
+        item.remove();
 
         this.items.delete(id);
 
@@ -323,26 +388,126 @@ Waiting...
 
 
 
-    // ================= HELPERS =================
+    // ==========================
+    // Clear All
+    // ==========================
 
-    setText(id,text){
+    clear(){
 
-        const li=
+        this.items.forEach(
 
-            this.items.get(id);
+            item=>item.remove()
 
-        if(!li) return;
+        );
 
-        li.querySelector(
+        this.items.clear();
 
-            ".upload-status"
+    },
 
-        ).innerText=text;
+
+
+    // ==========================
+    // Button Events
+    // ==========================
+
+    bindEvents(){
+
+        document.addEventListener(
+
+            "click",
+
+            (e)=>{
+
+                const btn=
+
+                    e.target.closest(
+
+                        ".upload-btn"
+
+                    );
+
+                if(!btn)
+
+                    return;
+
+                const id=
+
+                    btn.dataset.id;
+
+                if(
+
+                    btn.classList.contains(
+
+                        "pause"
+
+                    )
+
+                ){
+
+                    UploadQueue.pause(id);
+
+                    return;
+
+                }
+
+                if(
+
+                    btn.classList.contains(
+
+                        "resume"
+
+                    )
+
+                ){
+
+                    UploadQueue.resume(id);
+
+                    return;
+
+                }
+
+                if(
+
+                    btn.classList.contains(
+
+                        "cancel"
+
+                    )
+
+                ){
+
+                    UploadQueue.cancel(id);
+
+                }
+
+            }
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Initialize
+    // ==========================
+
+    start(){
+
+        this.init();
+
+        this.bindEvents();
 
     }
 
 };
 
-Object.freeze(UploadUI);
+Object.freeze(
 
-window.UploadUI=UploadUI;
+    UploadUI
+
+);
+
+window.UploadUI=
+
+UploadUI;
