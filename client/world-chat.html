@@ -106,6 +106,45 @@
             width: 45px; height: 45px; border-radius: 50%; 
             cursor: pointer; display: flex; align-items: center; 
             justify-content: center;
+
+            .attach-btn{
+    width:45px;
+    height:45px;
+    border:none;
+    border-radius:50%;
+    background:#1f1f1f;
+    color:#b59461;
+    font-size:26px;
+    cursor:pointer;
+}
+
+.attach-menu{
+    position:absolute;
+    bottom:70px;
+    left:12px;
+    background:#181818;
+    border:1px solid rgba(181,148,97,.25);
+    border-radius:12px;
+    display:none;
+    flex-direction:column;
+    overflow:hidden;
+    z-index:999;
+}
+
+.attach-menu.show{
+    display:flex;
+}
+
+.attach-item{
+    padding:12px 18px;
+    cursor:pointer;
+    color:#fff;
+    font-size:.85rem;
+}
+
+.attach-item:hover{
+    background:rgba(181,148,97,.15);
+}
             
         } 
         
@@ -128,6 +167,88 @@
 .info-btn:hover {
     background: #b59461;
     color: black;
+}
+/* ==========================
+   Upload UI
+========================== */
+
+.upload-message{
+    width:100%;
+    max-width:320px;
+}
+
+.upload-card{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.upload-header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.upload-icon{
+    font-size:30px;
+}
+
+.upload-details{
+    flex:1;
+}
+
+.upload-name{
+    font-size:.85rem;
+    font-weight:600;
+    color:#fff;
+    word-break:break-word;
+}
+
+.upload-size{
+    font-size:.7rem;
+    color:#aaa;
+}
+
+.upload-progress-text{
+    font-size:.72rem;
+    color:#b59461;
+}
+
+.upload-progress{
+    width:100%;
+    height:6px;
+    background:#222;
+    border-radius:20px;
+    overflow:hidden;
+}
+
+.upload-fill{
+    width:0%;
+    height:100%;
+    background:#b59461;
+    transition:width .2s linear;
+}
+
+.upload-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+}
+
+.upload-btn{
+    width:28px;
+    height:28px;
+    border:none;
+    border-radius:50%;
+    background:#202020;
+    color:#fff;
+    cursor:pointer;
+    font-size:13px;
+}
+
+.upload-btn:hover{
+    background:#b59461;
+    color:#000;
 }
     </style>
 </head>
@@ -155,18 +276,134 @@
 
     <ul id="messages"></ul>
 
+<div
+id="attachMenu"
+class="attach-menu">
+
+<div
+class="attach-item"
+data-type="camera">
+📷 Camera
+</div>
+
+<div
+class="attach-item"
+data-type="gallery">
+🖼 Gallery
+</div>
+
+<div
+class="attach-item"
+data-type="video">
+🎥 Video
+</div>
+
+<div
+class="attach-item"
+data-type="audio">
+🎵 Audio
+</div>
+
+<div
+class="attach-item"
+data-type="document">
+📄 Document
+</div>
+
+</div>
+
+<input
+id="cameraInput"
+type="file"
+accept="image/*"
+capture="environment"
+hidden>
+
+<input
+id="galleryInput"
+type="file"
+accept="image/*"
+hidden>
+
+<input
+id="videoInput"
+type="file"
+accept="video/*"
+hidden>
+
+<input
+id="audioInput"
+type="file"
+accept="audio/*"
+hidden>
+
+<input
+id="documentInput"
+type="file"
+hidden>
+
     <div class="input-area">
-        <input id="msg" placeholder="Type a message..." autocomplete="off" />
-        <button class="send-btn" onclick="window.handleSend()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-        </button>
-    </div>
+
+<button
+id="attachBtn"
+class="attach-btn">
++
+</button>
+
+<input
+id="msg"
+placeholder="Type a message..."
+autocomplete="off">
+
+<button
+class="send-btn"
+onclick="window.handleSend()">
+
+<svg width="20"
+height="20"
+viewBox="0 0 24 24"
+fill="none"
+stroke="#000"
+stroke-width="3">
+
+<line
+x1="22"
+y1="2"
+x2="11"
+y2="13"/>
+
+<polygon
+points="22 2 15 22 11 13 2 9 22 2"/>
+
+</svg>
+
+</button>
+
+</div>
+        
 
     <script src="https://chat-backend-gtg5.onrender.com/socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
+    <script src="chunkProtocol.js"></script>
+
+<script src="mediaUtils.js"></script>
+
+<script src="uploadAck.js"></script>
+
+<script src="mediaStore.js"></script>
+
+<script src="mediaPreview.js"></script>
+
+<script src="chunkSender.js"></script>
+
+<script src="uploadState.js"></script>
+
+<script src="uploadQueue.js"></script>
+
+<script src="uploadUI.js"></script>
+
+<script src="attachments.js"></script>
+
+<script src="script.js"></script>
 </body>
     </html>
     
