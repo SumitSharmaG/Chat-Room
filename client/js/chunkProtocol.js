@@ -1,17 +1,22 @@
 // ==========================================
 // Secure Ultra Chat
 // FINAL VERSION
+// Version 4.0
 // chunkProtocol.js
-// DO NOT MODIFY
+// PART 1 / 3
 // ==========================================
+
+"use strict";
 
 const ChunkProtocol = {
 
-    VERSION: "3.0",
+    // ==========================
+    // Protocol
+    // ==========================
 
-    // ================= SETTINGS =================
+    VERSION: "4.0",
 
-    CHUNK_SIZE: 256 * 1024,          // 256 KB
+    CHUNK_SIZE: 256 * 1024,
 
     MAX_RETRY: 5,
 
@@ -21,29 +26,399 @@ const ChunkProtocol = {
 
 
 
-    // ================= STATUS =================
+    // ==========================
+    // Upload Status
+    // ==========================
 
-    STATUS:{
+    STATUS: Object.freeze({
 
-        WAITING:"waiting",
+        WAITING: "waiting",
 
-        UPLOADING:"uploading",
+        PREPARING: "preparing",
 
-        PAUSED:"paused",
+        UPLOADING: "uploading",
 
-        COMPLETED:"completed",
+        PAUSED: "paused",
 
-        FAILED:"failed",
+        MERGING: "merging",
 
-        CANCELLED:"cancelled"
+        COMPLETED: "completed",
+
+        FAILED: "failed",
+
+        CANCELLED: "cancelled"
+
+    }),
+
+
+
+    // ==========================
+    // Packet Types
+    // ==========================
+
+    PACKET: Object.freeze({
+
+        CHUNK: "chunk",
+
+        ACK: "ack",
+
+        COMPLETE: "complete",
+
+        CANCEL: "cancel"
+
+    }),
+
+
+
+    // ==========================
+    // File Types
+    // ==========================
+
+    FILE: Object.freeze({
+
+        IMAGE: "image",
+
+        VIDEO: "video",
+
+        AUDIO: "audio",
+
+        DOCUMENT: "document"
+
+    }),
+
+
+
+    // ==========================
+    // Transfer ID
+    // ==========================
+
+    createTransferId(){
+
+        if(window.crypto?.randomUUID){
+
+            return crypto.randomUUID();
+
+        }
+
+        return (
+
+            Date.now().toString(36)+
+
+            Math.random()
+
+            .toString(36)
+
+            .substring(2,12)
+
+        );
 
     },
 
 
 
-    // ================= FILE VALIDATION =================
+    // ==========================
+    // File Type
+    // ==========================
 
-    validate(file){
+    getFileType(mime){
+
+        if(!mime)
+
+            return this.FILE.DOCUMENT;
+
+        if(mime.startsWith("image/"))
+
+            return this.FILE.IMAGE;
+
+        if(mime.startsWith("video/"))
+
+            return this.FILE.VIDEO;
+
+        if(mime.startsWith("audio/"))
+
+            return this.FILE.AUDIO;
+
+        return this.FILE.DOCUMENT;
+
+    },
+
+
+
+    // ==========================
+    // Icons
+    // ==========================
+
+    getFileIcon(type){
+
+        switch(type){
+
+            case this.FILE.IMAGE:
+
+                return "🖼️";
+
+            case this.FILE.VIDEO:
+
+                return "🎥";
+
+            case this.FILE.AUDIO:
+
+                return "🎵";
+
+            default:
+
+                return "📄";
+
+        }
+
+    },
+
+
+
+    // ==========================
+    // Size
+    // ==========================
+
+    formatSize(bytes){
+
+        if(!bytes)
+
+            return "0 B";
+
+        const units=[
+
+            "B",
+
+            "KB",
+
+            "MB",
+
+            "GB",
+
+            "TB"
+
+        ];
+
+        const index=Math.floor(
+
+            Math.log(bytes)/
+
+            Math.log(1024)
+
+        );
+
+        return (
+
+            bytes/
+
+            Math.pow(1024,index)
+
+        ).toFixed(2)
+
+        +" "+
+
+        units[index];
+
+    },
+
+
+
+    // ==========================
+    // Progress
+    // ==========================
+
+    calculateProgress(current,total){
+
+        if(total<=0)
+
+            return 0;
+
+        return Math.min(
+
+            100,
+
+            Math.floor(
+
+                (current*100)/total
+
+            )
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Total Chunks
+    // ==========================
+
+    getTotalChunks(fileSize){
+
+        return Math.ceil(
+
+            fileSize/
+
+            this.CHUNK_SIZE
+
+        );
+
+    },
+
+    // ==========================
+    // Split File
+    // ==========================
+
+    splitFile(file){
+
+        const chunks=[];
+
+        let offset=0;
+
+        let index=0;
+
+        while(offset<file.size){
+
+            const end=Math.min(
+
+                offset+this.CHUNK_SIZE,
+
+                file.size
+
+            );
+
+            chunks.push({
+
+                index,
+
+                start:offset,
+
+                end,
+
+                blob:file.slice(offset,end)
+
+            });
+
+            offset=end;
+
+            index++;
+
+        }
+
+        return chunks;
+
+    },
+
+
+
+    // ==========================
+    // Transfer Metadata
+    // ==========================
+
+    createTransferMeta(file,sender,room){
+
+        return{
+
+            transferId:this.createTransferId(),
+
+            fileName:file.name,
+
+            fileSize:file.size,
+
+            mimeType:file.type,
+
+            fileType:this.getFileType(file.type),
+
+            totalChunks:this.getTotalChunks(file.size),
+
+            sender,
+
+            room,
+
+            createdAt:Date.now()
+
+        };
+
+    },
+
+
+
+    // ==========================
+    // Chunk Packet
+    // ==========================
+
+    createPacket(meta,chunk){
+
+        return{
+
+            type:this.PACKET.CHUNK,
+
+            transferId:meta.transferId,
+
+            fileName:meta.fileName,
+
+            fileSize:meta.fileSize,
+
+            mimeType:meta.mimeType,
+
+            fileType:meta.fileType,
+
+            totalChunks:meta.totalChunks,
+
+            sender:meta.sender,
+
+            room:meta.room,
+
+            createdAt:meta.createdAt,
+
+            chunkIndex:chunk.index,
+
+            chunkSize:chunk.blob.size,
+
+            chunkData:chunk.blob
+
+        };
+
+    },
+
+
+
+    // ==========================
+    // ACK Packet
+    // ==========================
+
+    createAck(
+
+        transferId,
+
+        chunkIndex,
+
+        success=true
+
+    ){
+
+        return{
+
+            type:this.PACKET.ACK,
+
+            transferId,
+
+            chunkIndex,
+
+            success,
+
+            receivedAt:Date.now()
+
+        };
+
+    },
+
+
+
+    // ==========================
+    // File Validation
+    // ==========================
+
+    validateFile(file){
 
         if(!file){
 
@@ -81,201 +456,79 @@ const ChunkProtocol = {
 
 
 
-    // ================= SPLIT =================
+    // ==========================
+    // Packet Validation
+    // ==========================
 
-    split(file){
+    validatePacket(packet){
 
-        const chunks=[];
+        if(!packet)
 
-        let start=0;
+            return false;
 
-        while(start<file.size){
+        if(!packet.transferId)
 
-            const end=Math.min(
+            return false;
 
-                start+this.CHUNK_SIZE,
+        if(packet.chunkIndex===undefined)
 
-                file.size
+            return false;
 
-            );
+        if(!packet.totalChunks)
 
-            chunks.push(
+            return false;
 
-                file.slice(start,end)
+        if(packet.chunkData===undefined)
 
-            );
+            return false;
 
-            start=end;
-
-        }
-
-        return chunks;
+        return true;
 
     },
 
 
 
-    // ================= TOTAL CHUNKS =================
+    // ==========================
+    // ACK Validation
+    // ==========================
 
-    getChunkCount(size){
+    validateAck(ack){
 
-        return Math.ceil(
+        if(!ack)
 
-            size/
+            return false;
 
-            this.CHUNK_SIZE
+        if(!ack.transferId)
 
-        );
+            return false;
 
-    },
+        if(ack.chunkIndex===undefined)
 
+            return false;
 
+        if(typeof ack.success!=="boolean")
 
-    // ================= RANGE =================
+            return false;
 
-    getChunkRange(index){
-
-        const start=
-
-            index*
-
-            this.CHUNK_SIZE;
-
-        const end=
-
-            start+
-
-            this.CHUNK_SIZE;
-
-        return{
-
-            start,
-
-            end
-
-        };
+        return true;
 
     },
 
+    // ==========================
+    // Speed
+    // ==========================
 
+    calculateSpeed(bytes,timeMs){
 
-    // ================= FILE TYPE =================
-
-    getFileType(mime){
-
-        if(!mime)
-
-            return "document";
-
-        if(mime.startsWith("image/"))
-
-            return "image";
-
-        if(mime.startsWith("video/"))
-
-            return "video";
-
-        if(mime.startsWith("audio/"))
-
-            return "audio";
-
-        return "document";
-
-    },
-
-
-
-    // ================= ICON =================
-
-    getIcon(type){
-
-        switch(type){
-
-            case "image":
-
-                return "🖼️";
-
-            case "video":
-
-                return "🎥";
-
-            case "audio":
-
-                return "🎵";
-
-            default:
-
-                return "📄";
-
-        }
-
-    },
-
-
-
-    // ================= SIZE =================
-
-    formatSize(bytes){
-
-        if(!bytes)
-
-            return "0 B";
-
-        const units=[
-
-            "B",
-
-            "KB",
-
-            "MB",
-
-            "GB",
-
-            "TB"
-
-        ];
-
-        const i=Math.floor(
-
-            Math.log(bytes)/
-
-            Math.log(1024)
-
-        );
-
-        return (
-
-            bytes/
-
-            Math.pow(1024,i)
-
-        ).toFixed(2)
-
-        +" "+
-
-        units[i];
-
-    },
-
-
-
-    // ================= PERCENT =================
-
-    getPercent(current,total){
-
-        if(!total)
+        if(timeMs<=0)
 
             return 0;
 
-        return Math.min(
+        return Math.floor(
 
-            100,
+            bytes/
 
-            Math.floor(
-
-                current*100/total
-
-            )
+            (timeMs/1000)
 
         );
 
@@ -283,83 +536,107 @@ const ChunkProtocol = {
 
 
 
-    // ================= SPEED =================
+    // ==========================
+    // ETA
+    // ==========================
 
-    getSpeed(bytes,seconds){
+    calculateETA(
+
+        remainingBytes,
+
+        speed
+
+    ){
+
+        if(speed<=0)
+
+            return 0;
+
+        return Math.ceil(
+
+            remainingBytes/
+
+            speed
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Format Seconds
+    // ==========================
+
+    formatTime(seconds){
 
         if(seconds<=0)
 
-            return "0 KB/s";
+            return "0s";
 
-        return this.formatSize(
+        const h=Math.floor(
 
-            bytes/seconds
+            seconds/3600
 
-        )+"/s";
+        );
 
-    },
+        const m=Math.floor(
 
+            (seconds%3600)/60
 
+        );
 
-    // ================= ETA =================
+        const s=seconds%60;
 
-    getETA(leftBytes,speedBytes){
+        if(h>0)
 
-        if(speedBytes<=0)
+            return `${h}h ${m}m`;
 
-            return "--";
+        if(m>0)
 
-        const sec=
+            return `${m}m ${s}s`;
 
-            Math.ceil(
-
-                leftBytes/
-
-                speedBytes
-
-            );
-
-        if(sec<60)
-
-            return sec+" sec";
-
-        if(sec<3600)
-
-            return Math.ceil(sec/60)
-
-            +" min";
-
-        return Math.ceil(sec/3600)
-
-            +" hr";
+        return `${s}s`;
 
     },
 
 
 
-    // ================= TRANSFER ID =================
+    // ==========================
+    // Is Last Chunk
+    // ==========================
 
-    createTransferId(){
+    isLastChunk(
 
-        if(
+        index,
 
-            window.crypto?.randomUUID
+        total
 
-        ){
+    ){
 
-            return crypto.randomUUID();
+        return index===total-1;
 
-        }
+    },
 
-        return (
 
-            Date.now().toString(36)+
 
-            Math.random()
+    // ==========================
+    // Remaining Chunks
+    // ==========================
 
-            .toString(36)
+    remainingChunks(
 
-            .substring(2,12)
+        current,
+
+        total
+
+    ){
+
+        return Math.max(
+
+            total-current,
+
+            0
 
         );
 
@@ -367,25 +644,83 @@ const ChunkProtocol = {
 
 
 
-    // ================= META =================
+    // ==========================
+    // Remaining Bytes
+    // ==========================
 
-    createMeta(upload,index,total){
+    remainingBytes(
+
+        currentChunk,
+
+        totalChunks,
+
+        fileSize
+
+    ){
+
+        const uploaded=
+
+            currentChunk*
+
+            this.CHUNK_SIZE;
+
+        return Math.max(
+
+            fileSize-uploaded,
+
+            0
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Browser Support
+    // ==========================
+
+    supported(){
+
+        return (
+
+            !!window.File &&
+
+            !!window.Blob &&
+
+            !!window.FileReader &&
+
+            !!window.indexedDB &&
+
+            !!window.crypto
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Reset Helper
+    // ==========================
+
+    createEmptyProgress(){
 
         return{
 
-            uploadId:upload.id,
+            progress:0,
 
-            fileName:upload.name,
+            uploadedChunks:0,
 
-            fileSize:upload.size,
+            totalChunks:0,
 
-            fileType:upload.type,
+            uploadedBytes:0,
 
-            mimeType:upload.mime,
+            speed:0,
 
-            chunkIndex:index,
+            eta:0,
 
-            totalChunks:total
+            retry:0
 
         };
 
@@ -393,6 +728,30 @@ const ChunkProtocol = {
 
 };
 
-Object.freeze(ChunkProtocol);
+Object.freeze(
 
-window.ChunkProtocol=ChunkProtocol;
+    ChunkProtocol.STATUS
+
+);
+
+Object.freeze(
+
+    ChunkProtocol.PACKET
+
+);
+
+Object.freeze(
+
+    ChunkProtocol.FILE
+
+);
+
+Object.freeze(
+
+    ChunkProtocol
+
+);
+
+window.ChunkProtocol=
+
+ChunkProtocol;
