@@ -7,33 +7,27 @@
 
 "use strict";
 
-const ChunkProtocol = Object.freeze({
+// ==========================
+// ACK Packet
+// ==========================
 
-    ACK: "ack",
-
-    COMPLETE: "complete",
-
-    ERROR: "error"
-
-});
-
-function uploadAck({
+function createAck(
 
     transferId,
 
     chunkIndex,
 
-    success = true,
+    success=true,
 
-    message = "OK",
+    message="OK",
 
-    retry = false
+    retry=false
 
-}){
+){
 
     return{
 
-        type: ChunkProtocol.ACK,
+        type:"ack",
 
         transferId,
 
@@ -45,72 +39,116 @@ function uploadAck({
 
         message,
 
-        serverTime: Date.now()
+        serverTime:Date.now()
 
     };
 
 }
 
-function uploadComplete({
+
+
+// ==========================
+// Upload Complete Packet
+// ==========================
+
+function createComplete(
 
     transferId,
 
     totalChunks
 
-}){
+){
 
     return{
 
-        type: ChunkProtocol.COMPLETE,
+        type:"complete",
 
         transferId,
 
         totalChunks,
 
-        success: true,
+        success:true,
 
-        serverTime: Date.now()
+        serverTime:Date.now()
 
     };
 
 }
 
-function uploadError({
+
+
+// ==========================
+// Upload Error Packet
+// ==========================
+
+function createError(
 
     transferId,
 
     chunkIndex,
 
-    message = "Upload Failed"
+    message="Upload Failed"
 
-}){
+){
 
     return{
 
-        type: ChunkProtocol.ERROR,
+        type:"error",
 
         transferId,
 
         chunkIndex,
 
-        success: false,
+        success:false,
 
-        retry: true,
+        retry:true,
 
         message,
 
-        serverTime: Date.now()
+        serverTime:Date.now()
 
     };
 
 }
 
-module.exports = Object.freeze({
 
-    uploadAck,
 
-    uploadComplete,
+// ==========================
+// Packet Validator
+// ==========================
 
-    uploadError
+function validateAck(packet){
+
+    return(
+
+        packet &&
+
+        typeof packet==="object" &&
+
+        typeof packet.transferId==="string" &&
+
+        Number.isInteger(packet.chunkIndex) &&
+
+        typeof packet.success==="boolean"
+
+    );
+
+}
+
+
+
+// ==========================
+// Export
+// ==========================
+
+module.exports=Object.freeze({
+
+    createAck,
+
+    createComplete,
+
+    createError,
+
+    validateAck
 
 });
