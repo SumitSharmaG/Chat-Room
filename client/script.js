@@ -127,14 +127,18 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     const data = await res.json();
 
     if (data.success) {
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("username", username);
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("savedUsername", username);
-        localStorage.setItem("savedPassword", password);    
 
-        window.location.href = "selection.html";
-    } else {
+    localStorage.setItem("isLoggedIn", "true");
+
+    localStorage.setItem("username", username);
+
+    localStorage.setItem("token", data.token);
+
+   localStorage.setItem("savedUsername", username);
+   localStorage.setItem("savedPassword", password);    
+
+    window.location.href = "selection.html";
+} else {
         alert("Login failed");
     }
 });
@@ -171,11 +175,15 @@ document.addEventListener("DOMContentLoaded", () => {
         messagesUl.innerHTML = savedChat;
         scrollToBottom();
     }
-    if (typeof restoreAttachments === "function") {
-        setTimeout(() => {
-            restoreAttachments();
-        }, 300);
-    }
+if (typeof restoreAttachments === "function") {
+
+    setTimeout(() => {
+
+    restoreAttachments();
+
+},300);
+
+}
 });
 
 // ================== TYPING ==================
@@ -254,22 +262,26 @@ if (socket) {
         localStorage.removeItem("chat_history");
     });
 
-    // ================= ATTACHMENTS =================
-    socket.on("receiveAttachment", async (data) => {
-        if (!data.id) {
-            data.id = crypto.randomUUID();
-        }
 
-        if (typeof saveAttachment === "function") {
-            await saveAttachment(data);
-        }
+// ================= ATTACHMENTS =================
 
-         if(document.querySelector('[data-media-id="'+data.id+'"]')){
-    return;
-         }
-        
-        displayAttachment(data);
-    });
+socket.on("receiveAttachment", async (data) => {
+
+    if (!data.id) {
+
+        data.id = crypto.randomUUID();
+
+    }
+
+    if (typeof saveAttachment === "function") {
+
+        await saveAttachment(data);
+
+    }
+
+    displayAttachment(data);
+
+});
 }
 
 // DISPLAY MESSAGE
@@ -277,7 +289,6 @@ function displayMessage(data) {
     if (!messagesUl) return;
 
     const li = document.createElement("li");
-    li.dataset.mediaId=data.id;
     const myUser = localStorage.getItem("username");
 
     if (data.isAlert || data.username === "SYSTEM") {
@@ -309,20 +320,23 @@ function displayMessage(data) {
     }
 
     messagesUl.appendChild(li);
-    scrollToBottom();
+scrollToBottom();
 
-    localStorage.setItem(
-        "chat_history",
-        messagesUl.innerHTML
-    );
+localStorage.setItem(
+    "chat_history",
+    messagesUl.innerHTML
+);
 }
   
 
 // ================= ATTACHMENT PREVIEW =================
+
 function displayAttachment(data) {
+
     if (!messagesUl) return;
 
     const li = document.createElement("li");
+
     const myUser = localStorage.getItem("username");
 
     if (data.username === myUser) {
@@ -332,7 +346,9 @@ function displayAttachment(data) {
     let preview = "";
 
     switch (data.fileType) {
+
         case "image":
+
             preview = `
                 <img
                     src="${data.fileData}"
@@ -346,6 +362,7 @@ function displayAttachment(data) {
             break;
 
         case "video":
+
             preview = `
                 <video
                     controls
@@ -359,6 +376,7 @@ function displayAttachment(data) {
             break;
 
         case "audio":
+
             preview = `
                 <audio controls>
                     <source src="${data.fileData}">
@@ -367,6 +385,7 @@ function displayAttachment(data) {
             break;
 
         default:
+
             preview = `
                 <a
                     href="${data.fileData}"
@@ -382,10 +401,13 @@ function displayAttachment(data) {
     }
 
     li.innerHTML = `
+
         <strong>${data.username}</strong>
+
         <div style="margin-top:8px;">
             ${preview}
         </div>
+
         <span
             style="
                 font-size:11px;
@@ -394,15 +416,18 @@ function displayAttachment(data) {
             ">
             ${data.time}
         </span>
+
     `;
 
     messagesUl.appendChild(li);
+
     scrollToBottom();
 
     localStorage.setItem(
         "chat_history",
         messagesUl.innerHTML
     );
+
 }
 
 // Seen popup
@@ -429,20 +454,33 @@ window.handleSend = function () {
 };
 
 window.clearChat = async function () {
+
     if (confirm("Clear chat?")) {
+
         socket?.emit("clearAllChat");
+
         if (typeof clearAllMedia === "function") {
+
             await clearAllMedia();
+
         }
+
     }
+
 };
 
 window.logout = async function () {
+
     if (typeof clearAllMedia === "function") {
+
         await clearAllMedia();
+
     }
+
     localStorage.clear();
+
     window.location.href = "login.html";
+
 };
 
 document.getElementById("msg")?.addEventListener("keydown", (e) => {
@@ -453,16 +491,25 @@ document.getElementById("msg")?.addEventListener("keydown", (e) => {
 });
 
 // ================= ATTACHMENT SEND =================
+
 window.sendAttachment = function(fileData){
+
     if(!socket) return;
 
     socket.emit("sendAttachment",{
+
         id: crypto.randomUUID(),
+
         username:localStorage.getItem("username"),
+
         fileType:fileData.fileType,
+
         fileName:fileData.fileName,
+
         fileData:fileData.fileData,
+
         time:getCurrentTime()
+
     });
-};
-        
+};                                                }                              
+            
