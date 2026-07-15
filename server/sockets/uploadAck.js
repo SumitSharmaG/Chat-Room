@@ -1,26 +1,116 @@
 // ==========================================
 // Secure Ultra Chat
 // FINAL VERSION
+// Version 4.0
 // uploadAck.js
-// DO NOT MODIFY
 // ==========================================
 
-module.exports = function uploadAck(socket){
+"use strict";
 
-    return function(success=true,message="OK",extra={}){
+const ChunkProtocol = Object.freeze({
 
-        return{
+    ACK: "ack",
 
-            success,
+    COMPLETE: "complete",
 
-            message,
+    ERROR: "error"
 
-            serverTime:Date.now(),
+});
 
-            ...extra
+function uploadAck({
 
-        };
+    transferId,
+
+    chunkIndex,
+
+    success = true,
+
+    message = "OK",
+
+    retry = false
+
+}){
+
+    return{
+
+        type: ChunkProtocol.ACK,
+
+        transferId,
+
+        chunkIndex,
+
+        success,
+
+        retry,
+
+        message,
+
+        serverTime: Date.now()
 
     };
 
-};
+}
+
+function uploadComplete({
+
+    transferId,
+
+    totalChunks
+
+}){
+
+    return{
+
+        type: ChunkProtocol.COMPLETE,
+
+        transferId,
+
+        totalChunks,
+
+        success: true,
+
+        serverTime: Date.now()
+
+    };
+
+}
+
+function uploadError({
+
+    transferId,
+
+    chunkIndex,
+
+    message = "Upload Failed"
+
+}){
+
+    return{
+
+        type: ChunkProtocol.ERROR,
+
+        transferId,
+
+        chunkIndex,
+
+        success: false,
+
+        retry: true,
+
+        message,
+
+        serverTime: Date.now()
+
+    };
+
+}
+
+module.exports = Object.freeze({
+
+    uploadAck,
+
+    uploadComplete,
+
+    uploadError
+
+});
