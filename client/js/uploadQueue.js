@@ -1,47 +1,191 @@
 // ==========================================
+// Secure Ultra Chat
 // Upload Queue
+// Version 2.0 FINAL
 // ==========================================
 
 const UploadQueue = {
 
     queue: [],
 
-    uploading: false,
+    working: false,
 
-    add(file){
 
-        this.queue.push(file);
 
-        this.next();
+    add(upload){
+
+        UploadState.add(upload);
+
+        UploadUI.create(upload);
+
+        this.queue.push(upload);
+
+        this.run();
 
     },
 
-    async next(){
 
-        if(this.uploading) return;
 
-        if(this.queue.length===0) return;
+    async run(){
 
-        this.uploading=true;
+        if(this.working) return;
 
-        const file=this.queue.shift();
+        this.working = true;
 
-        try{
+        while(this.queue.length){
 
-            await ChunkSender.send(file);
+            const upload = this.queue[0];
 
-        }catch(err){
+            if(upload.cancelled){
 
-            console.error(err);
+                this.queue.shift();
+
+                continue;
+
+            }
+
+            UploadState.setStatus(
+                upload.id,
+                "uploading"
+            );
+
+            await this.process(upload);
+
+            this.queue.shift();
 
         }
 
-        this.uploading=false;
+        this.working = false;
 
-        this.next();
+    },
+
+
+
+    async process(upload){
+
+        const chunks =
+            ChunkProtocol.split(
+                upload.file
+            );
+
+        for(
+
+            let i=0;
+
+            i<chunks.length;
+
+            i++
+
+        ){
+
+            while(upload.paused){
+
+                await new Promise(r=>
+                    setTimeout(r,200)
+                );
+            }
+
+            if(upload.cancelled){
+
+                return;
+            }
+
+            await window.sendChunk(
+
+                upload,
+
+                chunks[i],
+
+                i,
+
+                chunks.length
+
+            );
+
+            UploadState.setProgress(
+
+                upload.id,
+
+                i+1,
+
+                chunks.length
+
+            );
+
+            UploadUI.update(
+
+                upload.id,
+
+                UploadState.get(upload.id)
+                .progress
+
+            );
+
+        }
+
+        UploadState.setStatus(
+
+            upload.id,
+
+            "completed"
+
+        );
+
+        UploadUI.complete(
+
+            upload.id
+
+        );
+
+    },
+
+
+
+    pause(id){
+
+        const upload =
+            UploadState.get(id);
+
+        if(!upload) return;
+
+        upload.paused = true;
+
+        UploadUI.pause(id);
+
+    },
+
+
+
+    resume(id){
+
+        const upload =
+            UploadState.get(id);
+
+        if(!upload) return;
+
+        upload.paused = false;
+
+        UploadUI.resume(id);
+
+    },
+
+
+
+    cancel(id){
+
+        const upload =
+            UploadState.get(id);
+
+        if(!upload) return;
+
+        upload.cancelled = true;
+
+        UploadState.remove(id);
+
+        UploadUI.complete(id);
 
     }
 
 };
 
-window.UploadQueue=UploadQueue;
+window.UploadQueue = UploadQueue;
