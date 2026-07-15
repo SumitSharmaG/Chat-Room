@@ -1,137 +1,26 @@
 // ==========================================
 // Secure Ultra Chat
-// Upload ACK
-// Version 2.0 FINAL
+// FINAL VERSION
+// uploadAck.js
+// DO NOT MODIFY
 // ==========================================
 
-const uploads = new Map();
+module.exports = function uploadAck(socket){
 
-module.exports = {
+    return function(success=true,message="OK",extra={}){
 
-    create(uploadId,totalChunks){
+        return{
 
-        uploads.set(uploadId,{
+            success,
 
-            total:totalChunks,
+            message,
 
-            received:0,
+            serverTime:Date.now(),
 
-            completed:false,
+            ...extra
 
-            createdAt:Date.now()
+        };
 
-        });
-
-    },
-
-
-
-    receive(uploadId){
-
-        const upload=
-
-            uploads.get(uploadId);
-
-        if(!upload) return false;
-
-        upload.received++;
-
-        return upload.received>=upload.total;
-
-    },
-
-
-
-    progress(uploadId){
-
-        const upload=
-
-            uploads.get(uploadId);
-
-        if(!upload) return 0;
-
-        return Math.floor(
-
-            (upload.received/upload.total)
-
-            *100
-
-        );
-
-    },
-
-
-
-    complete(uploadId){
-
-        const upload=
-
-            uploads.get(uploadId);
-
-        if(upload)
-
-            upload.completed=true;
-
-    },
-
-
-
-    remove(uploadId){
-
-        uploads.delete(uploadId);
-
-    },
-
-
-
-    exists(uploadId){
-
-        return uploads.has(uploadId);
-
-    },
-
-
-
-    get(uploadId){
-
-        return uploads.get(uploadId);
-
-    },
-
-
-
-    cleanup(){
-
-        const now=Date.now();
-
-        for(
-
-            const [id,data]
-
-            of uploads
-
-        ){
-
-            if(
-
-                now-data.createdAt>
-
-                1000*60*30
-
-            ){
-
-                uploads.delete(id);
-
-            }
-
-        }
-
-    }
+    };
 
 };
-
-setInterval(()=>{
-
-    module.exports.cleanup();
-
-},1000*60*5);
