@@ -1,16 +1,17 @@
 // ==========================================
 // Secure Ultra Chat
-// Chunk Protocol
-// Version 2.0 (FINAL)
+// FINAL VERSION
+// chunkProtocol.js
+// DO NOT MODIFY
 // ==========================================
 
 const ChunkProtocol = {
 
-    VERSION: "2.0",
+    VERSION: "3.0",
 
-    // ---------- Chunk Settings ----------
+    // ================= SETTINGS =================
 
-    CHUNK_SIZE: 256 * 1024,      // 256 KB
+    CHUNK_SIZE: 256 * 1024,          // 256 KB
 
     MAX_RETRY: 5,
 
@@ -20,212 +21,27 @@ const ChunkProtocol = {
 
 
 
-    // ---------- Upload Status ----------
+    // ================= STATUS =================
 
-    STATUS: {
+    STATUS:{
 
-        WAITING: "waiting",
+        WAITING:"waiting",
 
-        UPLOADING: "uploading",
+        UPLOADING:"uploading",
 
-        PAUSED: "paused",
+        PAUSED:"paused",
 
-        COMPLETED: "completed",
+        COMPLETED:"completed",
 
-        FAILED: "failed",
+        FAILED:"failed",
 
-        CANCELLED: "cancelled"
-
-    },
-
-
-
-    // ---------- File Type ----------
-
-    getFileType(mime){
-
-        if(!mime)
-            return "document";
-
-        if(mime.startsWith("image/"))
-            return "image";
-
-        if(mime.startsWith("video/"))
-            return "video";
-
-        if(mime.startsWith("audio/"))
-            return "audio";
-
-        return "document";
+        CANCELLED:"cancelled"
 
     },
 
 
 
-    // ---------- Icons ----------
-
-    getIcon(type){
-
-        switch(type){
-
-            case "image":
-
-                return "🖼️";
-
-            case "video":
-
-                return "🎥";
-
-            case "audio":
-
-                return "🎵";
-
-            default:
-
-                return "📄";
-
-        }
-
-    },
-
-
-
-    // ---------- File Size ----------
-
-    formatSize(bytes){
-
-        if(bytes===0)
-            return "0 B";
-
-        if(!bytes)
-            return "0 B";
-
-        const sizes=[
-
-            "B",
-
-            "KB",
-
-            "MB",
-
-            "GB",
-
-            "TB"
-
-        ];
-
-        const i=Math.floor(
-
-            Math.log(bytes)/
-
-            Math.log(1024)
-
-        );
-
-        return (
-
-            bytes/
-
-            Math.pow(1024,i)
-
-        ).toFixed(2)
-
-        +" "+
-
-        sizes[i];
-
-    },
-
-
-
-    // ---------- Progress ----------
-
-    getPercent(current,total){
-
-        if(total===0)
-            return 0;
-
-        return Math.floor(
-
-            (current/total)*100
-
-        );
-
-    },
-
-
-
-    // ---------- Transfer ID ----------
-
-    createTransferId(){
-
-        if(window.crypto?.randomUUID){
-
-            return crypto.randomUUID();
-
-        }
-
-        return (
-
-            Date.now().toString(36)+
-
-            Math.random()
-
-            .toString(36)
-
-            .substring(2,12)
-
-        );
-
-    },
-
-
-
-    // ---------- Total Chunks ----------
-
-    getChunkCount(size){
-
-        return Math.ceil(
-
-            size/
-
-            this.CHUNK_SIZE
-
-        );
-
-    },
-
-
-
-    // ---------- Chunk Range ----------
-
-    getChunkRange(index){
-
-        const start=
-
-            index*
-
-            this.CHUNK_SIZE;
-
-        const end=
-
-            start+
-
-            this.CHUNK_SIZE;
-
-        return{
-
-            start,
-
-            end
-
-        };
-
-    },
-
-
-
-    // ---------- File Validation ----------
+    // ================= FILE VALIDATION =================
 
     validate(file){
 
@@ -261,8 +77,322 @@ const ChunkProtocol = {
 
         };
 
+    },
+
+
+
+    // ================= SPLIT =================
+
+    split(file){
+
+        const chunks=[];
+
+        let start=0;
+
+        while(start<file.size){
+
+            const end=Math.min(
+
+                start+this.CHUNK_SIZE,
+
+                file.size
+
+            );
+
+            chunks.push(
+
+                file.slice(start,end)
+
+            );
+
+            start=end;
+
+        }
+
+        return chunks;
+
+    },
+
+
+
+    // ================= TOTAL CHUNKS =================
+
+    getChunkCount(size){
+
+        return Math.ceil(
+
+            size/
+
+            this.CHUNK_SIZE
+
+        );
+
+    },
+
+
+
+    // ================= RANGE =================
+
+    getChunkRange(index){
+
+        const start=
+
+            index*
+
+            this.CHUNK_SIZE;
+
+        const end=
+
+            start+
+
+            this.CHUNK_SIZE;
+
+        return{
+
+            start,
+
+            end
+
+        };
+
+    },
+
+
+
+    // ================= FILE TYPE =================
+
+    getFileType(mime){
+
+        if(!mime)
+
+            return "document";
+
+        if(mime.startsWith("image/"))
+
+            return "image";
+
+        if(mime.startsWith("video/"))
+
+            return "video";
+
+        if(mime.startsWith("audio/"))
+
+            return "audio";
+
+        return "document";
+
+    },
+
+
+
+    // ================= ICON =================
+
+    getIcon(type){
+
+        switch(type){
+
+            case "image":
+
+                return "🖼️";
+
+            case "video":
+
+                return "🎥";
+
+            case "audio":
+
+                return "🎵";
+
+            default:
+
+                return "📄";
+
+        }
+
+    },
+
+
+
+    // ================= SIZE =================
+
+    formatSize(bytes){
+
+        if(!bytes)
+
+            return "0 B";
+
+        const units=[
+
+            "B",
+
+            "KB",
+
+            "MB",
+
+            "GB",
+
+            "TB"
+
+        ];
+
+        const i=Math.floor(
+
+            Math.log(bytes)/
+
+            Math.log(1024)
+
+        );
+
+        return (
+
+            bytes/
+
+            Math.pow(1024,i)
+
+        ).toFixed(2)
+
+        +" "+
+
+        units[i];
+
+    },
+
+
+
+    // ================= PERCENT =================
+
+    getPercent(current,total){
+
+        if(!total)
+
+            return 0;
+
+        return Math.min(
+
+            100,
+
+            Math.floor(
+
+                current*100/total
+
+            )
+
+        );
+
+    },
+
+
+
+    // ================= SPEED =================
+
+    getSpeed(bytes,seconds){
+
+        if(seconds<=0)
+
+            return "0 KB/s";
+
+        return this.formatSize(
+
+            bytes/seconds
+
+        )+"/s";
+
+    },
+
+
+
+    // ================= ETA =================
+
+    getETA(leftBytes,speedBytes){
+
+        if(speedBytes<=0)
+
+            return "--";
+
+        const sec=
+
+            Math.ceil(
+
+                leftBytes/
+
+                speedBytes
+
+            );
+
+        if(sec<60)
+
+            return sec+" sec";
+
+        if(sec<3600)
+
+            return Math.ceil(sec/60)
+
+            +" min";
+
+        return Math.ceil(sec/3600)
+
+            +" hr";
+
+    },
+
+
+
+    // ================= TRANSFER ID =================
+
+    createTransferId(){
+
+        if(
+
+            window.crypto?.randomUUID
+
+        ){
+
+            return crypto.randomUUID();
+
+        }
+
+        return (
+
+            Date.now().toString(36)+
+
+            Math.random()
+
+            .toString(36)
+
+            .substring(2,12)
+
+        );
+
+    },
+
+
+
+    // ================= META =================
+
+    createMeta(upload,index,total){
+
+        return{
+
+            uploadId:upload.id,
+
+            fileName:upload.name,
+
+            fileSize:upload.size,
+
+            fileType:upload.type,
+
+            mimeType:upload.mime,
+
+            chunkIndex:index,
+
+            totalChunks:total
+
+        };
+
     }
 
 };
+
+Object.freeze(ChunkProtocol);
 
 window.ChunkProtocol=ChunkProtocol;
