@@ -1,86 +1,61 @@
 // ==========================================
 // Secure Ultra Chat
-// FINAL VERSION
 // Version 4.0
 // chunkReceiver.js
-// PART 1 / 2
+// STEP 1 / 3
 // ==========================================
 
 "use strict";
 
-const {
+const ChunkProtocol = require("./chunkProtocol");
 
-    createAck,
+module.exports = (io, socket) => {
 
-    createComplete,
-
-    createError
-
-}=require("./uploadAck");
-
-module.exports=function(io,socket){
+    // ==========================
+    // Upload Chunk
+    // ==========================
 
     socket.on(
 
         "uploadChunk",
 
-        (packet,callback)=>{
+        async (
+
+            packet,
+
+            callback
+
+        )=>{
 
             try{
 
                 if(
 
-                    !packet ||
+                    !ChunkProtocol
 
-                    typeof packet!=="object"
+                    .validatePacket(
 
-                ){
-
-                    callback?.(
-
-                        createError(
-
-                            "",
-
-                            -1,
-
-                            "Invalid Packet"
-
-                        )
-
-                    );
-
-                    return;
-
-                }
-
-                if(
-
-                    !packet.transferId ||
-
-                    !Number.isInteger(
-
-                        packet.chunkIndex
-
-                    ) ||
-
-                    !Number.isInteger(
-
-                        packet.totalChunks
+                        packet
 
                     )
 
                 ){
 
-                    callback?.(
+                    callback(
 
-                        createError(
+                        ChunkProtocol
 
-                            packet.transferId||"",
+                        .createAck(
 
-                            packet.chunkIndex??-1,
+                            packet
 
-                            "Packet Validation Failed"
+                            ?.transferId,
+
+                            packet
+
+                            ?.chunkIndex,
+
+                            false
 
                         )
 
@@ -90,49 +65,31 @@ module.exports=function(io,socket){
 
                 }
 
-                io.emit(
+                relayChunk(
 
-                    "receiveChunk",
+                    io,
+
+                    socket,
 
                     packet
 
                 );
 
-                callback?.(
+                callback(
 
-                    createAck(
+                    ChunkProtocol
+
+                    .createAck(
 
                         packet.transferId,
 
-                        packet.chunkIndex
+                        packet.chunkIndex,
+
+                        true
 
                     )
 
                 );
-
-                if(
-
-                    packet.chunkIndex===
-
-                    packet.totalChunks-1
-
-                ){
-
-                    io.emit(
-
-                        "uploadCompleted",
-
-                        createComplete(
-
-                            packet.transferId,
-
-                            packet.totalChunks
-
-                        )
-
-                    );
-
-                }
 
             }
 
@@ -140,27 +97,27 @@ module.exports=function(io,socket){
 
                 console.error(
 
-                    "[ChunkReceiver]",
+                    "Chunk Error:",
 
                     err
 
                 );
 
-                callback?.(
+                callback(
 
-                    createError(
+                    ChunkProtocol
 
-                        packet?.transferId||"",
+                    .createAck(
 
-                        Number.isInteger(packet?.chunkIndex)
+                        packet
 
-                            ? packet.chunkIndex
+                        ?.transferId,
 
-                            : -1,
+                        packet
 
-                        err.message||
+                        ?.chunkIndex,
 
-                        "Internal Server Error"
+                        false
 
                     )
 
@@ -172,5 +129,290 @@ module.exports=function(io,socket){
 
     );
 
+    // ==========================
+    // Relay Chunk
+    // ==========================
+
+    function relayChunk(
+
+        io,
+
+        socket,
+
+        packet
+
+    ){
+
+        // ======================
+        // Private Chat
+        // ======================
+
+        if(
+
+            packet.receiver
+
+        ){
+
+            for(
+
+                const [
+
+                    username,
+
+                    sockets
+
+                ]
+
+                of global.onlineUsers
+
+            ){
+
+                if(
+
+                    username===
+
+                    packet.receiver ||
+
+                    username===
+
+                    packet.sender
+
+                ){
+
+                    sockets.forEach(
+
+                        socketId=>{
+
+                            io.to(
+
+                                socketId
+
+                            ).emit(
+
+                                "receiveChunk",
+
+                                packet
+
+                            );
+
+                        }
+
+                    );
+
+                }
+
+            }
+
+            return;
+
+        }
+
+
+
+        // ======================
+        // World Chat
+        // ======================
+
+        socket.broadcast.emit(
+
+            "receiveChunk",
+
+            packet
+
+        );
+
+    }
+
+
+
+    // ==========================
+    // Upload Complete
+    // ==========================
+
+    socket.on(
+
+        "uploadComplete",
+
+        (data)=>{
+
+            if(
+
+                data.receiver
+
+            ){
+
+                for(
+
+                    const [
+
+                        username,
+
+                        sockets
+
+                    ]
+
+                    of global.onlineUsers
+
+                ){
+
+                    if(
+
+                        username===
+
+                        data.receiver ||
+
+                        username===
+
+                        data.sender
+
+                    ){
+
+                        sockets.forEach(
+
+                            socketId=>{
+
+                                io.to(
+
+                                    socketId
+
+                                ).emit(
+
+                                    "uploadCompleted",
+
+                                    data
+
+                                );
+
+                            }
+
+                        );
+
+                    }
+
+                }
+
+                return;
+
+            }
+
+
+
+            socket.broadcast.emit(
+
+                "uploadCompleted",
+
+                data
+
+            );
+
+        }
+
+    );
+
+    // ==========================
+    // Upload Cancel
+    // ==========================
+
+    socket.on(
+
+        "uploadCancel",
+
+        (data)=>{
+
+            if(
+
+                data.receiver
+
+            ){
+
+                for(
+
+                    const [
+
+                        username,
+
+                        sockets
+
+                    ]
+
+                    of global.onlineUsers
+
+                ){
+
+                    if(
+
+                        username===
+
+                        data.receiver ||
+
+                        username===
+
+                        data.sender
+
+                    ){
+
+                        sockets.forEach(
+
+                            socketId=>{
+
+                                io.to(
+
+                                    socketId
+
+                                ).emit(
+
+                                    "uploadCancelled",
+
+                                    data
+
+                                );
+
+                            }
+
+                        );
+
+                    }
+
+                }
+
+                return;
+
+            }
+
+            socket.broadcast.emit(
+
+                "uploadCancelled",
+
+                data
+
+            );
+
+        }
+
+    );
+
+
+
+    // ==========================
+    // Disconnect
+    // ==========================
+
+    socket.on(
+
+        "disconnect",
+
+        ()=>{
+
+            console.log(
+
+                "Chunk Receiver Closed:",
+
+                socket.id
+
+            );
+
+        }
+
+    );
+
 };
-        
