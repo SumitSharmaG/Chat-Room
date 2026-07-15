@@ -1,418 +1,458 @@
 // ==========================================
 // Secure Ultra Chat
-// Attachments
-// Part 1 / 3
+// Version 4.0
+// attachments.js
+// STEP 1 / 3
 // ==========================================
 
-if (!document.getElementById("attachBtn")) {
+"use strict";
 
-    console.log("Attachment UI skipped.");
+const Attachments={
 
-} else {
+    elements:{},
 
-const attachBtn =
-document.getElementById("attachBtn");
 
-const attachMenu =
-document.getElementById("attachMenu");
 
-const cameraInput =
-document.getElementById("cameraInput");
+    // ==========================
+    // Initialize
+    // ==========================
 
-const galleryInput =
-document.getElementById("galleryInput");
+    init(){
 
-const videoInput =
-document.getElementById("videoInput");
+        this.elements={
 
-const audioInput =
-document.getElementById("audioInput");
+            button:
 
-const documentInput =
-document.getElementById("documentInput");
+                document.getElementById(
 
-// ================= MENU =================
+                    "attachBtn"
 
-attachBtn.onclick = () => {
+                ),
 
-    attachMenu.classList.toggle("show");
+            menu:
 
-};
+                document.getElementById(
 
-document.addEventListener("click",(e)=>{
+                    "attachMenu"
 
-    if(
+                ),
 
-        !attachMenu.contains(e.target)
+            camera:
 
-        &&
+                document.getElementById(
 
-        e.target!==attachBtn
+                    "cameraInput"
 
-    ){
+                ),
 
-        attachMenu.classList.remove("show");
+            gallery:
 
-    }
+                document.getElementById(
 
-});
+                    "galleryInput"
 
-// ================= MENU EVENTS =================
+                ),
 
-document.querySelectorAll(".attach-item")
+            video:
 
-.forEach(item=>{
+                document.getElementById(
 
-    item.onclick=()=>{
+                    "videoInput"
 
-        attachMenu.classList.remove("show");
+                ),
 
-        switch(item.dataset.type){
+            audio:
 
-            case "camera":
+                document.getElementById(
 
-                cameraInput.value="";
+                    "audioInput"
 
-                cameraInput.click();
+                ),
 
-                break;
+            document:
 
-            case "gallery":
+                document.getElementById(
 
-                galleryInput.value="";
+                    "documentInput"
 
-                galleryInput.click();
+                )
 
-                break;
+        };
 
-            case "video":
+    },
 
-                videoInput.value="";
 
-                videoInput.click();
 
-                break;
+    // ==========================
+    // Open / Close Menu
+    // ==========================
 
-            case "audio":
+    toggleMenu(){
 
-                audioInput.value="";
+        this.elements.menu
 
-                audioInput.click();
+        ?.classList.toggle(
 
-                break;
-
-            case "document":
-
-                documentInput.value="";
-
-                documentInput.click();
-
-                break;
-
-        }
-
-    };
-
-});
-
-// ================= FILE EVENTS =================
-
-cameraInput.onchange=()=>{
-
-    handleFile(
-
-        cameraInput.files[0]
-
-    );
-
-};
-
-galleryInput.onchange=()=>{
-
-    handleFile(
-
-        galleryInput.files[0]
-
-    );
-
-};
-
-videoInput.onchange=()=>{
-
-    handleFile(
-
-        videoInput.files[0]
-
-    );
-
-};
-
-audioInput.onchange=()=>{
-
-    handleFile(
-
-        audioInput.files[0]
-
-    );
-
-};
-
-documentInput.onchange=()=>{
-
-    handleFile(
-
-        documentInput.files[0]
-
-    );
-
-};
-
-// ================= FILE HANDLER =================
-
-function handleFile(file){
-
-    if(!file) return;
-
-    const upload =
-
-        MediaUtils.createUpload(
-
-            file
+            "show"
 
         );
 
-    UploadQueue.add(
+    },
 
-        upload
 
-    );
 
-        }
+    closeMenu(){
 
-// ==========================================
-// Part 2 / 3
-// Upload Process
-// ==========================================
+        this.elements.menu
 
-async function startUpload(upload){
+        ?.classList.remove(
 
-    try{
-
-        UploadState.setStatus(
-
-            upload.id,
-
-            "uploading"
+            "show"
 
         );
 
-        const chunks =
+    },
 
-            ChunkProtocol.split(
 
-                upload.file
+
+    // ==========================
+    // Handle File
+    // ==========================
+
+    handleFile(file){
+
+        if(!file)
+
+            return;
+
+        const upload=
+
+            MediaUtils.createUpload(
+
+                file,
+
+                window.username||
+
+                "Unknown",
+
+                "world"
 
             );
 
-        const total =
+        UploadUI.create(
 
-            chunks.length;
+            upload
 
-        for(
+        );
 
-            let i=0;
+        UploadQueue.add(
 
-            i<total;
+            upload
 
-            i++
+        );
 
-        ){
+    },
 
-            while(upload.paused){
+    // ==========================
+    // Button Events
+    // ==========================
 
-                await new Promise(r=>
+    bindButtons(){
 
-                    setTimeout(r,200)
+        const e=this.elements;
 
-                );
+        if(e.button){
+
+            e.button.onclick=()=>
+
+                this.toggleMenu();
+
+        }
+
+        document.addEventListener(
+
+            "click",
+
+            (event)=>{
+
+                if(
+
+                    !e.menu ||
+
+                    !e.button
+
+                ){
+
+                    return;
+
+                }
+
+                if(
+
+                    !e.menu.contains(
+
+                        event.target
+
+                    ) &&
+
+                    event.target!==
+
+                    e.button
+
+                ){
+
+                    this.closeMenu();
+
+                }
 
             }
 
-            if(upload.cancelled){
+        );
 
-                UploadState.remove(
+    },
 
-                    upload.id
 
-                );
+
+    // ==========================
+    // Menu Events
+    // ==========================
+
+    bindMenu(){
+
+        document
+
+        .querySelectorAll(
+
+            ".attach-item"
+
+        )
+
+        .forEach(item=>{
+
+            item.onclick=()=>{
+
+                this.closeMenu();
+
+                switch(
+
+                    item.dataset.type
+
+                ){
+
+                    case "camera":
+
+                        this.elements
+
+                        .camera.value="";
+
+                        this.elements
+
+                        .camera.click();
+
+                        break;
+
+                    case "gallery":
+
+                        this.elements
+
+                        .gallery.value="";
+
+                        this.elements
+
+                        .gallery.click();
+
+                        break;
+
+                    case "video":
+
+                        this.elements
+
+                        .video.value="";
+
+                        this.elements
+
+                        .video.click();
+
+                        break;
+
+                    case "audio":
+
+                        this.elements
+
+                        .audio.value="";
+
+                        this.elements
+
+                        .audio.click();
+
+                        break;
+
+                    case "document":
+
+                        this.elements
+
+                        .document.value="";
+
+                        this.elements
+
+                        .document.click();
+
+                        break;
+
+                }
+
+            };
+
+        });
+
+    },
+
+
+
+    // ==========================
+    // Input Events
+    // ==========================
+
+    bindInputs(){
+
+        [
+
+            this.elements.camera,
+
+            this.elements.gallery,
+
+            this.elements.video,
+
+            this.elements.audio,
+
+            this.elements.document
+
+        ].forEach(input=>{
+
+            if(!input)
 
                 return;
 
+            input.onchange=()=>{
+
+                this.handleFile(
+
+                    input.files[0]
+
+                );
+
+            };
+
+        });
+
+    },
+
+    // ==========================
+    // Drag & Drop
+    // ==========================
+
+    bindDragDrop(){
+
+        window.addEventListener(
+
+            "dragover",
+
+            (e)=>{
+
+                e.preventDefault();
+
             }
 
-            await sendChunk(
+        );
 
-                upload,
+        window.addEventListener(
 
-                chunks[i],
+            "drop",
 
-                i,
+            (e)=>{
 
-                total
+                e.preventDefault();
 
-            );
+                const file=
 
-            UploadState.setProgress(
+                    e.dataTransfer
 
-                upload.id,
+                    ?.files?.[0];
 
-                i+1,
+                if(file){
 
-                total
+                    this.handleFile(
 
-            );
+                        file
 
-            UploadUI.update(
+                    );
 
-                upload.id,
+                }
 
-                UploadState.get(
+            }
 
-                    upload.id
+        );
 
-                ).progress
+    },
 
-            );
+
+
+    // ==========================
+    // Start
+    // ==========================
+
+    start(){
+
+        this.init();
+
+        this.bindButtons();
+
+        this.bindMenu();
+
+        this.bindInputs();
+
+        this.bindDragDrop();
+
+    }
+
+};
+
+Object.freeze(
+
+    Attachments
+
+);
+
+window.Attachments=
+
+Attachments;
+
+
+
+// ==========================
+// Auto Start
+// ==========================
+
+document.addEventListener(
+
+    "DOMContentLoaded",
+
+    ()=>{
+
+        if(
+
+            document.getElementById(
+
+                "attachBtn"
+
+            )
+
+        ){
+
+            Attachments.start();
 
         }
 
-        UploadState.setStatus(
-
-            upload.id,
-
-            "completed"
-
-        );
-
-        UploadUI.complete(
-
-            upload.id
-
-        );
-
     }
 
-    catch(err){
-
-        console.error(
-
-            "Upload Error:",
-
-            err
-
-        );
-
-        UploadState.setStatus(
-
-            upload.id,
-
-            "failed"
-
-        );
-
-        UploadUI.fail(
-
-            upload.id
-
-        );
-
-    }
-
-}
-
-// ==========================================
-// Queue Integration
-// ==========================================
-
-const oldAdd = UploadQueue.add.bind(UploadQueue);
-
-UploadQueue.add = function(upload){
-
-    oldAdd(upload);
-
-    startUpload(upload);
-
-};
-
-// ==========================================
-// Part 3 / 3
-// Controls + Export
-// ==========================================
-
-// Pause Upload
-window.pauseUpload = function(id){
-
-    UploadQueue.pause(id);
-
-};
-
-// Resume Upload
-window.resumeUpload = function(id){
-
-    UploadQueue.resume(id);
-
-};
-
-// Cancel Upload
-window.cancelUpload = function(id){
-
-    UploadQueue.cancel(id);
-
-};
-
-// Retry Upload
-window.retryUpload = function(id){
-
-    const upload = UploadState.get(id);
-
-    if(!upload) return;
-
-    upload.paused = false;
-
-    upload.cancelled = false;
-
-    upload.progress = 0;
-
-    UploadUI.update(id,0);
-
-    startUpload(upload);
-
-};
-
-// Handle drag & drop (future ready)
-
-window.addEventListener("dragover",(e)=>{
-
-    e.preventDefault();
-
-});
-
-window.addEventListener("drop",(e)=>{
-
-    e.preventDefault();
-
-    const file = e.dataTransfer.files[0];
-
-    if(file){
-
-        handleFile(file);
-
-    }
-
-});
-
-// Export
-
-window.handleAttachmentFile = handleFile;
-
-} // ===== End of Attachment Module =====
+);
