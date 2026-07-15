@@ -1,17 +1,22 @@
 // ==========================================
 // Secure Ultra Chat
-// Media Store
-// IndexedDB Final
-// Version 2.0
+// FINAL VERSION
+// mediaStore.js
+// DO NOT MODIFY
 // ==========================================
 
 const DB_NAME = "SecureUltraChat";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = "attachments";
 
 let mediaDB = null;
 
-// ---------------- OPEN DB ----------------
+// Prevent duplicate rendering
+const renderedAttachments = new Set();
+
+
+
+// ================= OPEN =================
 
 async function openMediaDB(){
 
@@ -19,40 +24,75 @@ async function openMediaDB(){
 
     return new Promise((resolve,reject)=>{
 
-        const request =
-            indexedDB.open(
-                DB_NAME,
-                DB_VERSION
-            );
+        const request = indexedDB.open(
 
-        request.onupgradeneeded = e=>{
+            DB_NAME,
+
+            DB_VERSION
+
+        );
+
+        request.onupgradeneeded=(e)=>{
 
             const db=e.target.result;
 
+            let store;
+
             if(
+
                 !db.objectStoreNames.contains(
+
                     STORE_NAME
+
                 )
+
             ){
 
-                const store =
-                    db.createObjectStore(
-                        STORE_NAME,
-                        {
-                            keyPath:"id"
-                        }
-                    );
+                store=db.createObjectStore(
+
+                    STORE_NAME,
+
+                    {
+
+                        keyPath:"id"
+
+                    }
+
+                );
+
+            }else{
+
+                store=e.target.transaction.objectStore(
+
+                    STORE_NAME
+
+                );
+
+            }
+
+            if(
+
+                !store.indexNames.contains(
+
+                    "time"
+
+                )
+
+            ){
 
                 store.createIndex(
+
                     "time",
+
                     "time"
+
                 );
 
             }
 
         };
 
-        request.onsuccess=e=>{
+        request.onsuccess=(e)=>{
 
             mediaDB=e.target.result;
 
@@ -72,22 +112,86 @@ async function openMediaDB(){
 
 
 
-// ---------------- SAVE ----------------
+// ================= EXISTS =================
+
+async function attachmentExists(id){
+
+    const db=await openMediaDB();
+
+    return new Promise((resolve)=>{
+
+        const req=
+
+        db.transaction(
+
+            STORE_NAME,
+
+            "readonly"
+
+        )
+
+        .objectStore(STORE_NAME)
+
+        .get(id);
+
+        req.onsuccess=()=>{
+
+            resolve(
+
+                !!req.result
+
+            );
+
+        };
+
+        req.onerror=()=>{
+
+            resolve(false);
+
+        };
+
+    });
+
+}
+
+
+
+// ================= SAVE =================
 
 async function saveAttachment(item){
 
-    const db =
+    if(
+
+        await attachmentExists(
+
+            item.id
+
+        )
+
+    ){
+
+        return;
+
+    }
+
+    const db=
+
         await openMediaDB();
 
     return new Promise((resolve,reject)=>{
 
-        const tx =
-            db.transaction(
-                STORE_NAME,
-                "readwrite"
-            );
+        const tx=
+
+        db.transaction(
+
+            STORE_NAME,
+
+            "readwrite"
+
+        );
 
         tx.objectStore(STORE_NAME)
+
         .put(item);
 
         tx.oncomplete=()=>resolve();
@@ -100,28 +204,37 @@ async function saveAttachment(item){
 
 
 
-// ---------------- GET ----------------
+// ================= GET =================
 
 async function getAttachment(id){
 
-    const db =
+    const db=
+
         await openMediaDB();
 
     return new Promise((resolve,reject)=>{
 
-        const req =
+        const req=
+
         db.transaction(
+
             STORE_NAME,
+
             "readonly"
+
         )
+
         .objectStore(STORE_NAME)
+
         .get(id);
 
-        req.onsuccess=
-        ()=>resolve(req.result);
+        req.onsuccess=()=>
 
-        req.onerror=
-        ()=>reject();
+            resolve(req.result);
+
+        req.onerror=()=>
+
+            reject();
 
     });
 
@@ -129,28 +242,37 @@ async function getAttachment(id){
 
 
 
-// ---------------- GET ALL ----------------
+// ================= GET ALL =================
 
 async function getAllAttachments(){
 
-    const db =
+    const db=
+
         await openMediaDB();
 
     return new Promise((resolve,reject)=>{
 
-        const req =
+        const req=
+
         db.transaction(
+
             STORE_NAME,
+
             "readonly"
+
         )
+
         .objectStore(STORE_NAME)
+
         .getAll();
 
-        req.onsuccess=
-        ()=>resolve(req.result);
+        req.onsuccess=()=>
 
-        req.onerror=
-        ()=>reject();
+            resolve(req.result);
+
+        req.onerror=()=>
+
+            reject();
 
     });
 
@@ -158,42 +280,35 @@ async function getAllAttachments(){
 
 
 
-// ---------------- EXISTS ----------------
-
-async function attachmentExists(id){
-
-    const data =
-        await getAttachment(id);
-
-    return !!data;
-
-}
-
-
-
-// ---------------- DELETE ----------------
+// ================= DELETE =================
 
 async function deleteAttachment(id){
 
-    const db =
+    renderedAttachments.delete(id);
+
+    const db=
+
         await openMediaDB();
 
     return new Promise((resolve,reject)=>{
 
-        const tx =
+        const tx=
+
         db.transaction(
+
             STORE_NAME,
+
             "readwrite"
+
         );
 
         tx.objectStore(STORE_NAME)
+
         .delete(id);
 
-        tx.oncomplete=
-        ()=>resolve();
+        tx.oncomplete=()=>resolve();
 
-        tx.onerror=
-        ()=>reject();
+        tx.onerror=()=>reject();
 
     });
 
@@ -201,29 +316,35 @@ async function deleteAttachment(id){
 
 
 
-// ---------------- CLEAR ----------------
+// ================= CLEAR =================
 
 async function clearAllMedia(){
 
-    const db =
+    renderedAttachments.clear();
+
+    const db=
+
         await openMediaDB();
 
     return new Promise((resolve,reject)=>{
 
-        const tx =
+        const tx=
+
         db.transaction(
+
             STORE_NAME,
+
             "readwrite"
+
         );
 
         tx.objectStore(STORE_NAME)
+
         .clear();
 
-        tx.oncomplete=
-        ()=>resolve();
+        tx.oncomplete=()=>resolve();
 
-        tx.onerror=
-        ()=>reject();
+        tx.onerror=()=>reject();
 
     });
 
@@ -231,58 +352,96 @@ async function clearAllMedia(){
 
 
 
-// ---------------- RESTORE ----------------
+// ================= RESTORE =================
 
 async function restoreAttachments(){
 
     if(
-        typeof displayAttachment!=="function"
+
+        typeof displayAttachment!
+
+        =="function"
+
     ) return;
 
-    const items =
+    const items=
+
         await getAllAttachments();
 
-    const rendered =
-        new Set();
+    for(
 
-    items.forEach(item=>{
+        const item of items
+
+    ){
 
         if(
-            rendered.has(item.id)
-        ) return;
 
-        rendered.add(item.id);
+            renderedAttachments.has(
 
-        displayAttachment(
-            item,
-            true
+                item.id
+
+            )
+
+        ){
+
+            continue;
+
+        }
+
+        if(
+
+            document.querySelector(
+
+                `[data-attachment-id="${item.id}"]`
+
+            )
+
+        ){
+
+            renderedAttachments.add(
+
+                item.id
+
+            );
+
+            continue;
+
+        }
+
+        renderedAttachments.add(
+
+            item.id
+
         );
 
-    });
+        displayAttachment(
+
+            item,
+
+            true
+
+        );
+
+    }
 
 }
 
 
 
-// ---------------- EXPORT ----------------
+// ================= EXPORT =================
 
-window.saveAttachment =
-    saveAttachment;
+window.openMediaDB=openMediaDB;
 
-window.getAttachment =
-    getAttachment;
+window.saveAttachment=saveAttachment;
 
-window.getAllAttachments =
-    getAllAttachments;
+window.getAttachment=getAttachment;
 
-window.deleteAttachment =
-    deleteAttachment;
+window.getAllAttachments=getAllAttachments;
 
-window.clearAllMedia =
-    clearAllMedia;
+window.deleteAttachment=deleteAttachment;
 
-window.restoreAttachments =
-    restoreAttachments;
+window.clearAllMedia=clearAllMedia;
 
-window.attachmentExists =
-    attachmentExists;
+window.restoreAttachments=restoreAttachments;
+
+window.attachmentExists=attachmentExists;
