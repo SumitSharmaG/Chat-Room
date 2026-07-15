@@ -1,27 +1,32 @@
 // ==========================================
 // Secure Ultra Chat
 // FINAL VERSION
+// Version 4.0
 // mediaPreview.js
-// DO NOT MODIFY
+// PART 1 / 2
 // ==========================================
 
-const MediaPreview = {
+"use strict";
 
-    // ================= CREATE =================
+const MediaPreview={
+
+    // ==========================
+    // Main Preview
+    // ==========================
 
     create(upload){
 
         switch(upload.type){
 
-            case "image":
+            case ChunkProtocol.FILE.IMAGE:
 
                 return this.image(upload);
 
-            case "video":
+            case ChunkProtocol.FILE.VIDEO:
 
                 return this.video(upload);
 
-            case "audio":
+            case ChunkProtocol.FILE.AUDIO:
 
                 return this.audio(upload);
 
@@ -35,18 +40,25 @@ const MediaPreview = {
 
 
 
-    // ================= IMAGE =================
+    // ==========================
+    // Image Preview
+    // ==========================
 
     image(upload){
 
-        return `
+        return`
+
+<div class="media-preview image-preview">
 
 <img
-src="${upload.previewURL}"
+src="${MediaUtils.createPreviewURL(upload.file)}"
+alt="${upload.name}"
 class="preview-image"
 loading="lazy"
 draggable="false"
 >
+
+</div>
 
 `;
 
@@ -54,11 +66,15 @@ draggable="false"
 
 
 
-    // ================= VIDEO =================
+    // ==========================
+    // Video Preview
+    // ==========================
 
     video(upload){
 
-        return `
+        return`
+
+<div class="media-preview video-preview">
 
 <video
 class="preview-video"
@@ -67,10 +83,13 @@ preload="metadata"
 >
 
 <source
-src="${upload.previewURL}"
-type="${upload.mime}">
+src="${MediaUtils.createPreviewURL(upload.file)}"
+type="${upload.mime}"
+>
 
 </video>
+
+</div>
 
 `;
 
@@ -78,11 +97,15 @@ type="${upload.mime}">
 
 
 
-    // ================= AUDIO =================
+    // ==========================
+    // Audio Preview
+    // ==========================
 
     audio(upload){
 
-        return `
+        return`
+
+<div class="media-preview audio-preview">
 
 <audio
 controls
@@ -91,42 +114,45 @@ class="preview-audio"
 >
 
 <source
-src="${upload.previewURL}"
-type="${upload.mime}">
+src="${MediaUtils.createPreviewURL(upload.file)}"
+type="${upload.mime}"
+>
 
 </audio>
+
+</div>
 
 `;
 
     },
 
-
-
-    // ================= DOCUMENT =================
+    // ==========================
+    // Document Preview
+    // ==========================
 
     document(upload){
 
-        return `
+        return`
 
-<div class="preview-document">
+<div class="media-preview document-preview">
 
-<div class="preview-doc-icon">
+<div class="preview-document-icon">
 
 ${upload.icon}
 
 </div>
 
-<div class="preview-doc-body">
+<div class="preview-document-info">
 
-<div class="preview-doc-name">
+<div class="preview-document-name">
 
 ${upload.name}
 
 </div>
 
-<div class="preview-doc-size">
+<div class="preview-document-size">
 
-${MediaUtils.formatSize(upload.size)}
+${ChunkProtocol.formatSize(upload.size)}
 
 </div>
 
@@ -140,30 +166,114 @@ ${MediaUtils.formatSize(upload.size)}
 
 
 
-    // ================= CLEANUP =================
+    // ==========================
+    // Preview Card
+    // ==========================
 
-    destroy(upload){
+    createCard(upload){
 
-        if(
+        return`
 
-            upload &&
+<div class="attachment-card">
 
-            upload.previewURL
+${this.create(upload)}
 
-        ){
+<div class="attachment-footer">
 
-            URL.revokeObjectURL(
+<div class="attachment-name">
 
-                upload.previewURL
+${upload.name}
 
-            );
+</div>
 
-        }
+<div class="attachment-meta">
+
+${ChunkProtocol.formatSize(upload.size)}
+
+&nbsp;•&nbsp;
+
+${upload.type}
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+    },
+
+
+
+    // ==========================
+    // Download Button
+    // ==========================
+
+    downloadButton(upload){
+
+        return`
+
+<button
+
+class="attachment-download"
+
+data-transfer-id="${upload.transferId}"
+
+title="Download"
+
+>
+
+⬇
+
+</button>
+
+`;
+
+    },
+
+
+
+    // ==========================
+    // Remove Preview URL
+    // ==========================
+
+    destroy(url){
+
+        MediaUtils.revokePreviewURL(
+
+            url
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Supported
+    // ==========================
+
+    supported(){
+
+        return(
+
+            typeof URL!=="undefined" &&
+
+            typeof URL.createObjectURL==="function"
+
+        );
 
     }
 
 };
 
-Object.freeze(MediaPreview);
+Object.freeze(
 
-window.MediaPreview=MediaPreview;
+    MediaPreview
+
+);
+
+window.MediaPreview=
+
+MediaPreview;
