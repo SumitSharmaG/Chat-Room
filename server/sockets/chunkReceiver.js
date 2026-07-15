@@ -1,185 +1,176 @@
 // ==========================================
 // Secure Ultra Chat
-// Chunk Receiver
-// Version 2.0 FINAL
+// FINAL VERSION
+// Version 4.0
+// chunkReceiver.js
+// PART 1 / 2
 // ==========================================
 
-const UploadAck = require("./uploadAck");
+"use strict";
 
-const activeUploads = new Map();
+const {
 
-module.exports = function(io,socket){
+    createAck,
 
-    socket.on("uploadChunk",(data,callback)=>{
+    createComplete,
 
-        try{
+    createError
 
-            let upload=
-                activeUploads.get(
-                    data.uploadId
-                );
+}=require("./uploadAck");
 
-            if(!upload){
+module.exports=function(io,socket){
 
-                upload={
+    socket.on(
 
-                    id:data.uploadId,
+        "uploadChunk",
 
-                    username:data.username,
+        (packet,callback)=>{
 
-                    fileName:data.fileName,
+            try{
 
-                    fileType:data.fileType,
+                if(
 
-                    fileSize:data.fileSize,
+                    !packet ||
 
-                    totalChunks:data.totalChunks,
+                    typeof packet!=="object"
 
-                    chunks:new Array(
-                        data.totalChunks
-                    ),
+                ){
 
-                    received:0,
+                    callback?.(
 
-                    time:data.time
+                        createError(
 
-                };
+                            "",
 
-                activeUploads.set(
-                    data.uploadId,
-                    upload
-                );
+                            -1,
 
-                UploadAck.create(
-                    data.uploadId,
-                    data.totalChunks
-                );
+                            "Invalid Packet"
 
-            }
+                        )
 
-            if(
+                    );
 
-                !upload.chunks[
-                    data.chunkIndex
-                ]
-
-            ){
-
-                upload.chunks[
-                    data.chunkIndex
-                ]=
-
-                Buffer.from(
-                    data.chunkData
-                );
-
-                upload.received++;
-
-            }
-
-            const finished=
-
-                UploadAck.receive(
-                    data.uploadId
-                );
-
-            callback({
-
-                success:true,
-
-                progress:
-
-                UploadAck.progress(
-                    data.uploadId
-                )
-
-            });
-
-            if(!finished){
-
-                return;
-
-            }
-
-            const fileBuffer=
-
-                Buffer.concat(
-                    upload.chunks
-                );
-
-            const mime={
-
-                image:"image/jpeg",
-
-                video:"video/mp4",
-
-                audio:"audio/mpeg",
-
-                document:
-                "application/octet-stream"
-
-            };
-
-            const dataUrl=
-
-                `data:${mime[upload.fileType]||"application/octet-stream"};base64,${fileBuffer.toString("base64")}`;
-
-            io.emit(
-
-                "receiveAttachment",
-
-                {
-
-                    id:upload.id,
-
-                    username:
-                    upload.username,
-
-                    fileName:
-                    upload.fileName,
-
-                    fileType:
-                    upload.fileType,
-
-                    fileSize:
-                    upload.fileSize,
-
-                    fileData:
-                    dataUrl,
-
-                    time:
-                    upload.time
+                    return;
 
                 }
 
-            );
+                if(
 
-            UploadAck.complete(
-                upload.id
-            );
+                    !packet.transferId ||
 
-            UploadAck.remove(
-                upload.id
-            );
+                    !Number.isInteger(
 
-            activeUploads.delete(
-                upload.id
-            );
+                        packet.chunkIndex
+
+                    ) ||
+
+                    !Number.isInteger(
+
+                        packet.totalChunks
+
+                    )
+
+                ){
+
+                    callback?.(
+
+                        createError(
+
+                            packet.transferId||"",
+
+                            packet.chunkIndex??-1,
+
+                            "Packet Validation Failed"
+
+                        )
+
+                    );
+
+                    return;
+
+                }
+
+                io.emit(
+
+                    "receiveChunk",
+
+                    packet
+
+                );
+
+                callback?.(
+
+                    createAck(
+
+                        packet.transferId,
+
+                        packet.chunkIndex
+
+                    )
+
+                );
+
+                if(
+
+                    packet.chunkIndex===
+
+                    packet.totalChunks-1
+
+                ){
+
+                    io.emit(
+
+                        "uploadCompleted",
+
+                        createComplete(
+
+                            packet.transferId,
+
+                            packet.totalChunks
+
+                        )
+
+                    );
+
+                }
+
+            }
+
+            catch(err){
+
+                console.error(
+
+                    "[ChunkReceiver]",
+
+                    err
+
+                );
+
+                callback?.(
+
+                    createError(
+
+                        packet?.transferId||"",
+
+                        Number.isInteger(packet?.chunkIndex)
+
+                            ? packet.chunkIndex
+
+                            : -1,
+
+                        err.message||
+
+                        "Internal Server Error"
+
+                    )
+
+                );
+
+            }
 
         }
 
-        catch(err){
-
-            console.log(err);
-
-            callback({
-
-                success:false
-
-            });
-
-        }
-
-    });
+    );
 
 };
+        
