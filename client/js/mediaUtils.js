@@ -1,75 +1,151 @@
 // ==========================================
 // Secure Ultra Chat
-// Media Utils
-// Version 2.0 FINAL
+// FINAL VERSION
+// mediaUtils.js
+// DO NOT MODIFY
 // ==========================================
 
 const MediaUtils = {
 
+    // ================= ID =================
+
     generateId(){
 
-        if(window.crypto?.randomUUID){
-
-            return crypto.randomUUID();
-
-        }
-
-        return Date.now().toString(36)
-            + Math.random().toString(36).substring(2);
+        return ChunkProtocol.createTransferId();
 
     },
 
 
 
-    formatSize(bytes){
-
-        if(bytes < 1024)
-            return bytes + " B";
-
-        if(bytes < 1024 * 1024)
-            return (bytes / 1024).toFixed(1) + " KB";
-
-        if(bytes < 1024 * 1024 * 1024)
-            return (bytes / 1024 / 1024).toFixed(1) + " MB";
-
-        return (bytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
-
-    },
-
-
+    // ================= FILE TYPE =================
 
     getType(file){
 
-        if(file.type.startsWith("image/"))
-            return "image";
+        return ChunkProtocol.getFileType(
 
-        if(file.type.startsWith("video/"))
-            return "video";
+            file.type
 
-        if(file.type.startsWith("audio/"))
-            return "audio";
-
-        return "document";
+        );
 
     },
 
 
 
+    // ================= ICON =================
+
     getIcon(type){
 
-        switch(type){
+        return ChunkProtocol.getIcon(type);
 
-            case "image":
-                return "🖼️";
+    },
 
-            case "video":
-                return "🎥";
 
-            case "audio":
-                return "🎵";
 
-            default:
-                return "📄";
+    // ================= SIZE =================
+
+    formatSize(bytes){
+
+        return ChunkProtocol.formatSize(bytes);
+
+    },
+
+
+
+    // ================= TIME =================
+
+    readableTime(){
+
+        const now=new Date();
+
+        let h=now.getHours();
+
+        const m=now.getMinutes()
+
+            .toString()
+
+            .padStart(2,"0");
+
+        const s=now.getSeconds()
+
+            .toString()
+
+            .padStart(2,"0");
+
+        const ampm=
+
+            h>=12
+
+            ?"PM"
+
+            :"AM";
+
+        h=h%12||12;
+
+        return `${h}:${m}:${s} ${ampm}`;
+
+    },
+
+
+
+    // ================= VALIDATE =================
+
+    validate(file){
+
+        return ChunkProtocol.validate(file);
+
+    },
+
+
+
+    // ================= MIME =================
+
+    getMime(file){
+
+        return file.type ||
+
+            "application/octet-stream";
+
+    },
+
+
+
+    // ================= EXTENSION =================
+
+    getExtension(fileName){
+
+        const dot=
+
+            fileName.lastIndexOf(".");
+
+        if(dot===-1)
+
+            return "";
+
+        return fileName
+
+            .substring(dot+1)
+
+            .toLowerCase();
+
+    },
+
+
+
+    // ================= PREVIEW =================
+
+    createPreviewURL(file){
+
+        return URL.createObjectURL(file);
+
+    },
+
+
+
+    revokePreviewURL(url){
+
+        if(url){
+
+            URL.revokeObjectURL(url);
 
         }
 
@@ -77,46 +153,83 @@ const MediaUtils = {
 
 
 
-    readableTime(){
-
-        const d = new Date();
-
-        let h = d.getHours();
-
-        const m = d.getMinutes()
-            .toString()
-            .padStart(2,"0");
-
-        const ampm =
-            h >= 12 ? "PM" : "AM";
-
-        h = h % 12 || 12;
-
-        return `${h}:${m} ${ampm}`;
-
-    },
-
-
+    // ================= CREATE UPLOAD =================
 
     createUpload(file){
 
-        return {
+        const validation=
 
-            id: this.generateId(),
+            this.validate(file);
 
-            file,
+        if(!validation.ok){
 
-            name: file.name,
+            throw new Error(
 
-            size: file.size,
+                validation.message
 
-            mime: file.type,
+            );
 
-            type: this.getType(file),
+        }
+
+        const upload={
+
+            id:
+
+                this.generateId(),
+
+            file:
+
+                file,
+
+            name:
+
+                file.name,
+
+            size:
+
+                file.size,
+
+            mime:
+
+                this.getMime(file),
+
+            extension:
+
+                this.getExtension(
+
+                    file.name
+
+                ),
+
+            type:
+
+                this.getType(file),
+
+            icon:
+
+                this.getIcon(
+
+                    this.getType(file)
+
+                ),
 
             progress:0,
 
-            uploaded:0,
+            uploadedChunks:0,
+
+            totalChunks:
+
+                ChunkProtocol.getChunkCount(
+
+                    file.size
+
+                ),
+
+            retry:0,
+
+            speed:0,
+
+            eta:"--",
 
             paused:false,
 
@@ -124,12 +237,26 @@ const MediaUtils = {
 
             completed:false,
 
-            time:this.readableTime()
+            status:
+
+                ChunkProtocol.STATUS.WAITING,
+
+            createdAt:
+
+                Date.now(),
+
+            time:
+
+                this.readableTime()
 
         };
+
+        return upload;
 
     }
 
 };
 
-window.MediaUtils = MediaUtils;
+Object.freeze(MediaUtils);
+
+window.MediaUtils=MediaUtils;
