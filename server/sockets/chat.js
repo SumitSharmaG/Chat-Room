@@ -1,351 +1,678 @@
-const chunkReceiver = require("./chunkReceiver");
-const Message = require("../models/Message");
-const jwt = require("jsonwebtoken");
+// ==========================================
+// Secure Ultra Chat
+// FINAL VERSION
+// Version 4.0
+// chat.js
+// PART 1 / 3
+// ==========================================
 
-// 🔥 UNIQUE USERS TRACK
-const onlineUsers = new Map();
+"use strict";
 
-// 🔥 TRACK TYPING USERS
-const typingUsers = new Set();
+const chunkReceiver =
+    require("./chunkReceiver");
 
-module.exports = (io) => {
+const Message =
+    require("../models/Message");
 
-  io.use((socket, next) => {
-
-  try {
-
-    const token = socket.handshake.auth.token;
-
-    if (!token) {
-      return next(new Error("No Token"));
-    }
-
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
-
-    socket.user = decoded;
-
-    next();
-
-  } catch (err) {
-
-    return next(
-      new Error("Invalid Token")
-    );
-
-  }
-
-});
-
-  io.on("connection", (socket) => {
-
-  console.log(
-    "✅ JWT User Connected:",
-    socket.user.username
-  );
-
-    // ================== TYPING ==================
-
-    socket.on("typing", (username) => {
-
-      if (!typingUsers.has(username)) {
-
-        typingUsers.add(username);
-
-        socket.broadcast.emit(
-          "userTyping",
-          username
-        );
-      }
-    });
-
-    socket.on("stopTyping", (username) => {
-
-      typingUsers.delete(username);
-
-      socket.broadcast.emit(
-        "userStopTyping",
-        username
-      );
-    });
+const jwt =
+    require("jsonwebtoken");
 
 
 
-    // ================== SEEN ==================
+// ==========================
+// Online Users
+// ==========================
 
-    socket.on(
-      "messageSeen",
-      async ({ messageId, username }) => {
-
-        try {
-
-          const msg =
-            await Message.findById(messageId);
-
-          if (!msg) return;
-
-          if (!msg.seenBy) {
-
-            msg.seenBy = [];
-          }
-
-          if (!msg.seenBy.includes(username)) {
-
-            msg.seenBy.push(username);
-
-            await msg.save();
-          }
-
-          io.emit("updateSeen", {
-
-            messageId,
-
-            seenBy: msg.seenBy
-
-          });
-
-        } catch (err) {
-
-          console.error(
-            "Seen error:",
-            err
-          );
-        }
-      }
-    );
+const onlineUsers =
+    new Map();
 
 
 
-    // ================== USER JOIN ==================
+// ==========================
+// Typing Users
+// ==========================
 
-    socket.on("userJoined", () => {
-      console.log(
-  "🔥 userJoined:",
-  socket.user.username
+const typingUsers =
+    new Set();
+
+
+
+// ==========================
+// Export
+// ==========================
+
+module.exports=(io)=>{
+
+
+
+// ==========================
+// JWT Authentication
+// ==========================
+
+io.use(
+
+(socket,next)=>{
+
+try{
+
+const token=
+
+socket.handshake
+
+.auth.token;
+
+if(!token){
+
+return next(
+
+new Error(
+
+"No Token"
+
+)
+
 );
 
-  const username = socket.user.username;
+}
 
-  socket.username = username;
+const decoded=
 
-  if (onlineUsers.has(username)) {
+jwt.verify(
 
-    onlineUsers
-      .get(username)
-      .add(socket.id);
+token,
 
-  } else {
+process.env
 
-    onlineUsers.set(
-      username,
-      new Set([socket.id])
-    );
-  }
+.JWT_SECRET
 
-  console.log(
-    "🔥 Online Users:",
-    onlineUsers
-  );
+);
 
-  io.emit(
-    "updateUserCount",
-    onlineUsers.size
-  );
+socket.user=
 
-});
-          
+decoded;
 
+next();
 
+}
 
-    // ================== WORLD CHAT ==================
+catch(err){
 
-    socket.on(
-  "sendMessage",
-  async (data) => {
+return next(
 
-    try {
+new Error(
 
-      // 🔐 Username JWT se force
-      data.username =
-        socket.user.username;
+"Invalid Token"
 
-      const msg =
-        await Message.create(data);
+)
 
-      io.emit(
-        "receiveMessage",
-        msg
-      );
+);
 
-    } catch (err) {
+}
 
-      console.error(
-        "Message error:",
-        err
-      );
-    }
-  }
+}
+
 );
 
 
-    // ================== ATTACHMENTS ==================
+
+// ==========================
+// Connection
+// ==========================
+
+io.on(
+
+"connection",
+
+(socket)=>{
+
+console.log(
+
+"✅ Connected:",
+
+socket.user
+
+.username
+
+);
+
+
+
+// ==========================
+// Register Chunk Receiver
+// ==========================
+
+chunkReceiver(
+
+io,
+
+socket,
+
+onlineUsers
+
+);
+
+  // ==========================
+// Typing
+// ==========================
 
 socket.on(
-    "sendAttachment",
-    (data) => {
 
-        data.username =
-            socket.user.username;
+"typing",
 
-        io.emit(
-            "receiveAttachment",
-            data
-        );
+(username)=>{
 
-    }
+if(
+
+!typingUsers.has(
+
+username
+
+)
+
+){
+
+typingUsers.add(
+
+username
+
 );
 
-    // ================== PRIVATE CHAT ==================
+socket.broadcast.emit(
 
-    socket.on(
-      "private_message",
-      (data) => {
+"userTyping",
 
-        // 🔐 Sender JWT se force
-    data.sender =
-      socket.user.username;
+username
 
-        // REMOVE @ IF EXISTS
+);
 
-        data.sender =
-          data.sender.replace("@", "");
+}
 
-        data.receiver =
-          data.receiver.replace("@", "");
+}
 
-        console.log(
-          "🔥 Private Msg:",
-          data
-        );
+);
 
 
 
-        // SEND ONLY TO SENDER + RECEIVER
+socket.on(
 
-        for (
-          const [username, sockets]
-          of onlineUsers
-        ) {
+"stopTyping",
 
-          if (
+(username)=>{
 
-            username === data.receiver
+typingUsers.delete(
 
-            ||
+username
 
-            username === data.sender
+);
 
-          ) {
+socket.broadcast.emit(
 
-            sockets.forEach((socketId) => {
+"userStopTyping",
 
-              io.to(socketId).emit(
-                "receive_private_message",
-                data
-              );
+username
 
-            });
+);
 
-          }
-        }
-      }
-    );
+}
+
+);
 
 
 
-    // ================== CLEAR CHAT ==================
+// ==========================
+// Seen
+// ==========================
 
-    socket.on(
-      "clearAllChat",
-      async () => {
+socket.on(
 
-        try {
+"messageSeen",
 
-          await Message.deleteMany({});
+async({
 
-          io.emit("chatCleared");
+messageId,
 
-        } catch (err) {
+username
 
-          console.error(
-            "Clear error:",
-            err
-          );
-        }
-      }
-    );
+})=>{
 
-chunkReceiver(io, socket);
+try{
 
-    // ================== DISCONNECT ==================
+const msg=
 
-    socket.on("disconnect", () => {
+await Message
 
-      console.log(
-        "User disconnected:",
-        socket.id
-      );
+.findById(
 
-      const username =
-        socket.username;
+messageId
 
-      // REMOVE FROM ONLINE USERS
+);
 
-      if (
-        username &&
-        onlineUsers.has(username)
-      ) {
+if(!msg)
 
-        const userSockets =
-          onlineUsers.get(username);
+return;
 
-        userSockets.delete(socket.id);
+msg.seenBy||=[];
 
-        if (userSockets.size === 0) {
+if(
 
-          onlineUsers.delete(username);
-        }
-      }
+!msg.seenBy
+
+.includes(
+
+username
+
+)
+
+){
+
+msg.seenBy
+
+.push(
+
+username
+
+);
+
+await msg.save();
+
+}
+
+io.emit(
+
+"updateSeen",{
+
+messageId,
+
+seenBy:
+
+msg.seenBy
+
+}
+
+);
+
+}
+
+catch(err){
+
+console.error(
+
+"Seen:",
+
+err
+
+);
+
+}
+
+}
+
+);
 
 
-      // REMOVE FROM TYPING USERS
 
-      if (
-        username &&
-        typingUsers.has(username)
-      ) {
+// ==========================
+// User Joined
+// ==========================
 
-        typingUsers.delete(username);
+socket.on(
 
-        socket.broadcast.emit(
-          "userStopTyping",
-          username
-        );
-      }
+"userJoined",
 
-      console.log(
-        "🔥 After Disconnect:",
-        onlineUsers
-      );
+()=>{
 
-      io.emit(
-        "updateUserCount",
-        onlineUsers.size
-      );
-    });
+const username=
 
-  });
+socket.user
+
+.username;
+
+socket.username=
+
+username;
+
+if(
+
+onlineUsers.has(
+
+username
+
+)
+
+){
+
+onlineUsers
+
+.get(username)
+
+.add(
+
+socket.id
+
+);
+
+}
+
+else{
+
+onlineUsers.set(
+
+username,
+
+new Set([
+
+socket.id
+
+])
+
+);
+
+}
+
+io.emit(
+
+"updateUserCount",
+
+onlineUsers.size
+
+);
+
+}
+
+);
+
+
+
+// ==========================
+// World Chat
+// ==========================
+
+socket.on(
+
+"sendMessage",
+
+async(data)=>{
+
+try{
+
+data.username=
+
+socket.user
+
+.username;
+
+const msg=
+
+await Message
+
+.create(data);
+
+io.emit(
+
+"receiveMessage",
+
+msg
+
+);
+
+}
+
+catch(err){
+
+console.error(
+
+"Message:",
+
+err
+
+);
+
+}
+
+}
+
+);
+
+  // ==========================
+// Private Chat
+// ==========================
+
+socket.on(
+
+"private_message",
+
+(data)=>{
+
+data.sender=
+
+socket.user
+
+.username;
+
+data.sender=
+
+data.sender
+
+.replace(
+
+"@",""
+
+);
+
+data.receiver=
+
+data.receiver
+
+.replace(
+
+"@",""
+
+);
+
+for(
+
+const[
+
+username,
+
+sockets
+
+]
+
+of onlineUsers
+
+){
+
+if(
+
+username===
+
+data.sender
+
+||
+
+username===
+
+data.receiver
+
+){
+
+sockets.forEach(
+
+socketId=>{
+
+io.to(
+
+socketId
+
+).emit(
+
+"receive_private_message",
+
+data
+
+);
+
+}
+
+);
+
+}
+
+}
+
+}
+
+);
+
+
+
+// ==========================
+// Clear Chat
+// ==========================
+
+socket.on(
+
+"clearAllChat",
+
+async()=>{
+
+try{
+
+await Message
+
+.deleteMany({});
+
+io.emit(
+
+"chatCleared"
+
+);
+
+}
+
+catch(err){
+
+console.error(
+
+"Clear:",
+
+err
+
+);
+
+}
+
+}
+
+);
+
+
+
+// ==========================
+// Disconnect
+// ==========================
+
+socket.on(
+
+"disconnect",
+
+()=>{
+
+const username=
+
+socket.username;
+
+if(
+
+username&&
+
+onlineUsers.has(
+
+username
+
+)
+
+){
+
+const sockets=
+
+onlineUsers.get(
+
+username
+
+);
+
+sockets.delete(
+
+socket.id
+
+);
+
+if(
+
+sockets.size===0
+
+){
+
+onlineUsers.delete(
+
+username
+
+);
+
+}
+
+}
+
+if(
+
+username&&
+
+typingUsers.has(
+
+username
+
+)
+
+){
+
+typingUsers.delete(
+
+username
+
+);
+
+socket.broadcast.emit(
+
+"userStopTyping",
+
+username
+
+);
+
+}
+
+io.emit(
+
+"updateUserCount",
+
+onlineUsers.size
+
+);
+
+console.log(
+
+"❌ Disconnected:",
+
+socket.id
+
+);
+
+}
+
+);
+
+});
 
 };
