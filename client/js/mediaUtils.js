@@ -3,12 +3,12 @@
 // FINAL VERSION
 // Version 4.0
 // mediaUtils.js
-// PART 1 / 3
+// PART 1 / 2
 // ==========================================
 
 "use strict";
 
-const MediaUtils = {
+const MediaUtils={
 
     // ==========================
     // Create Upload Object
@@ -89,7 +89,7 @@ const MediaUtils = {
 
 
     // ==========================
-    // File Name
+    // File Information
     // ==========================
 
     getName(upload){
@@ -99,10 +99,6 @@ const MediaUtils = {
     },
 
 
-
-    // ==========================
-    // File Size
-    // ==========================
 
     getSize(upload){
 
@@ -116,10 +112,6 @@ const MediaUtils = {
 
 
 
-    // ==========================
-    // MIME
-    // ==========================
-
     getMime(upload){
 
         return upload.mime;
@@ -128,10 +120,6 @@ const MediaUtils = {
 
 
 
-    // ==========================
-    // File Type
-    // ==========================
-
     getType(upload){
 
         return upload.type;
@@ -139,10 +127,6 @@ const MediaUtils = {
     },
 
 
-
-    // ==========================
-    // File Icon
-    // ==========================
 
     getIcon(upload){
 
@@ -153,10 +137,10 @@ const MediaUtils = {
 
 
     // ==========================
-    // Object URL
+    // Preview URL
     // ==========================
 
-    createObjectURL(file){
+    createPreviewURL(file){
 
         return URL.createObjectURL(file);
 
@@ -164,11 +148,7 @@ const MediaUtils = {
 
 
 
-    // ==========================
-    // Revoke Object URL
-    // ==========================
-
-    revokeObjectURL(url){
+    revokePreviewURL(url){
 
         if(url){
 
@@ -179,36 +159,6 @@ const MediaUtils = {
     },
 
 
-
-    // ==========================
-    // Readable Time
-    // ==========================
-
-    readableTime(){
-
-        const d=new Date();
-
-        let h=d.getHours();
-
-        const m=d.getMinutes()
-
-            .toString()
-
-            .padStart(2,"0");
-
-        const ampm=
-
-            h>=12
-
-            ?"PM"
-
-            :"AM";
-
-        h=h%12||12;
-
-        return`${h}:${m} ${ampm}`;
-
-    },
 
     // ==========================
     // Progress
@@ -232,10 +182,6 @@ const MediaUtils = {
 
 
 
-    // ==========================
-    // Uploaded Bytes
-    // ==========================
-
     updateUploadedBytes(
 
         upload,
@@ -249,10 +195,6 @@ const MediaUtils = {
     },
 
 
-
-    // ==========================
-    // Upload Speed
-    // ==========================
 
     updateSpeed(
 
@@ -276,21 +218,17 @@ const MediaUtils = {
 
 
 
-    // ==========================
-    // ETA
-    // ==========================
-
     updateETA(upload){
 
-        const remain=
+        const remaining=
 
-            ChunkProtocol.remainingBytes(
+            Math.max(
 
-                upload.uploadedChunks,
+                upload.size-
 
-                upload.totalChunks,
+                upload.uploadedBytes,
 
-                upload.size
+                0
 
             );
 
@@ -298,15 +236,13 @@ const MediaUtils = {
 
             ChunkProtocol.calculateETA(
 
-                remain,
+                remaining,
 
                 upload.speed
 
             );
 
     },
-
-
 
     // ==========================
     // Next Chunk
@@ -317,6 +253,8 @@ const MediaUtils = {
         upload.uploadedChunks++;
 
         this.updateProgress(upload);
+
+        return upload.uploadedChunks;
 
     },
 
@@ -330,13 +268,11 @@ const MediaUtils = {
 
         upload.retry++;
 
+        return upload.retry;
+
     },
 
 
-
-    // ==========================
-    // Reset Retry
-    // ==========================
 
     resetRetry(upload){
 
@@ -347,7 +283,7 @@ const MediaUtils = {
 
 
     // ==========================
-    // Pause
+    // Upload Status
     // ==========================
 
     pause(upload){
@@ -362,10 +298,6 @@ const MediaUtils = {
 
 
 
-    // ==========================
-    // Resume
-    // ==========================
-
     resume(upload){
 
         upload.paused=false;
@@ -377,26 +309,6 @@ const MediaUtils = {
     },
 
 
-
-    // ==========================
-    // Cancel
-    // ==========================
-
-    cancel(upload){
-
-        upload.cancelled=true;
-
-        upload.status=
-
-            ChunkProtocol.STATUS.CANCELLED;
-
-    },
-
-
-
-    // ==========================
-    // Complete
-    // ==========================
 
     complete(upload){
 
@@ -412,10 +324,6 @@ const MediaUtils = {
 
 
 
-    // ==========================
-    // Fail
-    // ==========================
-
     fail(upload){
 
         upload.status=
@@ -423,6 +331,20 @@ const MediaUtils = {
             ChunkProtocol.STATUS.FAILED;
 
     },
+
+
+
+    cancel(upload){
+
+        upload.cancelled=true;
+
+        upload.status=
+
+            ChunkProtocol.STATUS.CANCELLED;
+
+    },
+
+
 
     // ==========================
     // Reset Upload
@@ -475,32 +397,24 @@ const MediaUtils = {
 
 
     // ==========================
-    // File Validation
+    // Validation
     // ==========================
 
     validate(upload){
 
-        if(!upload)
+        return(
 
-            return false;
+            upload &&
 
-        if(!upload.file)
+            upload.file instanceof File &&
 
-            return false;
+            upload.size>0
 
-        if(upload.size<=0)
-
-            return false;
-
-        return true;
+        );
 
     },
 
 
-
-    // ==========================
-    // Can Retry
-    // ==========================
 
     canRetry(upload){
 
@@ -516,21 +430,13 @@ const MediaUtils = {
 
 
 
-    // ==========================
-    // Is Finished
-    // ==========================
-
     isFinished(upload){
 
         return(
 
             upload.completed||
 
-            upload.cancelled||
-
-            upload.status===
-
-            ChunkProtocol.STATUS.COMPLETED
+            upload.cancelled
 
         );
 
@@ -538,11 +444,7 @@ const MediaUtils = {
 
 
 
-    // ==========================
-    // Is Active
-    // ==========================
-
-    isActive(upload){
+    isUploading(upload){
 
         return(
 
