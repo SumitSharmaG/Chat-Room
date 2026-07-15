@@ -1,65 +1,93 @@
 // ==========================================
 // Secure Ultra Chat
-// Upload UI
-// Version 2.0 FINAL
+// FINAL VERSION
+// uploadUI.js
+// DO NOT MODIFY
 // ==========================================
 
 const UploadUI = {
 
-    items: new Map(),
+    items:new Map(),
+
+    // ================= CREATE =================
 
     create(upload){
 
-        const messages =
+        const messages=
+
             document.getElementById("messages");
 
         if(!messages) return;
 
-        const li =
+        const li=
+
             document.createElement("li");
 
-        li.className = "my-message";
+        li.className="my-message";
 
-        li.dataset.uploadId =
-            upload.id;
+        li.dataset.uploadId=upload.id;
 
-        li.innerHTML = `
+        li.innerHTML=`
 
 <div class="upload-card">
 
+<div class="upload-header">
+
 <div class="upload-icon">
 
-${ChunkProtocol.getIcon(upload.type)}
+${upload.icon}
 
 </div>
 
-<div class="upload-info">
-
-<div class="upload-name">
+<div class="upload-title">
 
 ${upload.name}
 
 </div>
 
-<div class="upload-size">
+</div>
 
-${ChunkProtocol.formatSize(upload.size)}
+<div class="upload-meta">
+
+${MediaUtils.formatSize(upload.size)}
 
 </div>
 
-<div class="upload-progress-text">
+<div class="upload-status">
 
 Waiting...
 
 </div>
 
-<div class="upload-bar">
+<div class="upload-progress">
 
-<div class="upload-fill"></div>
+<div class="upload-progress-fill"></div>
 
 </div>
 
-<div class="upload-actions">
+<div class="upload-footer">
+
+<div class="upload-percent">
+
+0%
+
+</div>
+
+<div class="upload-speed">
+
+0 KB/s
+
+</div>
+
+<div class="upload-eta">
+
+--
+
+</div>
+
+</div>
+
+<div class="upload-buttons">
 
 <button class="upload-btn pause">
 
@@ -83,34 +111,139 @@ Waiting...
 
 </div>
 
-</div>
-
 `;
 
         messages.appendChild(li);
 
-        messages.scrollTop =
+        messages.scrollTop=
+
             messages.scrollHeight;
 
         this.items.set(upload.id,li);
+
+
+
+        // Pause
+
+        li.querySelector(".pause")
+
+        .onclick=()=>{
+
+            UploadQueue.pause(upload.id);
+
+        };
+
+
+
+        // Resume
+
+        li.querySelector(".resume")
+
+        .onclick=()=>{
+
+            UploadQueue.resume(upload.id);
+
+        };
+
+
+
+        // Cancel
+
+        li.querySelector(".cancel")
+
+        .onclick=()=>{
+
+            UploadQueue.cancel(upload.id);
+
+        };
 
     },
 
 
 
-    update(id,percent){
+    // ================= UPDATE =================
 
-        const li=this.items.get(id);
+    update(id){
+
+        const upload=
+
+            UploadState.get(id);
+
+        if(!upload) return;
+
+        const li=
+
+            this.items.get(id);
 
         if(!li) return;
 
-        li.querySelector(".upload-fill")
-        .style.width=
-        percent+"%";
+        li.querySelector(
 
-        li.querySelector(".upload-progress-text")
-        .innerText=
-        percent+"% Uploading...";
+            ".upload-progress-fill"
+
+        ).style.width=
+
+        upload.progress+"%";
+
+
+
+        li.querySelector(
+
+            ".upload-percent"
+
+        ).innerText=
+
+        upload.progress+"%";
+
+
+
+        li.querySelector(
+
+            ".upload-status"
+
+        ).innerText=
+
+        "Uploading...";
+
+
+
+        li.querySelector(
+
+            ".upload-speed"
+
+        ).innerText=
+
+        ChunkProtocol.formatSize(
+
+            upload.speed
+
+        )+"/s";
+
+
+
+        li.querySelector(
+
+            ".upload-eta"
+
+        ).innerText=
+
+        upload.eta;
+
+    },
+
+
+
+    // ================= STATUS =================
+
+    waiting(id){
+
+        this.setText(
+
+            id,
+
+            "Waiting..."
+
+        );
 
     },
 
@@ -118,13 +251,13 @@ Waiting...
 
     pause(id){
 
-        const li=this.items.get(id);
+        this.setText(
 
-        if(!li) return;
+            id,
 
-        li.querySelector(".upload-progress-text")
-        .innerText=
-        "Paused";
+            "Paused"
+
+        );
 
     },
 
@@ -132,13 +265,13 @@ Waiting...
 
     resume(id){
 
-        const li=this.items.get(id);
+        this.setText(
 
-        if(!li) return;
+            id,
 
-        li.querySelector(".upload-progress-text")
-        .innerText=
-        "Uploading...";
+            "Uploading..."
+
+        );
 
     },
 
@@ -146,21 +279,39 @@ Waiting...
 
     fail(id){
 
-        const li=this.items.get(id);
+        this.setText(
 
-        if(!li) return;
+            id,
 
-        li.querySelector(".upload-progress-text")
-        .innerText=
-        "Upload Failed";
+            "Upload Failed"
+
+        );
 
     },
 
 
 
+    cancel(id){
+
+        this.setText(
+
+            id,
+
+            "Cancelled"
+
+        );
+
+    },
+
+
+
+    // ================= COMPLETE =================
+
     complete(id){
 
-        const li=this.items.get(id);
+        const li=
+
+            this.items.get(id);
 
         if(!li) return;
 
@@ -168,8 +319,30 @@ Waiting...
 
         this.items.delete(id);
 
+    },
+
+
+
+    // ================= HELPERS =================
+
+    setText(id,text){
+
+        const li=
+
+            this.items.get(id);
+
+        if(!li) return;
+
+        li.querySelector(
+
+            ".upload-status"
+
+        ).innerText=text;
+
     }
 
 };
+
+Object.freeze(UploadUI);
 
 window.UploadUI=UploadUI;
