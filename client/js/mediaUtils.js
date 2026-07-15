@@ -1,29 +1,114 @@
 // ==========================================
 // Secure Ultra Chat
 // FINAL VERSION
+// Version 4.0
 // mediaUtils.js
-// DO NOT MODIFY
+// PART 1 / 3
 // ==========================================
+
+"use strict";
 
 const MediaUtils = {
 
-    // ================= ID =================
+    // ==========================
+    // Create Upload Object
+    // ==========================
 
-    generateId(){
+    createUpload(file,sender,room){
 
-        return ChunkProtocol.createTransferId();
+        const meta=
+
+            ChunkProtocol.createTransferMeta(
+
+                file,
+
+                sender,
+
+                room
+
+            );
+
+        return{
+
+            id:meta.transferId,
+
+            transferId:meta.transferId,
+
+            file,
+
+            meta,
+
+            name:file.name,
+
+            size:file.size,
+
+            mime:file.type,
+
+            type:meta.fileType,
+
+            icon:
+
+                ChunkProtocol.getFileIcon(
+
+                    meta.fileType
+
+                ),
+
+            totalChunks:
+
+                meta.totalChunks,
+
+            uploadedChunks:0,
+
+            uploadedBytes:0,
+
+            progress:0,
+
+            speed:0,
+
+            eta:0,
+
+            retry:0,
+
+            status:
+
+                ChunkProtocol.STATUS.WAITING,
+
+            paused:false,
+
+            cancelled:false,
+
+            completed:false,
+
+            createdAt:meta.createdAt
+
+        };
 
     },
 
 
 
-    // ================= FILE TYPE =================
+    // ==========================
+    // File Name
+    // ==========================
 
-    getType(file){
+    getName(upload){
 
-        return ChunkProtocol.getFileType(
+        return upload.name;
 
-            file.type
+    },
+
+
+
+    // ==========================
+    // File Size
+    // ==========================
+
+    getSize(upload){
+
+        return ChunkProtocol.formatSize(
+
+            upload.size
 
         );
 
@@ -31,41 +116,81 @@ const MediaUtils = {
 
 
 
-    // ================= ICON =================
+    // ==========================
+    // MIME
+    // ==========================
 
-    getIcon(type){
+    getMime(upload){
 
-        return ChunkProtocol.getIcon(type);
-
-    },
-
-
-
-    // ================= SIZE =================
-
-    formatSize(bytes){
-
-        return ChunkProtocol.formatSize(bytes);
+        return upload.mime;
 
     },
 
 
 
-    // ================= TIME =================
+    // ==========================
+    // File Type
+    // ==========================
+
+    getType(upload){
+
+        return upload.type;
+
+    },
+
+
+
+    // ==========================
+    // File Icon
+    // ==========================
+
+    getIcon(upload){
+
+        return upload.icon;
+
+    },
+
+
+
+    // ==========================
+    // Object URL
+    // ==========================
+
+    createObjectURL(file){
+
+        return URL.createObjectURL(file);
+
+    },
+
+
+
+    // ==========================
+    // Revoke Object URL
+    // ==========================
+
+    revokeObjectURL(url){
+
+        if(url){
+
+            URL.revokeObjectURL(url);
+
+        }
+
+    },
+
+
+
+    // ==========================
+    // Readable Time
+    // ==========================
 
     readableTime(){
 
-        const now=new Date();
+        const d=new Date();
 
-        let h=now.getHours();
+        let h=d.getHours();
 
-        const m=now.getMinutes()
-
-            .toString()
-
-            .padStart(2,"0");
-
-        const s=now.getSeconds()
+        const m=d.getMinutes()
 
             .toString()
 
@@ -81,182 +206,378 @@ const MediaUtils = {
 
         h=h%12||12;
 
-        return `${h}:${m}:${s} ${ampm}`;
+        return`${h}:${m} ${ampm}`;
 
     },
 
+    // ==========================
+    // Progress
+    // ==========================
 
+    updateProgress(upload){
 
-    // ================= VALIDATE =================
+        upload.progress=
 
-    validate(file){
+            ChunkProtocol.calculateProgress(
 
-        return ChunkProtocol.validate(file);
+                upload.uploadedChunks,
 
-    },
-
-
-
-    // ================= MIME =================
-
-    getMime(file){
-
-        return file.type ||
-
-            "application/octet-stream";
-
-    },
-
-
-
-    // ================= EXTENSION =================
-
-    getExtension(fileName){
-
-        const dot=
-
-            fileName.lastIndexOf(".");
-
-        if(dot===-1)
-
-            return "";
-
-        return fileName
-
-            .substring(dot+1)
-
-            .toLowerCase();
-
-    },
-
-
-
-    // ================= PREVIEW =================
-
-    createPreviewURL(file){
-
-        return URL.createObjectURL(file);
-
-    },
-
-
-
-    revokePreviewURL(url){
-
-        if(url){
-
-            URL.revokeObjectURL(url);
-
-        }
-
-    },
-
-
-
-    // ================= CREATE UPLOAD =================
-
-    createUpload(file){
-
-        const validation=
-
-            this.validate(file);
-
-        if(!validation.ok){
-
-            throw new Error(
-
-                validation.message
+                upload.totalChunks
 
             );
 
-        }
+        return upload.progress;
 
-        const upload={
+    },
 
-            id:
 
-                this.generateId(),
 
-            file:
+    // ==========================
+    // Uploaded Bytes
+    // ==========================
 
-                file,
+    updateUploadedBytes(
 
-            name:
+        upload,
 
-                file.name,
+        bytes
 
-            size:
+    ){
 
-                file.size,
+        upload.uploadedBytes+=bytes;
 
-            mime:
+    },
 
-                this.getMime(file),
 
-            extension:
 
-                this.getExtension(
+    // ==========================
+    // Upload Speed
+    // ==========================
 
-                    file.name
+    updateSpeed(
 
-                ),
+        upload,
 
-            type:
+        elapsedMs
 
-                this.getType(file),
+    ){
 
-            icon:
+        upload.speed=
 
-                this.getIcon(
+            ChunkProtocol.calculateSpeed(
 
-                    this.getType(file)
+                upload.uploadedBytes,
 
-                ),
+                elapsedMs
 
-            progress:0,
+            );
 
-            uploadedChunks:0,
+    },
 
-            totalChunks:
 
-                ChunkProtocol.getChunkCount(
 
-                    file.size
+    // ==========================
+    // ETA
+    // ==========================
 
-                ),
+    updateETA(upload){
 
-            retry:0,
+        const remain=
 
-            speed:0,
+            ChunkProtocol.remainingBytes(
 
-            eta:"--",
+                upload.uploadedChunks,
 
-            paused:false,
+                upload.totalChunks,
 
-            cancelled:false,
+                upload.size
 
-            completed:false,
+            );
 
-            status:
+        upload.eta=
 
-                ChunkProtocol.STATUS.WAITING,
+            ChunkProtocol.calculateETA(
 
-            createdAt:
+                remain,
 
-                Date.now(),
+                upload.speed
 
-            time:
+            );
 
-                this.readableTime()
+    },
+
+
+
+    // ==========================
+    // Next Chunk
+    // ==========================
+
+    nextChunk(upload){
+
+        upload.uploadedChunks++;
+
+        this.updateProgress(upload);
+
+    },
+
+
+
+    // ==========================
+    // Retry
+    // ==========================
+
+    increaseRetry(upload){
+
+        upload.retry++;
+
+    },
+
+
+
+    // ==========================
+    // Reset Retry
+    // ==========================
+
+    resetRetry(upload){
+
+        upload.retry=0;
+
+    },
+
+
+
+    // ==========================
+    // Pause
+    // ==========================
+
+    pause(upload){
+
+        upload.paused=true;
+
+        upload.status=
+
+            ChunkProtocol.STATUS.PAUSED;
+
+    },
+
+
+
+    // ==========================
+    // Resume
+    // ==========================
+
+    resume(upload){
+
+        upload.paused=false;
+
+        upload.status=
+
+            ChunkProtocol.STATUS.UPLOADING;
+
+    },
+
+
+
+    // ==========================
+    // Cancel
+    // ==========================
+
+    cancel(upload){
+
+        upload.cancelled=true;
+
+        upload.status=
+
+            ChunkProtocol.STATUS.CANCELLED;
+
+    },
+
+
+
+    // ==========================
+    // Complete
+    // ==========================
+
+    complete(upload){
+
+        upload.completed=true;
+
+        upload.progress=100;
+
+        upload.status=
+
+            ChunkProtocol.STATUS.COMPLETED;
+
+    },
+
+
+
+    // ==========================
+    // Fail
+    // ==========================
+
+    fail(upload){
+
+        upload.status=
+
+            ChunkProtocol.STATUS.FAILED;
+
+    },
+
+    // ==========================
+    // Reset Upload
+    // ==========================
+
+    reset(upload){
+
+        upload.uploadedChunks=0;
+
+        upload.uploadedBytes=0;
+
+        upload.progress=0;
+
+        upload.speed=0;
+
+        upload.eta=0;
+
+        upload.retry=0;
+
+        upload.paused=false;
+
+        upload.cancelled=false;
+
+        upload.completed=false;
+
+        upload.status=
+
+            ChunkProtocol.STATUS.WAITING;
+
+        return upload;
+
+    },
+
+
+
+    // ==========================
+    // Clone Upload
+    // ==========================
+
+    clone(upload){
+
+        return{
+
+            ...upload
 
         };
 
-        return upload;
+    },
+
+
+
+    // ==========================
+    // File Validation
+    // ==========================
+
+    validate(upload){
+
+        if(!upload)
+
+            return false;
+
+        if(!upload.file)
+
+            return false;
+
+        if(upload.size<=0)
+
+            return false;
+
+        return true;
+
+    },
+
+
+
+    // ==========================
+    // Can Retry
+    // ==========================
+
+    canRetry(upload){
+
+        return(
+
+            upload.retry<
+
+            ChunkProtocol.MAX_RETRY
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Is Finished
+    // ==========================
+
+    isFinished(upload){
+
+        return(
+
+            upload.completed||
+
+            upload.cancelled||
+
+            upload.status===
+
+            ChunkProtocol.STATUS.COMPLETED
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Is Active
+    // ==========================
+
+    isActive(upload){
+
+        return(
+
+            upload.status===
+
+            ChunkProtocol.STATUS.UPLOADING
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Browser Support
+    // ==========================
+
+    supported(){
+
+        return(
+
+            ChunkProtocol.supported()
+
+        );
 
     }
 
 };
 
-Object.freeze(MediaUtils);
+Object.freeze(
 
-window.MediaUtils=MediaUtils;
+    MediaUtils
+
+);
+
+window.MediaUtils=
+
+MediaUtils;
