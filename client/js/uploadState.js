@@ -1,15 +1,22 @@
 // ==========================================
 // Secure Ultra Chat
 // FINAL VERSION
+// Version 4.0
 // uploadState.js
-// DO NOT MODIFY
+// PART 1 / 3
 // ==========================================
+
+"use strict";
 
 const UploadState = {
 
-    uploads: new Map(),
+    uploads:new Map(),
 
-    // ================= ADD =================
+
+
+    // ==========================
+    // Add Upload
+    // ==========================
 
     add(upload){
 
@@ -27,15 +34,21 @@ const UploadState = {
 
 
 
-    // ================= GET =================
+    // ==========================
+    // Get Upload
+    // ==========================
 
     get(id){
 
-        return this.uploads.get(id)||null;
+        return this.uploads.get(id);
 
     },
 
 
+
+    // ==========================
+    // Has Upload
+    // ==========================
 
     has(id){
 
@@ -44,6 +57,46 @@ const UploadState = {
     },
 
 
+
+    // ==========================
+    // Remove Upload
+    // ==========================
+
+    remove(id){
+
+        return this.uploads.delete(id);
+
+    },
+
+
+
+    // ==========================
+    // Clear All
+    // ==========================
+
+    clear(){
+
+        this.uploads.clear();
+
+    },
+
+
+
+    // ==========================
+    // Count
+    // ==========================
+
+    count(){
+
+        return this.uploads.size;
+
+    },
+
+
+
+    // ==========================
+    // All Uploads
+    // ==========================
 
     all(){
 
@@ -57,41 +110,19 @@ const UploadState = {
 
 
 
-    // ================= REMOVE =================
+    // ==========================
+    // Waiting Uploads
+    // ==========================
 
-    remove(id){
+    waiting(){
 
-        this.uploads.delete(id);
+        return this.all().filter(
 
-    },
+            upload=>
 
+                upload.status===
 
-
-    clear(){
-
-        this.uploads.clear();
-
-    },
-
-
-
-    // ================= UPDATE =================
-
-    update(id,data){
-
-        const upload=
-
-            this.get(id);
-
-        if(!upload)
-
-            return;
-
-        Object.assign(
-
-            upload,
-
-            data
+                ChunkProtocol.STATUS.WAITING
 
         );
 
@@ -99,9 +130,55 @@ const UploadState = {
 
 
 
-    // ================= STATUS =================
+    // ==========================
+    // Active Uploads
+    // ==========================
 
-    setStatus(id,status){
+    active(){
+
+        return this.all().filter(
+
+            upload=>
+
+                upload.status===
+
+                ChunkProtocol.STATUS.UPLOADING
+
+        );
+
+    },
+
+
+
+    // ==========================
+    // Completed Uploads
+    // ==========================
+
+    completed(){
+
+        return this.all().filter(
+
+            upload=>
+
+                upload.status===
+
+                ChunkProtocol.STATUS.COMPLETED
+
+        );
+
+    },
+
+    // ==========================
+    // Update Status
+    // ==========================
+
+    setStatus(
+
+        id,
+
+        status
+
+    ){
 
         const upload=
 
@@ -109,23 +186,25 @@ const UploadState = {
 
         if(!upload)
 
-            return;
+            return false;
 
         upload.status=status;
+
+        return true;
 
     },
 
 
 
-    // ================= PROGRESS =================
+    // ==========================
+    // Update Progress
+    // ==========================
 
     setProgress(
 
         id,
 
-        uploadedChunks,
-
-        totalChunks
+        uploadedChunks
 
     ){
 
@@ -135,37 +214,67 @@ const UploadState = {
 
         if(!upload)
 
-            return;
+            return false;
 
         upload.uploadedChunks=
 
             uploadedChunks;
 
-        upload.totalChunks=
+        MediaUtils.updateProgress(
 
-            totalChunks;
+            upload
 
-        upload.progress=
+        );
 
-            ChunkProtocol.getPercent(
-
-                uploadedChunks,
-
-                totalChunks
-
-            );
+        return true;
 
     },
 
 
 
-    // ================= SPEED =================
+    // ==========================
+    // Update Uploaded Bytes
+    // ==========================
+
+    setUploadedBytes(
+
+        id,
+
+        bytes
+
+    ){
+
+        const upload=
+
+            this.get(id);
+
+        if(!upload)
+
+            return false;
+
+        MediaUtils.updateUploadedBytes(
+
+            upload,
+
+            bytes
+
+        );
+
+        return true;
+
+    },
+
+
+
+    // ==========================
+    // Update Speed
+    // ==========================
 
     setSpeed(
 
         id,
 
-        bytesPerSecond
+        elapsedMs
 
     ){
 
@@ -175,25 +284,27 @@ const UploadState = {
 
         if(!upload)
 
-            return;
+            return false;
 
-        upload.speed=
+        MediaUtils.updateSpeed(
 
-            bytesPerSecond;
+            upload,
+
+            elapsedMs
+
+        );
+
+        return true;
 
     },
 
 
 
-    // ================= ETA =================
+    // ==========================
+    // Update ETA
+    // ==========================
 
-    setETA(
-
-        id,
-
-        eta
-
-    ){
+    setETA(id){
 
         const upload=
 
@@ -201,17 +312,25 @@ const UploadState = {
 
         if(!upload)
 
-            return;
+            return false;
 
-        upload.eta=eta;
+        MediaUtils.updateETA(
+
+            upload
+
+        );
+
+        return true;
 
     },
 
 
 
-    // ================= RETRY =================
+    // ==========================
+    // Increase Retry
+    // ==========================
 
-    increaseRetry(id){
+    retry(id){
 
         const upload=
 
@@ -219,13 +338,23 @@ const UploadState = {
 
         if(!upload)
 
-            return;
+            return false;
 
-        upload.retry++;
+        MediaUtils.increaseRetry(
+
+            upload
+
+        );
+
+        return true;
 
     },
 
 
+
+    // ==========================
+    // Reset Retry
+    // ==========================
 
     resetRetry(id){
 
@@ -235,15 +364,23 @@ const UploadState = {
 
         if(!upload)
 
-            return;
+            return false;
 
-        upload.retry=0;
+        MediaUtils.resetRetry(
+
+            upload
+
+        );
+
+        return true;
 
     },
 
 
 
-    // ================= FLAGS =================
+    // ==========================
+    // Pause Upload
+    // ==========================
 
     pause(id){
 
@@ -253,17 +390,23 @@ const UploadState = {
 
         if(!upload)
 
-            return;
+            return false;
 
-        upload.paused=true;
+        MediaUtils.pause(
 
-        upload.status=
+            upload
 
-            ChunkProtocol.STATUS.PAUSED;
+        );
+
+        return true;
 
     },
 
 
+
+    // ==========================
+    // Resume Upload
+    // ==========================
 
     resume(id){
 
@@ -273,17 +416,23 @@ const UploadState = {
 
         if(!upload)
 
-            return;
+            return false;
 
-        upload.paused=false;
+        MediaUtils.resume(
 
-        upload.status=
+            upload
 
-            ChunkProtocol.STATUS.UPLOADING;
+        );
+
+        return true;
 
     },
 
 
+
+    // ==========================
+    // Cancel Upload
+    // ==========================
 
     cancel(id){
 
@@ -293,58 +442,164 @@ const UploadState = {
 
         if(!upload)
 
-            return;
+            return false;
 
-        upload.cancelled=true;
+        MediaUtils.cancel(
 
-        upload.status=
+            upload
 
-            ChunkProtocol.STATUS.CANCELLED;
+        );
+
+        return true;
 
     },
 
-
+    // ==========================
+    // Complete Upload
+    // ==========================
 
     complete(id){
 
-        const upload=
-
-            this.get(id);
+        const upload=this.get(id);
 
         if(!upload)
+            return false;
 
-            return;
+        MediaUtils.complete(upload);
 
-        upload.completed=true;
-
-        upload.progress=100;
-
-        upload.status=
-
-            ChunkProtocol.STATUS.COMPLETED;
+        return true;
 
     },
 
 
 
+    // ==========================
+    // Fail Upload
+    // ==========================
+
     fail(id){
 
-        const upload=
-
-            this.get(id);
+        const upload=this.get(id);
 
         if(!upload)
+            return false;
 
-            return;
+        MediaUtils.fail(upload);
 
-        upload.status=
+        return true;
 
-            ChunkProtocol.STATUS.FAILED;
+    },
+
+
+
+    // ==========================
+    // Reset Upload
+    // ==========================
+
+    reset(id){
+
+        const upload=this.get(id);
+
+        if(!upload)
+            return false;
+
+        MediaUtils.reset(upload);
+
+        return true;
+
+    },
+
+
+
+    // ==========================
+    // Clone Upload
+    // ==========================
+
+    clone(id){
+
+        const upload=this.get(id);
+
+        if(!upload)
+            return null;
+
+        return MediaUtils.clone(upload);
+
+    },
+
+
+
+    // ==========================
+    // Queue Statistics
+    // ==========================
+
+    stats(){
+
+        const uploads=this.all();
+
+        return{
+
+            total:uploads.length,
+
+            waiting:this.waiting().length,
+
+            active:this.active().length,
+
+            completed:this.completed().length,
+
+            failed:uploads.filter(
+
+                upload=>
+
+                    upload.status===
+
+                    ChunkProtocol.STATUS.FAILED
+
+            ).length,
+
+            paused:uploads.filter(
+
+                upload=>
+
+                    upload.status===
+
+                    ChunkProtocol.STATUS.PAUSED
+
+            ).length,
+
+            cancelled:uploads.filter(
+
+                upload=>
+
+                    upload.status===
+
+                    ChunkProtocol.STATUS.CANCELLED
+
+            ).length
+
+        };
+
+    },
+
+
+
+    // ==========================
+    // Is Empty
+    // ==========================
+
+    isEmpty(){
+
+        return this.uploads.size===0;
 
     }
 
 };
 
-Object.freeze(UploadState);
+Object.freeze(
 
-window.UploadState=UploadState;
+    UploadState
+
+);
+
+window.UploadState=
+
+UploadState;
