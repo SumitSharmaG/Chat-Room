@@ -175,15 +175,6 @@ document.addEventListener("DOMContentLoaded", () => {
         messagesUl.innerHTML = savedChat;
         scrollToBottom();
     }
-if (typeof restoreAttachments === "function") {
-
-    setTimeout(() => {
-
-    restoreAttachments();
-
-},300);
-
-}
 });
 
 // ================== TYPING ==================
@@ -261,27 +252,6 @@ if (socket) {
         if (messagesUl) messagesUl.innerHTML = "";
         localStorage.removeItem("chat_history");
     });
-
-
-// ================= ATTACHMENTS =================
-
-socket.on("receiveAttachment", async (data) => {
-
-    if (!data.id) {
-
-        data.id = crypto.randomUUID();
-
-    }
-
-    if (typeof saveAttachment === "function") {
-
-        await saveAttachment(data);
-
-    }
-
-    displayAttachment(data);
-
-});
 }
 
 // DISPLAY MESSAGE
@@ -322,107 +292,7 @@ function displayMessage(data) {
     messagesUl.appendChild(li);
     scrollToBottom();
 
-  
-
-// ================= ATTACHMENT PREVIEW =================
-
-function displayAttachment(data) {
-
-    if (!messagesUl) return;
-
-    const li = document.createElement("li");
-
-    const myUser = localStorage.getItem("username");
-
-    if (data.username === myUser) {
-        li.classList.add("my-message");
-    }
-
-    let preview = "";
-
-    switch (data.fileType) {
-
-        case "image":
-
-            preview = `
-                <img
-                    src="${data.fileData}"
-                    style="
-                        max-width:220px;
-                        border-radius:10px;
-                        cursor:pointer;
-                    "
-                >
-            `;
-            break;
-
-        case "video":
-
-            preview = `
-                <video
-                    controls
-                    style="
-                        max-width:240px;
-                        border-radius:10px;
-                    ">
-                    <source src="${data.fileData}">
-                </video>
-            `;
-            break;
-
-        case "audio":
-
-            preview = `
-                <audio controls>
-                    <source src="${data.fileData}">
-                </audio>
-            `;
-            break;
-
-        default:
-
-            preview = `
-                <a
-                    href="${data.fileData}"
-                    download="${data.fileName}"
-                    style="
-                        color:#b59461;
-                        text-decoration:none;
-                        font-weight:bold;
-                    ">
-                    📄 ${data.fileName}
-                </a>
-            `;
-    }
-
-    li.innerHTML = `
-
-        <strong>${data.username}</strong>
-
-        <div style="margin-top:8px;">
-            ${preview}
-        </div>
-
-        <span
-            style="
-                font-size:11px;
-                opacity:.7;
-                margin-top:6px;
-            ">
-            ${data.time}
-        </span>
-
-    `;
-
-    messagesUl.appendChild(li);
-
-    scrollToBottom();
-
-    localStorage.setItem(
-        "chat_history",
-        messagesUl.innerHTML
-    );
-
+    localStorage.setItem("chat_history", messagesUl.innerHTML);
 }
 
 // Seen popup
@@ -448,35 +318,17 @@ window.handleSend = function () {
     }
 };
 
-window.clearChat = async function () {
-
+window.clearChat = function () {
     if (confirm("Clear chat?")) {
-
         socket?.emit("clearAllChat");
-
-        if (typeof clearAllMedia === "function") {
-
-            await clearAllMedia();
-
-        }
-
     }
-
 };
 
-window.logout = async function () {
-
-    if (typeof clearAllMedia === "function") {
-
-        await clearAllMedia();
-
-    }
-
-    localStorage.clear();
-
+window.logout = function () {
+    localStorage.clear(); // Saara data aur login flag clear ho jayega
     window.location.href = "login.html";
-
 };
+
 
 document.getElementById("msg")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -485,27 +337,5 @@ document.getElementById("msg")?.addEventListener("keydown", (e) => {
     }
 });
 
-// ================= ATTACHMENT SEND =================
 
-window.sendAttachment = function(fileData){
-
-    if(!socket) return;
-
-    socket.emit("sendAttachment",{
-
-        id: crypto.randomUUID(),
-
-        username:localStorage.getItem("username"),
-
-        fileType:fileData.fileType,
-
-        fileName:fileData.fileName,
-
-        fileData:fileData.fileData,
-
-        time:getCurrentTime()
-
-    });
-
-};
-                              
+    
