@@ -16,7 +16,6 @@ const socket = isChatPage
         }
     })
     : null;
-window.socket = socket;
 
 
 // 🔥 CONNECT
@@ -167,11 +166,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const user = localStorage.getItem("username");
 
     const userDisplayEl = document.getElementById("display-username");
-UploadUI?.start?.();
-
-Attachments?.start?.();
-
-MediaStore?.restore?.();
     if (userDisplayEl && user) {
         userDisplayEl.innerText = `@${user}`;
     }
@@ -242,8 +236,6 @@ if (socket) {
 
         const myUser = localStorage.getItem("username");
 
-
-
         if (data._id && data.username !== myUser) {
             socket.emit("messageSeen", {
                 messageId: data._id,
@@ -251,16 +243,6 @@ if (socket) {
             });
         }
     });
-
-socket.on(
-    "receiveChunk",
-    ChunkReceiver.receive
-);
-
-socket.on(
-    "uploadCompleted",
-    ChunkReceiver.complete
-);
 
     socket.on("updateUserCount", (count) => {
         document.getElementById("online-count").innerText = count;
@@ -274,13 +256,6 @@ socket.on(
 
 // DISPLAY MESSAGE
 function displayMessage(data) {
-if(data.type==="attachment"){
-
-    MediaPreview.render(data);
-
-    return;
-
-}
     if (!messagesUl) return;
 
     const li = document.createElement("li");
