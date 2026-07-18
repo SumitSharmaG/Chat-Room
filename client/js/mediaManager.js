@@ -155,34 +155,44 @@ window.MediaManager = {
     },
 
         // 6. Full-Screen Overlay Manager (FIXED FOR DIRECT NATIVE OPENING)
-    openPreview: (fileId, mode) => {
+    open    // 6. Full-Screen Overlay Manager (ROBUST PDF RENDERER)
+    openPreview: async (fileId, mode) => {
         const blob = window.LoadedBlobs ? window.LoadedBlobs[fileId] : null;
         if (!blob) return;
-
-        // Force explicit MIME application/pdf
-        const secureBlob = mode === 'pdf' ? new Blob([blob], { type: 'application/pdf' }) : blob;
-        const url = URL.createObjectURL(secureBlob);
-        
-        if (mode === 'pdf') {
-            // FIX: Anchor element ke bina direct window open karein
-            // Kuch mobile devices par ye native PDF viewer khol deta hai
-            const pdfWindow = window.open(url, '_blank');
-            
-            // Agar browser block kare, toh fallback link de dein
-            if (!pdfWindow) {
-                alert("PDF Viewer block ho gaya hai. Download button par click karein.");
-            }
-            return; 
-        }
 
         const overlay = document.getElementById("mediaOverlay");
         const container = document.getElementById("overlayContent");
         
         if (!overlay || !container) return;
 
+        // Reset overlay
+        container.innerHTML = `<div style="color:#fff; text-align:center; padding:20px;">Loading Document...</div>`;
+        overlay.classList.add("show");
+
         if (mode === 'image') {
+            const url = URL.createObjectURL(blob);
             container.innerHTML = `<img src="${url}" alt="Preview" onclick="event.stopPropagation();" />`;
-            overlay.classList.add("show");
+        } 
+        
+        else if (mode === 'pdf') {
+            // Hum Mozilla ka lightweight viewer use karenge
+            // Hum yaha blob URL ko direct nahi daal rahe, hum use safe URL format me encode kar rahe hain
+            const url = URL.createObjectURL(blob);
+            
+            // Ye raha wo "Extension" logic jo background me PDF load karega aur frame me dikhayega
+            const viewerUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}`;
+            
+            // Frame inject karein
+            container.innerHTML = `
+                <div style="width:100%; height:90dvh; background:white; position:relative;">
+                    <iframe src="${viewerUrl}" 
+                            style="width:100%; height:100%; border:none;" 
+                            allow="fullscreen">
+                    </iframe>
+                </div>
+            `;
+            
+            // Optional: Agar user ko browser-based viewer pasand nahi, to hum iframe me error handling bhi kar sakte hain
         }
     },
 
