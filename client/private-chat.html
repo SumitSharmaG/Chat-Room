@@ -203,6 +203,10 @@ user-select: none;
                 }
             }
         );
+        
+        // CRITICAL SECURE BRIDGE FOR ATTACHMENTS.JS ENGINE
+        window.socket = socket;
+
         const currentUser = localStorage.getItem("username") || "guest";
         let selectedUser = "";
         let typingTimeout;
@@ -278,13 +282,14 @@ user-select: none;
             $("inboxList").innerHTML = "";
             (JSON.parse(localStorage.getItem("privateUsers")) || []).forEach(u => {
                 const d = document.createElement("div"); d.className = "inbox"; d.innerText = "@" + u;
-                d.onclick = () => { window.currentChatUser = u; openChat(u); }; 
+                d.onclick = () => { window.currentChatUser = u; window.selectedUser = u; openChat(u); }; 
                 $("inboxList").appendChild(d);
             });
         }
 
         function openChat(u) {
             selectedUser = u; 
+            window.selectedUser = u; // Setup explicit window binding scope
             window.currentChatUser = u;
             $("chatTitle").innerText = "@" + u; 
             renderMessages();
@@ -334,7 +339,8 @@ user-select: none;
                         b.insertAdjacentHTML('beforeend', `<div class="system-alert">${m.text}</div>`);
                     } else if (m.fileId) {
                         const isMy = m.sender === currentUser;
-                        b.insertAdjacentHTML('beforeend', `<li id="media-${m.fileId}" class="${isMy ? 'msg my-msg' : 'msg received-msg'}" style="list-style:none; display:flex; flex-direction:column;">📁 Loading Media Component...</li>`);
+                        // CSS Alignment fixed matching standard chat UI rules seamlessly
+                        b.insertAdjacentHTML('beforeend', `<li id="media-${m.fileId}" class="msg ${isMy ? 'my-msg' : 'received-msg'}" style="list-style:none; display:flex; flex-direction:column;">📁 Loading Media Component...</li>`);
                     } else {
                         const isMy = m.sender === currentUser;
                         b.insertAdjacentHTML('beforeend', `
@@ -384,9 +390,4 @@ document.addEventListener("contextmenu", function(e) { e.preventDefault(); });
 document.addEventListener("selectstart", function(e) { e.preventDefault(); });
 document.addEventListener("copy", function(e) { e.preventDefault(); });
 document.addEventListener("cut", function(e) { e.preventDefault(); });
-document.addEventListener("dragstart", function(e) { e.preventDefault(); });
-</script>
-    
-</body>
-                </html>
-        
+document.addEventListener("dragsta
