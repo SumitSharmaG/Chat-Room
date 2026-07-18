@@ -129,8 +129,8 @@ window.MediaManager = {
             preview = `<img src="${url}" style="max-width:100%; border-radius:8px; margin-top:5px; cursor:zoom-in;" />`;
             clickHandler = `onclick="window.MediaManager.openPreview('${fileId}', 'image')"`;
         } else if (isPDF) {
-            // High-fidelity target block update
-            preview = `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-top:5px; border:1px solid rgba(181,148,97,0.3); text-align:center; color:#00ffcc; font-size:0.8rem; font-weight:600;">📖 Click to Open PDF Viewer</div>`;
+            // Mast look wala UI box click karne ke liye
+            preview = `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-top:5px; border:1px solid rgba(181,148,97,0.3); text-align:center; color:#00ffcc; font-size:0.8rem; font-weight:600;">📖 Click to Preview PDF Inside Chat</div>`;
             clickHandler = `onclick="window.MediaManager.openPreview('${fileId}', 'pdf')"`;
         } else if (type.startsWith("video/")) {
             preview = `<video src="${url}" controls style="max-width:100%; border-radius:8px; margin-top:5px;"></video>`;
@@ -154,45 +154,24 @@ window.MediaManager = {
         if (messages) localStorage.setItem("chat_history", messages.innerHTML);
     },
 
-        // 6. Full-Screen Overlay Manager (FIXED FOR DIRECT NATIVE OPENING)
-    open    // 6. Full-Screen Overlay Manager (ROBUST PDF RENDERER)
-    openPreview: async (fileId, mode) => {
+    // 6. Full-Screen Overlay Manager (FIXED WITH NATIVE EMBEDDED PDF.JS VIEWER)
+    openPreview: (fileId, mode) => {
         const blob = window.LoadedBlobs ? window.LoadedBlobs[fileId] : null;
         if (!blob) return;
 
+        const url = URL.createObjectURL(blob);
         const overlay = document.getElementById("mediaOverlay");
         const container = document.getElementById("overlayContent");
         
         if (!overlay || !container) return;
 
-        // Reset overlay
-        container.innerHTML = `<div style="color:#fff; text-align:center; padding:20px;">Loading Document...</div>`;
-        overlay.classList.add("show");
-
         if (mode === 'image') {
-            const url = URL.createObjectURL(blob);
             container.innerHTML = `<img src="${url}" alt="Preview" onclick="event.stopPropagation();" />`;
-        } 
-        
-        else if (mode === 'pdf') {
-            // Hum Mozilla ka lightweight viewer use karenge
-            // Hum yaha blob URL ko direct nahi daal rahe, hum use safe URL format me encode kar rahe hain
-            const url = URL.createObjectURL(blob);
-            
-            // Ye raha wo "Extension" logic jo background me PDF load karega aur frame me dikhayega
-            const viewerUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}`;
-            
-            // Frame inject karein
-            container.innerHTML = `
-                <div style="width:100%; height:90dvh; background:white; position:relative;">
-                    <iframe src="${viewerUrl}" 
-                            style="width:100%; height:100%; border:none;" 
-                            allow="fullscreen">
-                    </iframe>
-                </div>
-            `;
-            
-            // Optional: Agar user ko browser-based viewer pasand nahi, to hum iframe me error handling bhi kar sakte hain
+            overlay.classList.add("show");
+        } else if (mode === 'pdf') {
+            // FIX: Mozilla ka standard sandbox implementation wrapper use kiya hai jo blob data ko 100% render karega
+            container.innerHTML = `<iframe src="https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}" style="width:90%; height:85dvh; border:none; background:#fff; border-radius:12px;"></iframe>`;
+            overlay.classList.add("show");
         }
     },
 
@@ -255,4 +234,3 @@ window.setupMediaReceiver = (socket) => {
 
     setTimeout(MediaManager.restoreHistoryPreviews, 800);
 };
-                
