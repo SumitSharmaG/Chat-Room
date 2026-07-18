@@ -1,11 +1,11 @@
-// js/attachments.js
+// client/attachments.js
 
 document.addEventListener("DOMContentLoaded", () => {
     const attachBtn = document.getElementById("attachBtn");
     const attachMenu = document.getElementById("attachMenu");
 
-    // 1. Menu Toggle Logic
     if (attachBtn && attachMenu) {
+        // Menu toggle logic
         attachBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             attachMenu.classList.toggle("show");
@@ -19,50 +19,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 2. Click Handler for Menu Items
+    // Attach items click handler
     const menuItems = document.querySelectorAll(".attach-item");
     menuItems.forEach(item => {
         item.addEventListener("click", () => {
             const type = item.getAttribute("data-type");
-            handleAttachmentSelection(type);
-            attachMenu.classList.remove("show"); // Close menu after selection
+            const inputEl = document.getElementById(`${type}Input`);
+            if (inputEl) {
+                inputEl.click();
+            }
+            if (attachMenu) attachMenu.classList.remove("show");
         });
     });
 });
-
-// 3. Logic to Trigger Hidden Inputs
-function handleAttachmentSelection(type) {
-    let inputId = "";
-    
-    switch (type) {
-        case "camera": inputId = "cameraInput"; break;
-        case "gallery": inputId = "galleryInput"; break;
-        case "video": inputId = "videoInput"; break;
-        case "audio": inputId = "audioInput"; break;
-        case "document": inputId = "documentInput"; break;
-    }
-
-    if (inputId) {
-        document.getElementById(inputId).click();
-    }
-}
-
-// 4. Handle File Selection (Processing the file)
-// Aap is function ko apne main script.js mein bhi call kar sakte hain
-const fileInputs = ["cameraInput", "galleryInput", "videoInput", "audioInput", "documentInput"];
-
-fileInputs.forEach(id => {
-    const input = document.getElementById(id);
-    if (input) {
-        input.addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                console.log("File selected:", file.name, "Type:", file.type);
-                // YAHA PAR APNA UPLOAD LOGIC LIKHEIN
-                // Jaise: sendFileToServer(file);
-                alert("File selected: " + file.name);
-            }
-        });
-    }
-});
-          
