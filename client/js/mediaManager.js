@@ -116,7 +116,6 @@ window.MediaManager = {
         const bubble = document.getElementById(`media-${fileId}`);
         if (!bubble) return;
         
-        // Save dynamically globally to resolve references inside handlers safely
         if(!window.LoadedBlobs) window.LoadedBlobs = {};
         window.LoadedBlobs[fileId] = blob;
 
@@ -124,22 +123,20 @@ window.MediaManager = {
         let preview = "";
         let clickHandler = "";
 
-        // Determine if it's a PDF by extension or explicit mime types
         const isPDF = type === "application/pdf" || name.toLowerCase().endsWith(".pdf");
 
         if (type.startsWith("image/")) {
             preview = `<img src="${url}" style="max-width:100%; border-radius:8px; margin-top:5px; cursor:zoom-in;" />`;
             clickHandler = `onclick="window.MediaManager.openPreview('${fileId}', 'image')"`;
         } else if (isPDF) {
-            // FIX: PDF ke liye design update kiya
-            preview = `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-top:5px; border:1px solid rgba(181,148,97,0.3); text-align:center; cursor:pointer; color:#00ffcc; font-size:0.8rem; font-weight:600;">📄 View PDF Document</div>`;
+            // Mast look wala UI box click karne ke liye
+            preview = `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-top:5px; border:1px solid rgba(181,148,97,0.3); text-align:center; color:#00ffcc; font-size:0.8rem; font-weight:600;">📖 Click to Preview PDF Inside Chat</div>`;
             clickHandler = `onclick="window.MediaManager.openPreview('${fileId}', 'pdf')"`;
         } else if (type.startsWith("video/")) {
             preview = `<video src="${url}" controls style="max-width:100%; border-radius:8px; margin-top:5px;"></video>`;
         } else if (type.startsWith("audio/")) {
             preview = `<audio src="${url}" controls style="width:100%; margin-top:5px;"></audio>`;
         } else {
-            // Default file representation for unique mobile apps like (.apk, .html, .xml)
             const extension = name.split('.').pop().toUpperCase();
             preview = `<div style="background:#222; padding:8px; border-radius:6px; margin-top:5px; font-size:0.75rem; color:#fff; border-left:3px solid var(--accent-gold);">⚙️ File Format: [${extension}]</div>`;
         }
@@ -157,29 +154,12 @@ window.MediaManager = {
         if (messages) localStorage.setItem("chat_history", messages.innerHTML);
     },
 
-    // 6. Full-Screen Overlay Manager (FIXED FOR MOBILE PDF LIGHTWEIGHT VIEWING)
+    // 6. Full-Screen Overlay Manager (FIXED WITH NATIVE EMBEDDED PDF.JS VIEWER)
     openPreview: (fileId, mode) => {
         const blob = window.LoadedBlobs ? window.LoadedBlobs[fileId] : null;
         if (!blob) return;
 
         const url = URL.createObjectURL(blob);
-        
-        // FIX: Agar mode PDF hai, toh blank pop-up ke bajaye direct mobile browser ka native sandbox view engine trigger hoga
-        if (mode === 'pdf') {
-            const pdfWindow = window.open();
-            if (pdfWindow) {
-                pdfWindow.document.write(`
-                    <html lang="en"><head><title>PDF Viewer</title><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-                    <body style="margin:0; background:#121212; display:flex; justify-content:center; align-items:center;">
-                        <embed src="${url}" type="application/pdf" style="width:100%; height:100dvh;" />
-                    </body></html>
-                `);
-            } else {
-                window.location.href = url;
-            }
-            return;
-        }
-
         const overlay = document.getElementById("mediaOverlay");
         const container = document.getElementById("overlayContent");
         
@@ -187,6 +167,10 @@ window.MediaManager = {
 
         if (mode === 'image') {
             container.innerHTML = `<img src="${url}" alt="Preview" onclick="event.stopPropagation();" />`;
+            overlay.classList.add("show");
+        } else if (mode === 'pdf') {
+            // FIX: Mozilla ka standard sandbox implementation wrapper use kiya hai jo blob data ko 100% render karega
+            container.innerHTML = `<iframe src="https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}" style="width:90%; height:85dvh; border:none; background:#fff; border-radius:12px;"></iframe>`;
             overlay.classList.add("show");
         }
     },
@@ -204,7 +188,6 @@ window.MediaManager = {
             
             records.forEach(item => {
                 window.LoadedBlobs[item.fileId] = item.blob;
-                // Re-trigger visual handlers on standard message elements if they exist inside DOM
                 const bubble = document.getElementById(`media-${item.fileId}`);
                 if(bubble) {
                     MediaManager.renderFinalUI(item.fileId, item.name, item.type, item.blob);
@@ -249,6 +232,6 @@ window.setupMediaReceiver = (socket) => {
         }
     });
 
-    // Run automatically to re-bind historical local media buffers
     setTimeout(MediaManager.restoreHistoryPreviews, 800);
 };
+    
