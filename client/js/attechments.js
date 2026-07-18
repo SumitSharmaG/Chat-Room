@@ -18,33 +18,34 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // NAYA FIX: File Select hote hi MediaManager ko call karna
+    // Har ek inputs par events trace karna
     const fileInputs = ['cameraInput', 'galleryInput', 'videoInput', 'audioInput', 'documentInput'];
     fileInputs.forEach(inputId => {
         const inputEl = document.getElementById(inputId);
         if (inputEl) {
-            inputEl.addEventListener('change', (e) => {
+            inputEl.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
 
-                // Check karo ki user select hai ya nahi
-                if (typeof selectedUser === 'undefined' || !selectedUser) {
-                    alert("Pehle user select karo!");
+                const activeUser = window.selectedUser || window.currentChatUser;
+                if (!activeUser) {
+                    alert("Pehle user select karo jise file bhejni hai!");
                     return;
                 }
 
-                // Global socket object ka use karke file send karo
                 if (window.MediaManager && window.socket) {
-                    window.MediaManager.sendFile(file, window.socket);
-                    attachMenu.classList.remove("show");
+                    // Menu chhupao
+                    if (attachMenu) attachMenu.classList.remove("show");
+                    
+                    // Core sender trigger
+                    await window.MediaManager.sendFile(file, window.socket);
                 } else {
-                    console.error("Socket ya MediaManager missing hai!");
+                    console.error("Critical components missing! Socket or MediaManager not loaded.");
                 }
                 
-                // Input reset karo taaki dubara same file bhej sako
-                e.target.value = '';
+                e.target.value = ''; // Reset pointer
             });
         }
     });
 });
-                                     
+                    
