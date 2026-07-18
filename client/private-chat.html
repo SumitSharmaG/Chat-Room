@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!--  -->
-<script>
+    <script>
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -31,7 +30,7 @@ user-select: none;
         .add-btn{width:35px;height:35px;border:none;border-radius:50%;background:#d4af6a;cursor:pointer;font-weight:bold;font-size:20px;}
 
         .inbox-list{flex:1;overflow-y:auto;padding:10px;}
-        .inbox{background:#1b1b1b;padding:15px;border-radius:12px;margin-bottom:8px;cursor:pointer;border:1px solid transparent;}
+        .inbox(background:#1b1b1b;padding:15px;border-radius:12px;margin-bottom:8px;cursor:pointer;border:1px solid transparent;}
 
         /* CHAT AREA */
         .chat-area{flex:1;display:flex;flex-direction:column;background:#0f0f0f;height:100%;}
@@ -120,7 +119,6 @@ user-select: none;
             <div class="top">
                 <a href="/" class="home-link">🏠</a>
                 <h2>Private Chats</h2>
-                <!-- Fixed original click method intact -->
                 <button class="add-btn" onclick="toggleSearch()">+</button>
             </div>
             <div id="searchBox" style="display:none; padding:12px;">
@@ -137,7 +135,6 @@ user-select: none;
                     <div><span id="chatTitle">Select Chat</span><br><span id="typing-indicator" style="font-size:10px; color:#d4af6a; display:none;">typing...</span></div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <!-- Fixed User Counter UI anchor -->
                     <span style="font-size:10px;">👁️ <span id="online-count">0</span></span>
                     <button onclick="clearAllChat()" style="color:#ff4d4d; background:none; border:1px solid #ff4d4d; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">Clear</button>
                     <button onclick="logout()" style="color:#d4af6a; background:none; border:1px solid #d4af6a; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">Logout</button>
@@ -147,7 +144,6 @@ user-select: none;
             <div class="messages" id="messages"></div>
 
             <div class="send-box">
-                <!-- Independent Clip Icon trigger for attachments media menu popup -->
                 <button class="attach-btn" id="attachBtn" onclick="event.stopPropagation(); document.getElementById('attachMenu').classList.toggle('show');">
                     📎
                 </button>
@@ -157,14 +153,12 @@ user-select: none;
         </div>
     </div>
 
-    <!-- Hidden native device file pickers -->
     <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
     <input type="file" id="galleryInput" accept="image/*" hidden>
     <input type="file" id="videoInput" accept="video/*" hidden>
     <input type="file" id="audioInput" accept="audio/*" hidden>
     <input type="file" id="documentInput" accept="*/*" hidden>
 
-    <!-- Attach Dropdown UI Overlay Components -->
     <div class="attach-menu" id="attachMenu">  
         <div class="attach-item" onclick="event.stopPropagation(); document.getElementById('cameraInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
             <div class="attach-icon">📷</div> <span>Camera</span>
@@ -183,7 +177,6 @@ user-select: none;
         </div>  
     </div>
 
-    <!-- Full-Screen Media Display Overlay Frame Layer -->
     <div id="mediaOverlay" class="media-overlay">
         <button class="close-overlay-btn" onclick="document.getElementById('mediaOverlay').classList.remove('show')">&times;</button>
         <div id="overlayContent" style="width:100%; display:flex; justify-content:center; align-items:center;"></div>
@@ -204,12 +197,14 @@ user-select: none;
             }
         );
         
-        // CRITICAL SECURE BRIDGE FOR ATTACHMENTS.JS ENGINE
         window.socket = socket;
 
         const currentUser = localStorage.getItem("username") || "guest";
         let selectedUser = "";
         let typingTimeout;
+        
+        // STEP 3 CORE: Active dynamic transfer stream collector cache block
+        const activeTransfers = {};
 
         // --- 3-Finger Screenshot Alert ---
         document.addEventListener('touchstart', e => {
@@ -223,13 +218,9 @@ user-select: none;
 
         socket.on("connect", () => {
             socket.emit("userJoined", currentUser);
-            if (window.setupMediaReceiver) {
-                window.setupMediaReceiver(socket);
-            }
             loadInbox();
         });
 
-        // Fixed active user tracker socket event listener
         socket.on("updateUserCount", count => {
             const countEl = $("online-count");
             if (countEl) countEl.innerText = count;
@@ -289,7 +280,7 @@ user-select: none;
 
         function openChat(u) {
             selectedUser = u; 
-            window.selectedUser = u; // Setup explicit window binding scope
+            window.selectedUser = u;
             window.currentChatUser = u;
             $("chatTitle").innerText = "@" + u; 
             renderMessages();
@@ -323,10 +314,50 @@ user-select: none;
             if(selectedUser === data.sender || selectedUser === data.receiver) renderMessages();
         }
 
-        socket.on("receive_private_message", data => {
-            saveAndRender(data);
-            if(data.fileId && window.MediaManager && window.MediaManager.restoreHistoryPreviews) {
-                setTimeout(window.MediaManager.restoreHistoryPreviews, 300);
+        // STEP 3 IMPLEMENTED: Complete binary packet data multiplexer interceptor
+        socket.on("receive_private_message", async (data) => {
+            if (data.fileId && data.chunkData !== undefined) {
+                const { fileId, fileName, fileType, totalChunks, chunkIndex, chunkData, sender } = data;
+
+                if (!activeTransfers[fileId]) {
+                    activeTransfers[fileId] = { received: 0, chunks: new Array(totalChunks) };
+                    
+                    if (window.MediaManager && window.MediaManager.createBubble) {
+                        window.MediaManager.createBubble(fileId, fileName, fileType, false);
+                    }
+                    
+                    saveAndRender({
+                        sender: sender,
+                        receiver: currentUser,
+                        fileId: fileId,
+                        fileName: fileName,
+                        fileType: fileType,
+                        time: data.time || formatAMPM(new Date())
+                    });
+                }
+
+                activeTransfers[fileId].chunks[chunkIndex] = chunkData;
+                activeTransfers[fileId].received++;
+
+                const percent = Math.round((activeTransfers[fileId].received / totalChunks) * 100);
+                const pb = document.getElementById(`pb-${fileId}`);
+                const pt = document.getElementById(`pt-${fileId}`);
+                if (pb) pb.style.width = percent + "%";
+                if (pt) pt.innerText = percent + "%";
+
+                if (activeTransfers[fileId].received === totalChunks) {
+                    const st = document.getElementById(`st-${fileId}`);
+                    if (st) st.innerText = "Assembling...";
+                    
+                    const finalBlob = new Blob(activeTransfers[fileId].chunks, { type: fileType });
+                    if (window.MediaManager) {
+                        await window.MediaManager.saveToLocalDB(fileId, fileName, fileType, finalBlob);
+                        window.MediaManager.renderFinalUI(fileId, fileName, fileType, finalBlob);
+                    }
+                    delete activeTransfers[fileId]; 
+                }
+            } else {
+                saveAndRender(data);
             }
         });
 
@@ -339,7 +370,6 @@ user-select: none;
                         b.insertAdjacentHTML('beforeend', `<div class="system-alert">${m.text}</div>`);
                     } else if (m.fileId) {
                         const isMy = m.sender === currentUser;
-                        // CSS Alignment fixed matching standard chat UI rules seamlessly
                         b.insertAdjacentHTML('beforeend', `<li id="media-${m.fileId}" class="msg ${isMy ? 'my-msg' : 'received-msg'}" style="list-style:none; display:flex; flex-direction:column;">📁 Loading Media Component...</li>`);
                     } else {
                         const isMy = m.sender === currentUser;
@@ -361,33 +391,4 @@ user-select: none;
         }
 
         function clearAllChat() {
-            if(confirm("Dono side ke message clear karein?")) {
-                let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
-                chats = chats.filter(c => !((c.sender === currentUser && c.receiver === selectedUser) || (c.sender === selectedUser && c.receiver === currentUser)));
-                localStorage.setItem("privateChats", JSON.stringify(chats));
-                renderMessages();
-            }
-        }
-
-        function logout() {
-            localStorage.clear();
-            window.location.href = "login.html";
-        }
-        function goBack() { $("sidebar").style.display = "flex"; $("chatArea").style.display = "none"; }
-        $("messageInput").onkeydown = e => e.key === "Enter" && sendMessage();
-
-        document.addEventListener("click", function(e) {
-            const menu = $("attachMenu");
-            const btn = $("attachBtn");
-            if(menu && btn && !menu.contains(e.target) && e.target !== btn) {
-                menu.classList.remove("show");
-            }
-        });
-    </script>
-
-<script>
-document.addEventListener("contextmenu", function(e) { e.preventDefault(); });
-document.addEventListener("selectstart", function(e) { e.preventDefault(); });
-document.addEventListener("copy", function(e) { e.preventDefault(); });
-document.addEventListener("cut", function(e) { e.preventDefault(); });
-document.addEventListener("dragsta
+            if(confirm(
