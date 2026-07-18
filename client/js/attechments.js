@@ -5,11 +5,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const attachMenu = document.getElementById("attachMenu");
 
     if (attachBtn && attachMenu) {
-        // Toggle menu when clicking button
+        // Toggle menu when clicking + button
         attachBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             e.preventDefault();
             attachMenu.classList.toggle("show");
+            console.log("Menu toggled! Classes now:", attachMenu.className); // Debugging line
         });
 
         // Close menu on outside click
@@ -18,52 +19,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 attachMenu.classList.remove("show");
             }
         });
+    } else {
+        console.error("Attachment elements not found in HTML!");
     }
 
-    // --- DIRECT ROUTING TO MEDIAMANAGER CHUNK SENDER ---
-    const fileInputs = ['cameraInput', 'galleryInput', 'videoInput', 'audioInput', 'documentInput'];
-    
-    fileInputs.forEach(inputId => {
-        const inputEl = document.getElementById(inputId);
-        if (inputEl) {
-            inputEl.addEventListener('change', async function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                // Validation check for user selection
-                if (typeof selectedUser === 'undefined' || !selectedUser) {
-                    alert("Please select a user first before sending media!");
-                    this.value = '';
-                    return;
-                }
-
-                // Validation check for active connection framework
-                if (typeof socket === 'undefined' || !socket) {
-                    alert("Chat server connection is not active!");
-                    this.value = '';
-                    return;
-                }
-
-                try {
-                    // Hide menu immediately
-                    if (attachMenu) attachMenu.classList.remove("show");
-
-                    // MAGIC FIX: Base64 ka jhanjhat khatam! Direct mediaManager ke chunking engine ko file pass karo
-                    if (window.MediaManager && typeof window.MediaManager.sendFile === 'function') {
-                        console.log("Routing file to MediaManager chunk engine:", file.name);
-                        await window.MediaManager.sendFile(file, socket);
-                    } else {
-                        console.error("MediaManager.sendFile function not found!");
-                        alert("Media sending system is initializing. Please try again.");
-                    }
-                    
-                } catch (error) {
-                    console.error("Error routing file to sender engine:", error);
-                }
-
-                // Reset field to allow consecutive identical uploads
-                this.value = '';
-            });
-        }
+    // Handle menu options click
+    const menuItems = document.querySelectorAll(".attach-item");
+    menuItems.forEach(item => {
+        item.addEventListener("click", (e) => {
+            const type = item.getAttribute("data-type");
+            const inputEl = document.getElementById(`${type}Input`);
+            if (inputEl) {
+                inputEl.click();
+            }
+            attachMenu.classList.remove("show");
+        });
     });
 });
+    
