@@ -1,4 +1,4 @@
-// client/mediaManager.js
+// client/js/mediaManager.js
 
 window.MediaManager = {
     CHUNK_SIZE: 1024 * 1024 * 1.5, // 1.5MB stable slices
@@ -51,8 +51,7 @@ window.MediaManager = {
             </div>
         `;
         messages.appendChild(li);
-        if (typeof window.scrollToBottom === "function") window.scrollToBottom();
-        else messages.scrollTop = messages.scrollHeight;
+        messages.scrollTop = messages.scrollHeight;
     },
 
     // 4. File Core Sender Logic
@@ -60,20 +59,15 @@ window.MediaManager = {
         if (!socket) return;
         const fileId = "media-" + Math.random().toString(36).substr(2, 9);
         
-        // Sender UI Create
         MediaManager.createBubble(fileId, file.name, file.type, true);
 
         const totalChunks = Math.ceil(file.size / MediaManager.CHUNK_SIZE);
         let offset = 0;
         let chunkIndex = 0;
 
-        // Auto Save to Sender's own browser storage instantly
         await MediaManager.saveToLocalDB(fileId, file.name, file.type, file);
 
-        // Check if page is world-chat or private-chat to target correctly
         const isPrivate = window.location.pathname.includes("private-chat.html");
-        
-        // Private chat ke liye url query parameter ya standard parsing variables ka backup
         const urlParams = new URLSearchParams(window.location.search);
         const receiverName = urlParams.get("user") || window.currentChatUser || "";
 
@@ -96,7 +90,7 @@ window.MediaManager = {
                     fileType: file.type,
                     totalChunks: totalChunks,
                     chunkIndex: chunkIndex,
-                    chunkData: e.target.result // ArrayBuffer transmission
+                    chunkData: e.target.result
                 };
 
                 socket.emit("file-relay", payload);
@@ -110,42 +104,100 @@ window.MediaManager = {
                 if (pb) pb.style.width = percent + "%";
                 if (pt) pt.innerText = percent + "%";
 
-                setTimeout(sendNext, 5); // Smooth background relay execution
+                setTimeout(sendNext, 5);
             };
             reader.readAsArrayBuffer(blob);
         };
         sendNext();
     },
 
-    // 5. Final Download button + Image/Video Previewer
+    // 5. Final Download button + Image/Video Previewer + Interactive Click Layer
     renderFinalUI: (fileId, name, type, blob) => {
         const bubble = document.getElementById(`media-${fileId}`);
         if (!bubble) return;
         
+        if(!window.LoadedBlobs) window.LoadedBlobs = {};
+        window.LoadedBlobs[fileId] = blob;
+
         const url = URL.createObjectURL(blob);
         let preview = "";
+        let clickHandler = "";
 
-        if (type.startsWith("image/")) preview = `<img src="${url}" style="max-width:100%; border-radius:8px; margin-top:5px; user-select: text !important; -webkit-user-select: text !important;"/>`;
-        else if (type.startsWith("video/")) preview = `<video src="${url}" controls style="max-width:100%; border-radius:8px; margin-top:5px;"></video>`;
-        else if (type.startsWith("audio/")) preview = `<audio src="${url}" controls style="width:100%; margin-top:5px;"></audio>`;
+        const isPDF = type === "application/pdf" || name.toLowerCase().endsWith(".pdf");
+
+        if (type.startsWith("image/")) {
+            preview = `<img src="${url}" style="max-width:100%; border-radius:8px; margin-top:5px; cursor:zoom-in;" />`;
+            clickHandler = `onclick="window.MediaManager.openPreview('${fileId}', 'image')"`;
+        } else if (isPDF) {
+            // Mast look wala UI box click karne ke liye
+            preview = `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-top:5px; border:1px solid rgba(181,148,97,0.3); text-align:center; color:#00ffcc; font-size:0.8rem; font-weight:600;">📖 Click to Preview PDF Inside Chat</div>`;
+            clickHandler = `onclick="window.MediaManager.openPreview('${fileId}', 'pdf')"`;
+        } else if (type.startsWith("video/")) {
+            preview = `<video src="${url}" controls style="max-width:100%; border-radius:8px; margin-top:5px;"></video>`;
+        } else if (type.startsWith("audio/")) {
+            preview = `<audio src="${url}" controls style="width:100%; margin-top:5px;"></audio>`;
+        } else {
+            const extension = name.split('.').pop().toUpperCase();
+            preview = `<div style="background:#222; padding:8px; border-radius:6px; margin-top:5px; font-size:0.75rem; color:#fff; border-left:3px solid var(--accent-gold);">⚙️ File Format: [${extension}]</div>`;
+        }
 
         bubble.innerHTML = `
-            <div style="padding: 5px;">
-                <span style="color: var(--accent-gold); font-size:0.8rem; font-weight:600;">📎 ${name}</span>
+            <div style="padding: 5px; cursor:pointer;" ${clickHandler}>
+                <span style="color: var(--accent-gold); font-size:0.8rem; font-weight:600; display:block; word-break:break-all;">📎 ${name}</span>
                 <div style="margin: 4px 0;">${preview}</div>
-                <a href="${url}" download="${name}" style="color:#00ffcc; text-decoration:none; font-size:0.75rem; font-weight:bold; display:inline-block; margin-top:4px;">📥 Download File</a>
+                <a href="${url}" download="${name}" onclick="event.stopPropagation();" style="color:#00ffcc; text-decoration:none; font-size:0.75rem; font-weight:bold; display:inline-block; margin-top:4px;">📥 Download File</a>
             </div>
         `;
         
         const messages = document.getElementById("messages");
         if (messages) messages.scrollTop = messages.scrollHeight;
+        if (messages) localStorage.setItem("chat_history", messages.innerHTML);
+    },
+
+    // 6. Full-Screen Overlay Manager (FIXED WITH NATIVE EMBEDDED PDF.JS VIEWER)
+    openPreview: (fileId, mode) => {
+        const blob = window.LoadedBlobs ? window.LoadedBlobs[fileId] : null;
+        if (!blob) return;
+
+        const url = URL.createObjectURL(blob);
+        const overlay = document.getElementById("mediaOverlay");
+        const container = document.getElementById("overlayContent");
         
-        // Chat history update logic compatible with script.js
-        if(messages) localStorage.setItem("chat_history", messages.innerHTML);
+        if (!overlay || !container) return;
+
+        if (mode === 'image') {
+            container.innerHTML = `<img src="${url}" alt="Preview" onclick="event.stopPropagation();" />`;
+            overlay.classList.add("show");
+        } else if (mode === 'pdf') {
+            // FIX: Mozilla ka standard sandbox implementation wrapper use kiya hai jo blob data ko 100% render karega
+            container.innerHTML = `<iframe src="https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}" style="width:90%; height:85dvh; border:none; background:#fff; border-radius:12px;"></iframe>`;
+            overlay.classList.add("show");
+        }
+    },
+
+    // 7. Auto reload blob anchors from base database storage upon page reboots
+    restoreHistoryPreviews: async () => {
+        const db = await MediaManager.initDB();
+        const transaction = db.transaction("saved_media", "readonly");
+        const store = transaction.objectStore("saved_media");
+        
+        const request = store.getAll();
+        request.onsuccess = (e) => {
+            const records = e.target.result;
+            if(!window.LoadedBlobs) window.LoadedBlobs = {};
+            
+            records.forEach(item => {
+                window.LoadedBlobs[item.fileId] = item.blob;
+                const bubble = document.getElementById(`media-${item.fileId}`);
+                if(bubble) {
+                    MediaManager.renderFinalUI(item.fileId, item.name, item.type, item.blob);
+                }
+            });
+        };
     }
 };
 
-// 6. Global Receiver Setup
+// 8. Global Receiver Setup
 window.setupMediaReceiver = (socket) => {
     if (!socket) return;
     const activeTransfers = {};
@@ -173,12 +225,12 @@ window.setupMediaReceiver = (socket) => {
             
             const finalBlob = new Blob(activeTransfers[fileId].chunks, { type: fileType });
             
-            // Save locally inside recipient browser IndexedDB
             await MediaManager.saveToLocalDB(fileId, fileName, fileType, finalBlob);
             MediaManager.renderFinalUI(fileId, fileName, fileType, finalBlob);
             
-            delete activeTransfers[fileId]; // Instantly free RAM memory leak protection
+            delete activeTransfers[fileId]; 
         }
     });
+
+    setTimeout(MediaManager.restoreHistoryPreviews, 800);
 };
-                                                         
