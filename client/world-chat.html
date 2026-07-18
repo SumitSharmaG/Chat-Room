@@ -200,6 +200,49 @@
     .attach-item span {
         pointer-events: none;
     }
+
+    /* ===== STEP 2: Full Screen Media Preview Overlay CSS ===== */
+    .media-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 999999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .media-overlay.show {
+        display: flex;
+        opacity: 1;
+    }
+    .media-overlay img {
+        max-width: 90%;
+        max-height: 80dvh;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        object-fit: contain;
+    }
+    .media-overlay iframe {
+        width: 90%;
+        height: 85dvh;
+        border: none;
+        background: #fff;
+        border-radius: 12px;
+    }
+    .close-overlay-btn {
+        position: absolute;
+        top: 20px; right: 20px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid var(--accent-gold);
+        color: var(--accent-gold);
+        font-size: 1.5rem;
+        width: 45px; height: 45px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+    }
 </style>
 </head>  
 <body oncontextmenu="return false;">  
@@ -227,7 +270,6 @@
 <ul id="messages"></ul>  
 
 <div class="input-area">  
-    <!-- Bypass system with robust direct inline evaluation toggle -->
     <button class="attach-btn" id="attachBtn" onclick="event.stopPropagation(); document.getElementById('attachMenu').classList.toggle('show');">
         +
     </button>
@@ -245,9 +287,11 @@
 <input type="file" id="galleryInput" accept="image/*" hidden>
 <input type="file" id="videoInput" accept="video/*" hidden>
 <input type="file" id="audioInput" accept="audio/*" hidden>
-<input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt,.zip,.rar,.ppt,.pptx,.xls,.xlsx" hidden>
 
-<!-- ===== REPLACE THIS ENTIRE ATTACH-MENU SECTION ===== -->
+<!-- ===== STEP 1 FIXED: Changed accept to "*/*" to allow .apk, .html, .xml, etc. ===== -->
+<input type="file" id="documentInput" accept="*/*" hidden>
+
+<!-- ===== ENTIRE ATTACH-MENU SECTION WITH DIRECT TRIGGERS ===== -->
 <div class="attach-menu" id="attachMenu">  
     <div class="attach-item" style="pointer-events: auto !important;" onclick="event.stopPropagation(); document.getElementById('cameraInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
         <div class="attach-icon" style="pointer-events: none;">📷</div>  
@@ -271,6 +315,11 @@
     </div>  
 </div>
 
+<!-- ===== STEP 2 FIXED: Full-Screen Media Viewer Layer Container ===== -->
+<div id="mediaOverlay" class="media-overlay">
+    <button class="close-overlay-btn" onclick="document.getElementById('mediaOverlay').classList.remove('show')">&times;</button>
+    <div id="overlayContent" style="width:100%; display:flex; justify-content:center; align-items:center;"></div>
+</div>
 
 <script src="https://chat-backend-gtg5.onrender.com/socket.io/socket.io.js"></script>  
 <script src="js/mediaManager.js"></script>
