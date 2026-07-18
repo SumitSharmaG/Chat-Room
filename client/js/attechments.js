@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- AUTOMATIC FILE SELECTION HANDLING AND UPLOAD CORE ---
+    // --- DIRECT ROUTING TO MEDIAMANAGER CHUNK SENDER ---
     const fileInputs = ['cameraInput', 'galleryInput', 'videoInput', 'audioInput', 'documentInput'];
     
     fileInputs.forEach(inputId => {
@@ -30,71 +30,38 @@ document.addEventListener("DOMContentLoaded", () => {
                 const file = e.target.files[0];
                 if (!file) return;
 
-                // Check standard variables inside chat window context
+                // Validation check for user selection
                 if (typeof selectedUser === 'undefined' || !selectedUser) {
                     alert("Please select a user first before sending media!");
+                    this.value = '';
                     return;
                 }
 
-                // Identify media type category accurately
-                let mediaType = 'document';
-                if (inputId.includes('camera') || inputId.includes('gallery')) mediaType = 'image';
-                if (inputId.includes('video')) mediaType = 'video';
-                if (inputId.includes('audio')) mediaType = 'audio';
-
-                try {
-                    // Generate structured standard transaction variables
-                    const fileId = 'media_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                    
-                    // Convert raw target streams directly into usable base64 formats
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        const fileDataString = event.target.result;
-
-                        // Secure buffer space directly inside the Media Manager IndexDB engine safely
-                        if (window.MediaManager && window.MediaManager.saveIncomingMedia) {
-                            window.MediaManager.saveIncomingMedia(fileId, fileDataString);
-                        } else {
-                            // Secondary fallback memory system using default localStorage buffers
-                            localStorage.setItem(`media_blob_${fileId}`, fileDataString);
-                        }
-
-                        // Build matching unified network structural package parameters
-                        const mediaMessage = {
-                            sender: currentUser,
-                            receiver: selectedUser,
-                            text: `[Sent a ${mediaType}]`,
-                            time: formatAMPM(new Date()),
-                            id: Date.now(),
-                            fileId: fileId,
-                            fileType: mediaType,
-                            fileName: file.name
-                        };
-
-                        // 1. Broadcast stream live through web-socket connection instantly
-                        if (typeof socket !== 'undefined') {
-                            socket.emit("private_message", mediaMessage);
-                        }
-
-                        // 2. Commit transaction metadata values into historical database
-                        if (typeof saveAndRender === 'function') {
-                            saveAndRender(mediaMessage);
-                        }
-
-                        // 3. Command interface framework layouts to refresh media views immediately
-                        if (window.MediaManager && window.MediaManager.restoreHistoryPreviews) {
-                            setTimeout(window.MediaManager.restoreHistoryPreviews, 300);
-                        }
-                    };
-                    
-                    reader.readAsDataURL(file);
-                    
-                } catch (error) {
-                    console.error("Error processing attachment payload stream:", error);
-                    alert("Failed to process media file. Please try again.");
+                // Validation check for active connection framework
+                if (typeof socket === 'undefined' || !socket) {
+                    alert("Chat server connection is not active!");
+                    this.value = '';
+                    return;
                 }
 
-                // Clear element string context targets to accept replacement uploads seamlessly
+                try {
+                    // Hide menu immediately
+                    if (attachMenu) attachMenu.classList.remove("show");
+
+                    // MAGIC FIX: Base64 ka jhanjhat khatam! Direct mediaManager ke chunking engine ko file pass karo
+                    if (window.MediaManager && typeof window.MediaManager.sendFile === 'function') {
+                        console.log("Routing file to MediaManager chunk engine:", file.name);
+                        await window.MediaManager.sendFile(file, socket);
+                    } else {
+                        console.error("MediaManager.sendFile function not found!");
+                        alert("Media sending system is initializing. Please try again.");
+                    }
+                    
+                } catch (error) {
+                    console.error("Error routing file to sender engine:", error);
+                }
+
+                // Reset field to allow consecutive identical uploads
                 this.value = '';
             });
         }
