@@ -131,7 +131,8 @@ window.MediaManager = {
             preview = `<img src="${url}" style="max-width:100%; border-radius:8px; margin-top:5px; cursor:zoom-in;" />`;
             clickHandler = `onclick="window.MediaManager.openPreview('${fileId}', 'image')"`;
         } else if (isPDF) {
-            preview = `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:6px; margin-top:5px; border:1px solid rgba(181,148,97,0.3); text-align:center; cursor:pointer; color:#00ffcc;">📖 Tap to Open PDF Viewer</div>`;
+            // FIX: PDF ke liye design update kiya
+            preview = `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-top:5px; border:1px solid rgba(181,148,97,0.3); text-align:center; cursor:pointer; color:#00ffcc; font-size:0.8rem; font-weight:600;">📄 View PDF Document</div>`;
             clickHandler = `onclick="window.MediaManager.openPreview('${fileId}', 'pdf')"`;
         } else if (type.startsWith("video/")) {
             preview = `<video src="${url}" controls style="max-width:100%; border-radius:8px; margin-top:5px;"></video>`;
@@ -156,12 +157,29 @@ window.MediaManager = {
         if (messages) localStorage.setItem("chat_history", messages.innerHTML);
     },
 
-    // 6. Full-Screen Overlay Manager
+    // 6. Full-Screen Overlay Manager (FIXED FOR MOBILE PDF LIGHTWEIGHT VIEWING)
     openPreview: (fileId, mode) => {
         const blob = window.LoadedBlobs ? window.LoadedBlobs[fileId] : null;
         if (!blob) return;
 
         const url = URL.createObjectURL(blob);
+        
+        // FIX: Agar mode PDF hai, toh blank pop-up ke bajaye direct mobile browser ka native sandbox view engine trigger hoga
+        if (mode === 'pdf') {
+            const pdfWindow = window.open();
+            if (pdfWindow) {
+                pdfWindow.document.write(`
+                    <html lang="en"><head><title>PDF Viewer</title><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+                    <body style="margin:0; background:#121212; display:flex; justify-content:center; align-items:center;">
+                        <embed src="${url}" type="application/pdf" style="width:100%; height:100dvh;" />
+                    </body></html>
+                `);
+            } else {
+                window.location.href = url;
+            }
+            return;
+        }
+
         const overlay = document.getElementById("mediaOverlay");
         const container = document.getElementById("overlayContent");
         
@@ -169,11 +187,8 @@ window.MediaManager = {
 
         if (mode === 'image') {
             container.innerHTML = `<img src="${url}" alt="Preview" onclick="event.stopPropagation();" />`;
-        } else if (mode === 'pdf') {
-            container.innerHTML = `<iframe src="${url}"></iframe>`;
+            overlay.classList.add("show");
         }
-
-        overlay.classList.add("show");
     },
 
     // 7. Auto reload blob anchors from base database storage upon page reboots
