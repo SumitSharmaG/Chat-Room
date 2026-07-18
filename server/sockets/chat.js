@@ -10,49 +10,38 @@ const typingUsers = new Set();
 module.exports = (io) => {
 
   io.use((socket, next) => {
+    try {
+      const token = socket.handshake.auth.token;
 
-  try {
+      if (!token) {
+        return next(new Error("No Token"));
+      }
 
-    const token = socket.handshake.auth.token;
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET
+      );
 
-    if (!token) {
-      return next(new Error("No Token"));
+      socket.user = decoded;
+      next();
+    } catch (err) {
+      return next(
+        new Error("Invalid Token")
+      );
     }
-
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
-
-    socket.user = decoded;
-
-    next();
-
-  } catch (err) {
-
-    return next(
-      new Error("Invalid Token")
-    );
-
-  }
-
-});
+  });
 
   io.on("connection", (socket) => {
 
-  console.log(
-    "✅ JWT User Connected:",
-    socket.user.username
-  );
+    console.log(
+      "✅ JWT User Connected:",
+      socket.user.username
+    );
 
     // ================== TYPING ==================
-
     socket.on("typing", (username) => {
-
       if (!typingUsers.has(username)) {
-
         typingUsers.add(username);
-
         socket.broadcast.emit(
           "userTyping",
           username
@@ -61,52 +50,35 @@ module.exports = (io) => {
     });
 
     socket.on("stopTyping", (username) => {
-
       typingUsers.delete(username);
-
       socket.broadcast.emit(
         "userStopTyping",
         username
       );
     });
 
-
-
     // ================== SEEN ==================
-
     socket.on(
       "messageSeen",
       async ({ messageId, username }) => {
-
         try {
-
-          const msg =
-            await Message.findById(messageId);
-
+          const msg = await Message.findById(messageId);
           if (!msg) return;
 
           if (!msg.seenBy) {
-
             msg.seenBy = [];
           }
 
           if (!msg.seenBy.includes(username)) {
-
             msg.seenBy.push(username);
-
             await msg.save();
           }
 
           io.emit("updateSeen", {
-
             messageId,
-
             seenBy: msg.seenBy
-
           });
-
         } catch (err) {
-
           console.error(
             "Seen error:",
             err
@@ -115,153 +87,126 @@ module.exports = (io) => {
       }
     );
 
-
-
     // ================== USER JOIN ==================
-
     socket.on("userJoined", () => {
       console.log(
-  "🔥 userJoined:",
-  socket.user.username
-);
+        "🔥 userJoined:",
+        socket.user.username
+      );
 
-  const username = socket.user.username;
+      const username = socket.user.username;
+      socket.username = username;
 
-  socket.username = username;
+      if (onlineUsers.has(username)) {
+        onlineUsers.get(username).add(socket.id);
+      } else {
+        onlineUsers.set(
+          username,
+          new Set([socket.id])
+        );
+      }
 
-  if (onlineUsers.has(username)) {
-
-    onlineUsers
-      .get(username)
-      .add(socket.id);
-
-  } else {
-
-    onlineUsers.set(
-      username,
-      new Set([socket.id])
-    );
-  }
-
-  console.log(
-    "🔥 Online Users:",
-    onlineUsers
-  );
-
-  io.emit(
-    "updateUserCount",
-    onlineUsers.size
-  );
-
-});
-          
-
-
-
-    // ================== WORLD CHAT ==================
-
-    socket.on(
-  "sendMessage",
-  async (data) => {
-
-    try {
-
-      // 🔐 Username JWT se force
-      data.username =
-        socket.user.username;
-
-      const msg =
-        await Message.create(data);
+      console.log(
+        "🔥 Online Users:",
+        onlineUsers
+      );
 
       io.emit(
-        "receiveMessage",
-        msg
+        "updateUserCount",
+        onlineUsers.size
       );
+    });
 
-    } catch (err) {
+    // ================== WORLD CHAT ==================
+    socket.on(
+      "sendMessage",
+      async (data) => {
+        try {
+          // 🔐 Username JWT se force
+          data.username = socket.user.username;
 
-      console.error(
-        "Message error:",
-        err
-      );
-    }
-  }
-);
-
-
+          const msg = await Message.create(data);
+          io.emit(
+            "receiveMessage",
+            msg
+          );
+        } catch (err) {
+          console.error(
+            "Message error:",
+            err
+          );
+        }
+      }
+    );
 
     // ================== PRIVATE CHAT ==================
-
     socket.on(
       "private_message",
       (data) => {
-
         // 🔐 Sender JWT se force
-    data.sender =
-      socket.user.username;
+        data.sender = socket.user.username;
 
         // REMOVE @ IF EXISTS
-
-        data.sender =
-          data.sender.replace("@", "");
-
-        data.receiver =
-          data.receiver.replace("@", "");
+        data.sender = data.sender.replace("@", "");
+        data.receiver = data.receiver.replace("@", "");
 
         console.log(
           "🔥 Private Msg:",
           data
         );
 
-
-
         // SEND ONLY TO SENDER + RECEIVER
-
-        for (
-          const [username, sockets]
-          of onlineUsers
-        ) {
-
+        for (const [username, sockets] of onlineUsers) {
           if (
-
-            username === data.receiver
-
-            ||
-
+            username === data.receiver ||
             username === data.sender
-
           ) {
-
             sockets.forEach((socketId) => {
-
               io.to(socketId).emit(
                 "receive_private_message",
                 data
               );
-
             });
-
           }
         }
       }
     );
 
+    // ================== DIRECT MEDIA CHUNKS RELAY LAYER ==================
+    socket.on("file-relay", (data) => {
+      try {
+        // Safe authenticated sender name via secure JWT token
+        data.sender = socket.user.username.replace("@", "");
 
+        if (data.isPrivate) {
+          // Send only to the specific receiver and the sender sockets
+          const receiverName = data.receiver.replace("@", "");
+          const senderName = data.sender;
+
+          for (const [username, sockets] of onlineUsers) {
+            if (username === receiverName || username === senderName) {
+              sockets.forEach((socketId) => {
+                io.to(socketId).emit("receive-file-relay", data);
+              });
+            }
+          }
+        } else {
+          // World Chat relay: Broadcast to everyone else connected
+          socket.broadcast.emit("receive-file-relay", data);
+        }
+      } catch (err) {
+        console.error("Media relay streaming error:", err);
+      }
+    });
 
     // ================== CLEAR CHAT ==================
-
     socket.on(
       "clearAllChat",
       async () => {
-
         try {
-
           await Message.deleteMany({});
-
           io.emit("chatCleared");
-
         } catch (err) {
-
           console.error(
             "Clear error:",
             err
@@ -270,48 +215,34 @@ module.exports = (io) => {
       }
     );
 
-
-
     // ================== DISCONNECT ==================
-
     socket.on("disconnect", () => {
-
       console.log(
         "User disconnected:",
         socket.id
       );
 
-      const username =
-        socket.username;
+      const username = socket.username;
 
       // REMOVE FROM ONLINE USERS
-
       if (
         username &&
         onlineUsers.has(username)
       ) {
-
-        const userSockets =
-          onlineUsers.get(username);
-
+        const userSockets = onlineUsers.get(username);
         userSockets.delete(socket.id);
 
         if (userSockets.size === 0) {
-
           onlineUsers.delete(username);
         }
       }
 
-
       // REMOVE FROM TYPING USERS
-
       if (
         username &&
         typingUsers.has(username)
       ) {
-
         typingUsers.delete(username);
-
         socket.broadcast.emit(
           "userStopTyping",
           username
@@ -332,3 +263,4 @@ module.exports = (io) => {
   });
 
 };
+      
