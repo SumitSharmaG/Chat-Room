@@ -337,4 +337,28 @@ document.getElementById("msg")?.addEventListener("keydown", (e) => {
     }
 });
 
-                              
+ // ================== MEDIA INTEGRATION SYSTEM ==================
+
+// 1. Media receiver initialization
+if (socket && typeof window.setupMediaReceiver === "function") {
+    window.setupMediaReceiver(socket);
+}
+
+// 2. Global file selection configuration
+document.addEventListener("DOMContentLoaded", () => {
+    const fileInputs = ["cameraInput", "galleryInput", "videoInput", "audioInput", "documentInput"];
+    
+    fileInputs.forEach(id => {
+        const inputEl = document.getElementById(id);
+        if (inputEl) {
+            inputEl.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && socket) {
+                    window.MediaManager.sendFile(file, socket);
+                    e.target.value = ""; // Form value cleanup resets
+                }
+            });
+        }
+    });
+});
+            
