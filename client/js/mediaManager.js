@@ -154,26 +154,24 @@ window.MediaManager = {
         if (messages) localStorage.setItem("chat_history", messages.innerHTML);
     },
 
-    // 6. Full-Screen Overlay Manager (FIXED FOR STABLE SYSTEM BYPASS RENDERING)
+        // 6. Full-Screen Overlay Manager (FIXED FOR DIRECT NATIVE OPENING)
     openPreview: (fileId, mode) => {
         const blob = window.LoadedBlobs ? window.LoadedBlobs[fileId] : null;
         if (!blob) return;
 
-        // Force explicit MIME application update for PDF integrity
+        // Force explicit MIME application/pdf
         const secureBlob = mode === 'pdf' ? new Blob([blob], { type: 'application/pdf' }) : blob;
         const url = URL.createObjectURL(secureBlob);
         
         if (mode === 'pdf') {
-            // FIX: Mobile browser secure sandboxing mechanism bypass
-            // Ek temporary anchor element create karke direct high-priority user click initiate karenge 
-            // Isse phone ka chrome automatic built-in light viewer trigger kar dega bina 'Open button' screen par atke.
-            const viewerLink = document.createElement('a');
-            viewerLink.href = url;
-            viewerLink.target = '_blank';
-            viewerLink.rel = 'noopener noreferrer';
-            document.body.appendChild(viewerLink);
-            viewerLink.click();
-            document.body.removeChild(viewerLink);
+            // FIX: Anchor element ke bina direct window open karein
+            // Kuch mobile devices par ye native PDF viewer khol deta hai
+            const pdfWindow = window.open(url, '_blank');
+            
+            // Agar browser block kare, toh fallback link de dein
+            if (!pdfWindow) {
+                alert("PDF Viewer block ho gaya hai. Download button par click karein.");
+            }
             return; 
         }
 
