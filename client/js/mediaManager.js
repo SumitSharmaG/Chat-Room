@@ -129,8 +129,8 @@ window.MediaManager = {
             preview = `<img src="${url}" style="max-width:100%; border-radius:8px; margin-top:5px; cursor:zoom-in;" />`;
             clickHandler = `onclick="window.MediaManager.openPreview('${fileId}', 'image')"`;
         } else if (isPDF) {
-            // Mast look wala UI box click karne ke liye
-            preview = `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-top:5px; border:1px solid rgba(181,148,97,0.3); text-align:center; color:#00ffcc; font-size:0.8rem; font-weight:600;">📖 Click to Preview PDF Inside Chat</div>`;
+            // High-fidelity target block update
+            preview = `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-top:5px; border:1px solid rgba(181,148,97,0.3); text-align:center; color:#00ffcc; font-size:0.8rem; font-weight:600;">📖 Click to Open PDF Viewer</div>`;
             clickHandler = `onclick="window.MediaManager.openPreview('${fileId}', 'pdf')"`;
         } else if (type.startsWith("video/")) {
             preview = `<video src="${url}" controls style="max-width:100%; border-radius:8px; margin-top:5px;"></video>`;
@@ -154,12 +154,29 @@ window.MediaManager = {
         if (messages) localStorage.setItem("chat_history", messages.innerHTML);
     },
 
-    // 6. Full-Screen Overlay Manager (FIXED WITH NATIVE EMBEDDED PDF.JS VIEWER)
+    // 6. Full-Screen Overlay Manager (FIXED FOR STABLE SYSTEM BYPASS RENDERING)
     openPreview: (fileId, mode) => {
         const blob = window.LoadedBlobs ? window.LoadedBlobs[fileId] : null;
         if (!blob) return;
 
-        const url = URL.createObjectURL(blob);
+        // Force explicit MIME application update for PDF integrity
+        const secureBlob = mode === 'pdf' ? new Blob([blob], { type: 'application/pdf' }) : blob;
+        const url = URL.createObjectURL(secureBlob);
+        
+        if (mode === 'pdf') {
+            // FIX: Mobile browser secure sandboxing mechanism bypass
+            // Ek temporary anchor element create karke direct high-priority user click initiate karenge 
+            // Isse phone ka chrome automatic built-in light viewer trigger kar dega bina 'Open button' screen par atke.
+            const viewerLink = document.createElement('a');
+            viewerLink.href = url;
+            viewerLink.target = '_blank';
+            viewerLink.rel = 'noopener noreferrer';
+            document.body.appendChild(viewerLink);
+            viewerLink.click();
+            document.body.removeChild(viewerLink);
+            return; 
+        }
+
         const overlay = document.getElementById("mediaOverlay");
         const container = document.getElementById("overlayContent");
         
@@ -167,10 +184,6 @@ window.MediaManager = {
 
         if (mode === 'image') {
             container.innerHTML = `<img src="${url}" alt="Preview" onclick="event.stopPropagation();" />`;
-            overlay.classList.add("show");
-        } else if (mode === 'pdf') {
-            // FIX: Mozilla ka standard sandbox implementation wrapper use kiya hai jo blob data ko 100% render karega
-            container.innerHTML = `<iframe src="https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(url)}" style="width:90%; height:85dvh; border:none; background:#fff; border-radius:12px;"></iframe>`;
             overlay.classList.add("show");
         }
     },
@@ -234,4 +247,4 @@ window.setupMediaReceiver = (socket) => {
 
     setTimeout(MediaManager.restoreHistoryPreviews, 800);
 };
-    
+                
