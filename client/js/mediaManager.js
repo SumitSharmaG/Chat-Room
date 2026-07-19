@@ -1,7 +1,7 @@
 // client/js/mediaManager.js
 
 window.MediaManager = {
-    CHUNK_SIZE: 1024 * 1024 * 0.256, // 256KB stable slices
+    CHUNK_SIZE: 1024 * 800 * 0.800, // 800KB stable slices
 
     // 1. Browser Database Initialize 
     initDB: () => {
