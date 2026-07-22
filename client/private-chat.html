@@ -28,7 +28,18 @@
         .add-btn{width:35px;height:35px;border:none;border-radius:50%;background:#d4af6a;cursor:pointer;font-weight:bold;font-size:20px;}
 
         .inbox-list{flex:1;overflow-y:auto;padding:10px;}
-        .inbox{background:#1b1b1b;padding:15px;border-radius:12px;margin-bottom:8px;cursor:pointer;border:1px solid transparent;}
+        .inbox{background:#1b1b1b;padding:15px;border-radius:12px;margin-bottom:8px;cursor:pointer;border:1px solid transparent;display:flex;justify-content:space-between;align-items:center;}
+        .inbox.active{border-color:#d4af6a;background:#222;}
+        
+        /* UNREAD GREEN DOT BADGE */
+        .unread-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #25D366;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #25D366;
+        }
 
         /* CHAT AREA */
         .chat-area{flex:1;display:flex;flex-direction:column;background:#0f0f0f;height:100%;}
@@ -53,7 +64,6 @@
         .send-box input{flex:1;padding:12px 15px;border:none;outline:none;border-radius:25px;background:#1d1d1d;color:white;font-size:14px;user-select: text !important;-webkit-user-select: text !important;}
         .send-box button{width:45px;height:45px;border:none;border-radius:50%;background:#d4af6a;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
-        /* Dedicated Media Attachment Button */
         .attach-btn {
             width: 45px; height: 45px; border: none; border-radius: 50%;
             background: #202020; color: #d4af6a; font-size: 22px; cursor: pointer;
@@ -90,7 +100,6 @@
         }
         .attach-item span { pointer-events: none; }
 
-        /* FULL SCREEN OVERLAY VIEWER STYLE */
         .media-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95); z-index: 999999;
@@ -195,15 +204,14 @@
             }
         );
         
-        // CRITICAL SECURE BRIDGE FOR ATTACHMENTS.JS ENGINE
         window.socket = socket;
 
-        const currentUser = localStorage.getItem("username") || "guest";
+        const currentUser = (localStorage.getItem("username") || "guest").replace("@", "");
         let selectedUser = "";
         let typingTimeout;
         const activeTransfers = {};
 
-        // --- 3-Finger Screenshot Alert ---
+        // --- Screenshot Alert ---
         document.addEventListener('touchstart', e => {
             if(e.touches.length >= 3 && selectedUser) {
                 const time = formatAMPM(new Date());
@@ -223,7 +231,6 @@
             if (countEl) countEl.innerText = count;
         });
 
-        // --- Typing ---
         function handleTyping() {
             if (!selectedUser) return;
             socket.emit("typing", currentUser);
@@ -243,7 +250,6 @@
             $("typing-indicator").style.display = "none";
         });
 
-        // --- Time Formatter ---
         function formatAMPM(date) {
             let hours = date.getHours();
             let minutes = date.getMinutes();
@@ -261,16 +267,52 @@
 
         function toggleSearch() { $("searchBox").style.display = ($("searchBox").style.display === "block" ? "none" : "block"); }
 
+        // --- AUTOMATIC INBOX MANAGER ---
         function addInbox(u) {
+            if (!u || u === currentUser) return;
             let users = JSON.parse(localStorage.getItem("privateUsers")) || [];
-            if(!users.includes(u)) { users.push(u); localStorage.setItem("privateUsers", JSON.stringify(users)); loadInbox(); }
+            if(!users.includes(u)) { 
+                users.push(u); 
+                localStorage.setItem("privateUsers", JSON.stringify(users)); 
+                loadInbox(); 
+            }
+        }
+
+        // --- UNREAD BADGE HELPERS ---
+        function setUnreadBadge(u, isUnread) {
+            let unreads = JSON.parse(localStorage.getItem("unreadUsers")) || {};
+            if (isUnread) unreads[u] = true;
+            else delete unreads[u];
+            localStorage.setItem("unreadUsers", JSON.stringify(unreads));
+            loadInbox();
         }
 
         function loadInbox() {
             $("inboxList").innerHTML = "";
-            (JSON.parse(localStorage.getItem("privateUsers")) || []).forEach(u => {
-                const d = document.createElement("div"); d.className = "inbox"; d.innerText = "@" + u;
-                d.onclick = () => { window.currentChatUser = u; window.selectedUser = u; openChat(u); }; 
+            const users = JSON.parse(localStorage.getItem("privateUsers")) || [];
+            const unreads = JSON.parse(localStorage.getItem("unreadUsers")) || {};
+
+            users.forEach(u => {
+                const d = document.createElement("div"); 
+                d.className = "inbox" + (selectedUser === u ? " active" : ""); 
+                
+                const nameSpan = document.createElement("span");
+                nameSpan.innerText = "@" + u;
+                d.appendChild(nameSpan);
+
+                // Add Green Dot Badge if Unread
+                if (unreads[u]) {
+                    const dot = document.createElement("span");
+                    dot.className = "unread-dot";
+                    d.appendChild(dot);
+                }
+
+                d.onclick = () => { 
+                    window.currentChatUser = u; 
+                    window.selectedUser = u; 
+                    setUnreadBadge(u, false); // Clear green dot on open
+                    openChat(u); 
+                }; 
                 $("inboxList").appendChild(d);
             });
         }
@@ -280,6 +322,7 @@
             window.selectedUser = u; 
             window.currentChatUser = u;
             $("chatTitle").innerText = "@" + u; 
+            loadInbox();
             renderMessages();
             if(window.innerWidth <= 768) { $("sidebar").style.display = "none"; $("chatArea").style.display = "flex"; }
             
@@ -307,14 +350,27 @@
             if(selectedUser === data.sender || selectedUser === data.receiver) renderMessages();
         }
 
-        // RE-STRUCTURED SOCKET RECEIVER FOR FILE STREAM CHUNKS
+        // --- REALTIME AUTOMATIC PRIVATE MESSAGE LISTENER ---
         socket.on("receive_private_message", async (data) => {
+            const otherUser = (data.sender === currentUser) ? data.receiver : data.sender;
+            
+            // 1. Automatically create chat index if not present
+            addInbox(otherUser);
+
+            // 2. Add Green Dot if user is receiving and chat is not currently open
+            if (data.sender !== currentUser && selectedUser !== data.sender) {
+                setUnreadBadge(data.sender, true);
+            }
+
+            // 3. File Chunk Processing logic
             if (data.fileId && data.chunkData !== undefined) {
                 const { fileId, fileName, fileType, totalChunks, chunkIndex, chunkData, sender } = data;
 
                 if (!activeTransfers[fileId]) {
                     activeTransfers[fileId] = { received: 0, chunks: new Array(totalChunks) };
-                    window.MediaManager.createBubble(fileId, fileName, fileType, false);
+                    if (selectedUser === sender || selectedUser === data.receiver) {
+                        window.MediaManager.createBubble(fileId, fileName, fileType, false);
+                    }
                     
                     saveAndRender({
                         sender: sender,
@@ -351,66 +407,4 @@
         });
 
         function renderMessages() {
-            const b = $("messages"); b.innerHTML = "";
-            const chats = JSON.parse(localStorage.getItem("privateChats")) || [];
-            chats.filter(c => (c.sender === currentUser && c.receiver === selectedUser) || (c.sender === selectedUser && c.receiver === currentUser) || (c.sender === "system" && (c.receiver === selectedUser || c.receiver === currentUser)))
-                 .forEach(m => {
-                    if(m.sender === "system") {
-                        b.insertAdjacentHTML('beforeend', `<div class="system-alert">${m.text}</div>`);
-                    } else if (m.fileId) {
-                        const isMy = m.sender === currentUser;
-                        b.insertAdjacentHTML('beforeend', `<li id="media-${m.fileId}" class="msg ${isMy ? 'my-msg' : 'received-msg'}" style="list-style:none; display:flex; flex-direction:column;">📁 Loading Media Component...</li>`);
-                    } else {
-                        const isMy = m.sender === currentUser;
-                        b.insertAdjacentHTML('beforeend', `
-                            <div class="msg ${isMy ? 'my-msg' : 'received-msg'}">
-                                ${m.text}
-                                <div class="msg-meta">
-                                    ${m.time} <button class="info-btn" onclick="alert('Sent: ${m.time}\\nSeen: Tik ✓\\nTime: ${m.time}')">ⓘ</button>
-                                </div>
-                            </div>
-                        `);
-                    }
-                 });
-            b.scrollTop = b.scrollHeight;
-            
-            if(window.MediaManager && window.MediaManager.restoreHistoryPreviews) {
-                window.MediaManager.restoreHistoryPreviews();
-            }
-        }
-
-        function clearAllChat() {
-            if(confirm("Dono side ke message clear karein?")) {
-                let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
-                chats = chats.filter(c => !((c.sender === currentUser && c.receiver === selectedUser) || (c.sender === selectedUser && c.receiver === currentUser)));
-                localStorage.setItem("privateChats", JSON.stringify(chats));
-                renderMessages();
-            }
-        }
-
-        function logout() {
-            localStorage.clear();
-            window.location.href = "login.html";
-        }
-        function goBack() { $("sidebar").style.display = "flex"; $("chatArea").style.display = "none"; }
-        $("messageInput").onkeydown = e => e.key === "Enter" && sendMessage();
-
-        document.addEventListener("click", function(e) {
-            const menu = $("attachMenu");
-            const btn = $("attachBtn");
-            if(menu && btn && !menu.contains(e.target) && e.target !== btn) {
-                menu.classList.remove("show");
-            }
-        });
-    </script>
-
-<script>
-document.addEventListener("contextmenu", function(e) { e.preventDefault(); });
-document.addEventListener("selectstart", function(e) { e.preventDefault(); });
-document.addEventListener("copy", function(e) { e.preventDefault(); });
-document.addEventListener("cut", function(e) { e.preventDefault(); });
-document.addEventListener("dragstart", function(e) { e.preventDefault(); });
-</script>
-    
-</body>
-</html>
+            const b = $("messages"); b.in
