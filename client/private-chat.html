@@ -30,7 +30,7 @@
         .inbox-list{flex:1;overflow-y:auto;padding:10px;}
         .inbox{background:#1b1b1b;padding:15px;border-radius:12px;margin-bottom:8px;cursor:pointer;border:1px solid transparent;display:flex;justify-content:space-between;align-items:center;}
         .inbox.active{border-color:#d4af6a;background:#222;}
-        
+
         /* UNREAD GREEN DOT BADGE */
         .unread-dot {
             width: 10px;
@@ -64,6 +64,7 @@
         .send-box input{flex:1;padding:12px 15px;border:none;outline:none;border-radius:25px;background:#1d1d1d;color:white;font-size:14px;user-select: text !important;-webkit-user-select: text !important;}
         .send-box button{width:45px;height:45px;border:none;border-radius:50%;background:#d4af6a;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
+        /* Dedicated Media Attachment Button */
         .attach-btn {
             width: 45px; height: 45px; border: none; border-radius: 50%;
             background: #202020; color: #d4af6a; font-size: 22px; cursor: pointer;
@@ -100,6 +101,7 @@
         }
         .attach-item span { pointer-events: none; }
 
+        /* FULL SCREEN OVERLAY VIEWER STYLE */
         .media-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95); z-index: 999999;
@@ -204,15 +206,15 @@
             }
         );
         
+        // CRITICAL SECURE BRIDGE FOR ATTACHMENTS.JS ENGINE
         window.socket = socket;
 
-        // ORIGINAL USERNAME RESTORED TO FIX SOCKET HANDSHAKE & COUNTER
         const currentUser = localStorage.getItem("username") || "guest";
         let selectedUser = "";
         let typingTimeout;
         const activeTransfers = {};
 
-        // --- Screenshot Alert ---
+        // --- 3-Finger Screenshot Alert ---
         document.addEventListener('touchstart', e => {
             if(e.touches.length >= 3 && selectedUser) {
                 const time = formatAMPM(new Date());
@@ -232,6 +234,7 @@
             if (countEl) countEl.innerText = count;
         });
 
+        // --- Typing ---
         function handleTyping() {
             if (!selectedUser) return;
             socket.emit("typing", currentUser);
@@ -251,6 +254,7 @@
             $("typing-indicator").style.display = "none";
         });
 
+        // --- Time Formatter ---
         function formatAMPM(date) {
             let hours = date.getHours();
             let minutes = date.getMinutes();
@@ -261,51 +265,29 @@
             return (hours < 10 ? '0'+hours : hours) + ':' + minutes + ampm;
         }
 
-        // --- SEARCH BOX TOGGLE AND START CHAT FIX ---
-        window.toggleSearch = function() { 
-            const box = $("searchBox");
-            if(box) box.style.display = (box.style.display === "block" ? "none" : "block"); 
+        function startChat() {
+            const u = $("usernameInput").value.trim().replace("@","");
+            if(u) { addInbox(u); openChat(u); $("usernameInput").value = ""; $("searchBox").style.display = "none"; }
         }
 
-        window.startChat = function() {
-            const input = $("usernameInput");
-            if (!input) return;
-            const u = input.value.trim().replace("@","");
-            if(u) { 
-                addInbox(u); 
-                openChat(u); 
-                input.value = ""; 
-                $("searchBox").style.display = "none"; 
-            }
-        }
+        function toggleSearch() { $("searchBox").style.display = ($("searchBox").style.display === "block" ? "none" : "block"); }
 
-        // --- AUTOMATIC INBOX MANAGER ---
         function addInbox(u) {
-            const cleanU = u.replace("@", "");
-            const cleanCurrent = currentUser.replace("@", "");
-            if (!cleanU || cleanU === cleanCurrent) return;
-            
             let users = JSON.parse(localStorage.getItem("privateUsers")) || [];
-            if(!users.includes(cleanU)) { 
-                users.push(cleanU); 
-                localStorage.setItem("privateUsers", JSON.stringify(users)); 
-                loadInbox(); 
-            }
+            if(!users.includes(u)) { users.push(u); localStorage.setItem("privateUsers", JSON.stringify(users)); loadInbox(); }
         }
 
+        // --- UNREAD BADGE HELPERS ---
         function setUnreadBadge(u, isUnread) {
-            const cleanU = u.replace("@", "");
             let unreads = JSON.parse(localStorage.getItem("unreadUsers")) || {};
-            if (isUnread) unreads[cleanU] = true;
-            else delete unreads[cleanU];
+            if (isUnread) unreads[u] = true;
+            else delete unreads[u];
             localStorage.setItem("unreadUsers", JSON.stringify(unreads));
             loadInbox();
         }
 
         function loadInbox() {
-            const list = $("inboxList");
-            if (!list) return;
-            list.innerHTML = "";
+            $("inboxList").innerHTML = "";
             const users = JSON.parse(localStorage.getItem("privateUsers")) || [];
             const unreads = JSON.parse(localStorage.getItem("unreadUsers")) || {};
 
@@ -327,19 +309,18 @@
                 d.onclick = () => { 
                     window.currentChatUser = u; 
                     window.selectedUser = u; 
-                    setUnreadBadge(u, false);
+                    setUnreadBadge(u, false); // Clear green dot on open
                     openChat(u); 
                 }; 
-                list.appendChild(d);
+                $("inboxList").appendChild(d);
             });
         }
 
         function openChat(u) {
-            const cleanU = u.replace("@", "");
-            selectedUser = cleanU; 
-            window.selectedUser = cleanU; 
-            window.currentChatUser = cleanU;
-            $("chatTitle").innerText = "@" + cleanU; 
+            selectedUser = u; 
+            window.selectedUser = u; 
+            window.currentChatUser = u;
+            $("chatTitle").innerText = "@" + u; 
             loadInbox();
             renderMessages();
             if(window.innerWidth <= 768) { $("sidebar").style.display = "none"; $("chatArea").style.display = "flex"; }
@@ -352,7 +333,7 @@
         function sendMessage() {
             const txt = $("messageInput").value.trim();
             if(!txt || !selectedUser) return;
-            const data = { sender: currentUser.replace("@",""), receiver: selectedUser, text: txt, time: formatAMPM(new Date()), id: Date.now() };
+            const data = { sender: currentUser, receiver: selectedUser, text: txt, time: formatAMPM(new Date()), id: Date.now() };
             socket.emit("private_message", data);
             saveAndRender(data);
             $("messageInput").value = "";
@@ -365,36 +346,27 @@
             
             chats.push(data);
             localStorage.setItem("privateChats", JSON.stringify(chats));
-            
-            const cleanSender = (data.sender || "").replace("@", "");
-            const cleanReceiver = (data.receiver || "").replace("@", "");
-            if(selectedUser === cleanSender || selectedUser === cleanReceiver) renderMessages();
+            if(selectedUser === data.sender || selectedUser === data.receiver) renderMessages();
         }
 
-        // --- REALTIME AUTOMATIC PRIVATE MESSAGE LISTENER ---
+        // RE-STRUCTURED SOCKET RECEIVER FOR FILE STREAM CHUNKS & AUTO INBOX
         socket.on("receive_private_message", async (data) => {
-            const cleanSender = (data.sender || "").replace("@", "");
-            const cleanCurrent = currentUser.replace("@", "");
-            const cleanReceiver = (data.receiver || "").replace("@", "");
-            const otherUser = (cleanSender === cleanCurrent) ? cleanReceiver : cleanSender;
+            const otherUser = (data.sender === currentUser) ? data.receiver : data.sender;
             
-            // 1. Auto add sender to receiver's inbox list
+            // 1. Auto add sender to recipient's inbox list
             addInbox(otherUser);
 
             // 2. Add Green Dot if user is receiving and chat is not currently open
-            if (cleanSender !== cleanCurrent && selectedUser !== cleanSender) {
-                setUnreadBadge(cleanSender, true);
+            if (data.sender !== currentUser && selectedUser !== data.sender) {
+                setUnreadBadge(data.sender, true);
             }
 
-            // 3. File Chunk Processing logic
             if (data.fileId && data.chunkData !== undefined) {
                 const { fileId, fileName, fileType, totalChunks, chunkIndex, chunkData, sender } = data;
 
                 if (!activeTransfers[fileId]) {
                     activeTransfers[fileId] = { received: 0, chunks: new Array(totalChunks) };
-                    if (selectedUser === cleanSender || selectedUser === cleanReceiver) {
-                        window.MediaManager.createBubble(fileId, fileName, fileType, false);
-                    }
+                    window.MediaManager.createBubble(fileId, fileName, fileType, false);
                     
                     saveAndRender({
                         sender: sender,
@@ -411,4 +383,26 @@
 
                 const percent = Math.round((activeTransfers[fileId].received / totalChunks) * 100);
                 const pb = document.getElementById(`pb-${fileId}`);
-          
+                const pt = document.getElementById(`pt-${fileId}`);
+                if (pb) pb.style.width = percent + "%";
+                if (pt) pt.innerText = percent + "%";
+
+                if (activeTransfers[fileId].received === totalChunks) {
+                    const st = document.getElementById(`st-${fileId}`);
+                    if (st) st.innerText = "Assembling...";
+                    
+                    const finalBlob = new Blob(activeTransfers[fileId].chunks, { type: fileType });
+                    await window.MediaManager.saveToLocalDB(fileId, fileName, fileType, finalBlob);
+                    window.MediaManager.renderFinalUI(fileId, fileName, fileType, finalBlob);
+                    
+                    delete activeTransfers[fileId]; 
+                }
+            } else {
+                saveAndRender(data);
+            }
+        });
+
+        function renderMessages() {
+            const b = $("messages"); b.innerHTML = "";
+            const chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+           
