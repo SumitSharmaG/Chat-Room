@@ -398,7 +398,14 @@ socket.on("userStopTyping", () => {
     localStorage.clear();
     window.location.href = "login.html";
 }
-        function goBack() { $("sidebar").style.display = "flex"; $("chatArea").style.display = "none"; }
+        function goBack() {
+
+    loadInbox();
+
+    $("sidebar").style.display = "flex";
+    $("chatArea").style.display = "none";
+
+}
         $("messageInput").onkeydown = e => e.key === "Enter" && sendMessage();
     </script>
 
