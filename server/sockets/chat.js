@@ -166,6 +166,14 @@ module.exports = (io) => {
                 "receive_private_message",
                 data
               );
+              if (username === data.receiver) {
+    io.to(socketId).emit(
+        "private_chat_created",
+        {
+            username: data.sender
+        }
+    );
+              }
             });
           }
         }
