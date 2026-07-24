@@ -401,10 +401,14 @@ socket.on("userStopTyping", () => {
 }
         function goBack() {
 
-    loadInbox();
-
+    // Pehle inbox dikhao
     $("sidebar").style.display = "flex";
     $("chatArea").style.display = "none";
+
+    // 2 second baad page reload
+    setTimeout(() => {
+        location.reload();
+    }, 2000);
 
 }
         $("messageInput").onkeydown = e => e.key === "Enter" && sendMessage();
