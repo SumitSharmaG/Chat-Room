@@ -194,17 +194,100 @@ socket.on("userStopTyping", () => {
         }
 
         function loadInbox() {
-            $("inboxList").innerHTML = "";
-            (JSON.parse(localStorage.getItem("privateUsers")) || []).forEach(u => {
-                const d = document.createElement("div"); d.className = "inbox"; d.innerText = "@" + u;
-                d.onclick = () => openChat(u); $("inboxList").appendChild(d);
-            });
-        }
+
+    const inbox = $("inboxList");
+    inbox.innerHTML = "";
+
+    const users =
+        JSON.parse(localStorage.getItem("privateUsers")) || [];
+
+    const meta =
+        JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+
+    // Latest chat on top
+    users.sort((a, b) => {
+
+        const timeA = meta[a]?.lastActivity || 0;
+        const timeB = meta[b]?.lastActivity || 0;
+
+        return timeB - timeA;
+
+    });
+
+    users.forEach(u => {
+
+        const info = meta[u] || {};
+
+        const unread = info.unread || 0;
+
+        const dot =
+            unread > 0
+                ? `<span style="width:10px;height:10px;background:#00d26a;border-radius:50%;display:inline-block;margin-right:6px;"></span>`
+                : "";
+
+        const badge =
+            unread > 0
+                ? `<span style="background:#00d26a;color:white;border-radius:20px;padding:2px 7px;font-size:11px;">${unread}</span>`
+                : "";
+
+        const d = document.createElement("div");
+
+        d.className = "inbox";
+
+        d.innerHTML = `
+
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+
+                <div style="display:flex;align-items:center;">
+
+                    ${dot}
+
+                    <strong>@${u}</strong>
+
+                </div>
+
+                ${badge}
+
+            </div>
+
+        `;
+
+        d.onclick = () => openChat(u);
+
+        inbox.appendChild(d);
+
+    });
+
+}
 
         function openChat(u) {
-            selectedUser = u; $("chatTitle").innerText = "@" + u; renderMessages();
-            if(window.innerWidth <= 768) { $("sidebar").style.display = "none"; $("chatArea").style.display = "flex"; }
-        }
+
+    selectedUser = u;
+
+    $("chatTitle").innerText = "@" + u;
+
+    // ===== NEW : Clear unread =====
+    let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+
+    if (meta[u]) {
+        meta[u].unread = 0;
+
+        localStorage.setItem(
+            "privateInboxMeta",
+            JSON.stringify(meta)
+        );
+
+        loadInbox();
+    }
+
+    renderMessages();
+
+    if (window.innerWidth <= 768) {
+        $("sidebar").style.display = "none";
+        $("chatArea").style.display = "flex";
+    }
+
+}
 
         function sendMessage() {
             const txt = $("messageInput").value.trim();
@@ -216,13 +299,64 @@ socket.on("userStopTyping", () => {
         }
 
         function saveAndRender(data) {
-            let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
-            chats.push(data);
-            localStorage.setItem("privateChats", JSON.stringify(chats));
-            if(selectedUser === data.sender || selectedUser === data.receiver) renderMessages();
-        }
 
-        socket.on("receive_private_message", data => saveAndRender(data));
+    // Save Messages (Old Logic)
+    let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+    chats.push(data);
+    localStorage.setItem("privateChats", JSON.stringify(chats));
+
+    // ===== NEW : Inbox Meta =====
+    let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+
+    // Inbox owner
+    const user =
+        data.sender === currentUser
+            ? data.receiver
+            : data.sender;
+
+    if (!meta[user]) {
+        meta[user] = {
+            unread: 0,
+            lastMessage: "",
+            lastTime: "",
+            lastActivity: 0
+        };
+    }
+
+    meta[user].lastMessage = data.text;
+    meta[user].lastTime = data.time;
+    meta[user].lastActivity = Date.now();
+
+    // Increase unread only for incoming messages
+    if (
+        data.sender !== currentUser &&
+        selectedUser !== data.sender
+    ) {
+        meta[user].unread++;
+    }
+
+    localStorage.setItem(
+        "privateInboxMeta",
+        JSON.stringify(meta)
+    );
+
+    // Old Logic
+    if (
+        selectedUser === data.sender ||
+        selectedUser === data.receiver
+    ) {
+        renderMessages();
+    }
+
+}
+
+        socket.on("receive_private_message", data => {
+
+    saveAndRender(data);
+
+    loadInbox();
+
+});
         socket.on("private_chat_created", (data) => {
 
     // Agar inbox me pehle se nahi hai to add kar do
