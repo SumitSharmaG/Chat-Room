@@ -222,16 +222,7 @@ socket.on("userStopTyping", () => {
             if(selectedUser === data.sender || selectedUser === data.receiver) renderMessages();
         }
 
-        socket.on("receive_private_message", data => {
-
-    // Auto create inbox if sender not exists
-    if (data.sender !== currentUser) {
-        addInbox(data.sender);
-    }
-
-    saveAndRender(data);
-
-});
+        socket.on("receive_private_message", data => saveAndRender(data));
         function renderMessages() {
             const b = $("messages"); b.innerHTML = "";
             const chats = JSON.parse(localStorage.getItem("privateChats")) || [];
