@@ -408,7 +408,7 @@ socket.on("userStopTyping", () => {
     // 2 second baad page reload
     setTimeout(() => {
         location.reload();
-    }, 2000);
+    }, 1000);
 
 }
         $("messageInput").onkeydown = e => e.key === "Enter" && sendMessage();
