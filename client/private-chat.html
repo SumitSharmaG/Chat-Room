@@ -223,6 +223,12 @@ socket.on("userStopTyping", () => {
         }
 
         socket.on("receive_private_message", data => saveAndRender(data));
+        socket.on("private_chat_created", (data) => {
+
+    // Agar inbox me pehle se nahi hai to add kar do
+    addInbox(data.username);
+
+});
         function renderMessages() {
             const b = $("messages"); b.innerHTML = "";
             const chats = JSON.parse(localStorage.getItem("privateChats")) || [];
