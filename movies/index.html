@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guuu TV — Streaming UI</title>
+<style>
+:root{--bg:#16004b;--panel:#25006b;--panel2:#100c2b;--yellow:#ffe500;--pink:#ff4268;--teal:#08b79d;--text:#fff;--muted:#c8c0e8}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--text);font-family:Inter,system-ui,Arial,sans-serif;background:radial-gradient(ellipse at 15% 0%,#1716b7 0,transparent 42%),radial-gradient(ellipse at 90% 80%,#8b004e 0,transparent 40%),linear-gradient(145deg,#09065d,#32006d 52%,#58003c);min-height:100vh}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;background-image:radial-gradient(#fff 1px,transparent 1.5px);background-size:47px 53px;z-index:-1}
+button,input{font:inherit}button{cursor:pointer;border:0;color:inherit}.wrap{width:min(1280px,96%);margin:auto}.top{height:90px;display:flex;align-items:center;justify-content:space-between;gap:20px}.logo{font-size:clamp(28px,4vw,48px);font-weight:1000;font-style:italic;letter-spacing:-3px;text-shadow:0 3px #ec2a83,2px 0 #1bd5ff}.logo span{color:#ff4d69}.search{background:#100b38;border:1px solid #4c3c9a;border-radius:30px;padding:12px 16px;color:white;width:min(260px,50%)}
+.hero{height:330px;border-radius:18px;overflow:hidden;position:relative;background:linear-gradient(90deg,#080a20 0%,#080a2088 42%,transparent),linear-gradient(0deg,#05051dd9,transparent 60%),url('https://image.tmdb.org/t/p/w1280/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg') center 38%/cover,#08091b;box-shadow:0 12px 30px #0005}
+.hero-copy{position:absolute;bottom:22px;left:26px}.tag{display:inline-block;background:var(--pink);font-size:10px;font-weight:900;padding:5px 8px;border-radius:3px}.hero h2{margin:8px 0;font-size:27px}.yellow{background:var(--yellow);color:#09051c;font-weight:900;border-radius:25px;padding:10px 17px;box-shadow:0 0 14px #ffe50055}.stats{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;background:#3b128b99;border:1px solid #ffffff12;border-radius:10px;margin:18px 0 12px;padding:13px}.stats b{color:var(--yellow)}.stats span{font-size:13px;color:#ddd}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.toolbtn{background:#100b38;border:1px solid #ffffff2b;border-radius:20px;padding:9px 14px;font-size:12px;font-weight:800}.toolbtn.active{background:var(--yellow);color:#100b38;border-color:var(--yellow)}.load-row{text-align:center;padding:8px 0 28px}.load-row button:disabled{opacity:.55;cursor:wait}.section-title{margin:12px 0;background:#35117fbb;border:1px solid #ffffff14;border-radius:9px;padding:10px 14px;color:#ffbf25;font-weight:900}.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:22px 18px;padding-bottom:32px}.card{min-width:0;cursor:pointer;transition:transform .18s}.card:hover{transform:translateY(-5px)}.poster{height:clamp(150px,22vw,285px);border-radius:8px;overflow:hidden;position:relative;background:linear-gradient(145deg,var(--c1),var(--c2));display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px #0005}.poster img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}.poster:after{content:"";position:absolute;inset:35% 0 0;background:linear-gradient(transparent,#000b)}.poster-title{position:absolute;z-index:1;bottom:18px;left:8px;right:8px;text-align:center;font-weight:1000;font-size:clamp(15px,2vw,25px);line-height:1.02;text-transform:uppercase;text-shadow:0 2px 5px #000}.rating{position:absolute;right:5px;top:5px;z-index:2;background:#080816e8;color:#ffeb00;font-size:10px;padding:5px;border-radius:4px}.card .tag{position:absolute;bottom:5px;left:5px;z-index:2;font-size:8px;padding:4px 6px}.meta{text-align:center;font-size:12px;font-weight:800;margin-top:8px}.sub{text-align:center;font-size:10px;color:#c8bde2;margin-top:3px}.detail{display:none;margin:12px 0 35px}.detail-nav{display:flex;align-items:center;gap:8px;margin-bottom:15px}.back{background:#ffffff17;border:1px solid #ffffff25;border-radius:10px;padding:9px 14px}.home-icon{width:36px;height:36px;border-radius:10px;background:#ffffff17;border:1px solid #ffffff25;font-size:22px;line-height:1}.detail-head{display:grid;grid-template-columns:210px 1fr;gap:26px;align-items:center;padding:22px 12px}.detail-poster{height:300px;border-radius:12px;background:linear-gradient(140deg,var(--c1),var(--c2));display:flex;align-items:end;justify-content:center;padding:18px;font-size:25px;font-weight:1000;text-align:center;box-shadow:0 10px 28px #0007}.detail h1{font-size:clamp(26px,4vw,42px);margin:9px 0}.pill{display:inline-block;background:#ffffff20;border-radius:4px;padding:5px 8px;font-size:12px;margin:3px}.desc{color:#e0d9f3;line-height:1.65;font-size:14px;max-width:900px}.actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}.action{border-radius:9px;padding:12px 17px;background:#160b3a;border:1px solid #ffffff28;font-weight:800}.action.green{background:var(--teal);color:#fff}.feature{position:relative;aspect-ratio:16/8;background:linear-gradient(135deg,#08091b,#37136e);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin:14px 0 24px}.feature img{width:100%;height:100%;object-fit:cover;opacity:.55}.feature video{width:100%;height:100%;position:absolute;inset:0;object-fit:contain;background:#000;display:none}.playbig{position:absolute;border-radius:50%;background:#050505;color:var(--yellow);font-size:30px;width:70px;height:70px}.servers{border-top:1px solid #ffffff22;padding-top:18px}.servers h3{font-size:14px;letter-spacing:1px}.server-row{display:flex;flex-wrap:wrap;gap:12px}.server{background:#080817;border:2px solid transparent;border-radius:12px;min-width:130px;padding:15px 20px;text-align:center;font-size:13px}.server.active{border-color:var(--yellow);box-shadow:0 0 14px #ffe50035}.server small{display:block;color:#38d9ac;margin-top:5px}.urlbox{margin-top:16px;background:#100b2b;border:1px solid #ffffff24;border-radius:12px;padding:16px}.urlbox p{color:var(--muted);font-size:13px}.urlrow{display:flex;gap:8px}.urlrow input{min-width:0;flex:1;background:#08051e;border:1px solid #55458b;color:white;padding:12px;border-radius:8px}.player{display:none;margin:20px 0}.player video{width:100%;max-height:70vh;background:#000;border-radius:12px}.notice{font-size:12px;color:#c9c0e7;margin-top:10px}.similar{margin-top:26px}.modal{display:none;position:fixed;inset:0;background:#000b;z-index:10;align-items:center;justify-content:center;padding:18px}.modalbox{max-width:480px;width:100%;background:#1a0a48;border:1px solid #ffffff30;border-radius:15px;padding:22px}.modalbox h3{margin-top:0}.modalbox p{color:#d2c9ed;line-height:1.5}.close{float:right;background:#ffffff20;border-radius:50%;width:30px;height:30px}.footer{text-align:center;color:#c5b8e4;font-size:11px;padding:24px}
+@media(max-width:760px){.top{height:75px}.hero{height:270px}.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:17px 10px}.detail-head{grid-template-columns:110px 1fr;gap:14px;padding:12px 0}.detail-poster{height:170px;font-size:17px}.desc{font-size:12px}.action{padding:10px 12px;font-size:12px}.server{flex:1;min-width:100px}.stats{gap:10px}.poster{height:clamp(145px,47vw,240px)}}
+@media(max-width:420px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero h2{font-size:23px}.search{font-size:12px;padding:10px}.logo{letter-spacing:-2px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="logo">Guuu<span>T</span>V 🎞</div><input id="search" class="search" placeholder="⌕  Search Movie..." aria-label="Search movies"></header>
+<section id="home">
+<div class="hero"><div class="hero-copy"><span class="tag">FEATURED</span><h2>Trending on Guuu TV</h2><button class="yellow" onclick="openFeatured()">▶ Explore Now</button></div></div>
+<div class="stats"><span><b>1.2M+</b> Movies</span><span>•</span><span><b>250K+</b> TV Shows</span><span>•</span><span><b>4K</b> HDR</span><span>•</span><span><b style="color:#00e0a0">Free</b> Streaming</span></div>
+<div class="section-title">🔥 Discover Movies & TV</div><div class="toolbar" id="categoryToolbar"><button class="toolbtn active" data-feed="trending/all/week" onclick="changeFeed(this,'trending/all/week')">Trending</button><button class="toolbtn" data-feed="movie/popular" onclick="changeFeed(this,'movie/popular')">Popular Movies</button><button class="toolbtn" data-feed="tv/popular" onclick="changeFeed(this,'tv/popular')">Popular TV</button><button class="toolbtn" data-feed="movie/top_rated" onclick="changeFeed(this,'movie/top_rated')">Top Rated Movies</button><button class="toolbtn" data-feed="tv/top_rated" onclick="changeFeed(this,'tv/top_rated')">Top Rated TV</button><button class="toolbtn" data-feed="movie/upcoming" onclick="changeFeed(this,'movie/upcoming')">Upcoming</button></div><div class="grid" id="grid"></div><div class="load-row"><button class="yellow" id="loadMoreBtn" onclick="loadMore()">＋ Load More Movies & Shows</button><div class="notice" id="pageStatus">Loading titles…</div></div>
+</section>
+<section class="detail" id="detail"><div class="detail-nav"><button class="back" onclick="goHome()" aria-label="Back to home">← Back</button><button class="home-icon" onclick="goHome()" title="Home" aria-label="Home">⌂</button></div>
+<div class="detail-head"><div class="detail-poster" id="detailPoster"></div><div><span class="tag" id="detailType">MOVIE</span><h1 id="detailTitle"></h1><div id="detailPills"></div><p class="desc" id="detailDesc"></p><div class="actions"><button class="yellow" onclick="showServers()">▶ Watch Now</button><button class="action green" onclick="showServers()">⬇ Download</button><button class="action" onclick="trailer()">▶ Trailer</button><button class="action" id="watchlist" onclick="toggleWatchlist()">＋ Watchlist</button></div></div></div>
+<div class="feature" id="feature"><div id="previewPlaceholder" style="text-align:center;color:#fff"><div id="previewArt" style="font-size:60px">▶</div><div id="previewTitle">Player preview</div></div><video id="video" controls playsinline style="display:none"></video></div>
+<div class="servers" id="servers" style="display:none"><h3>STREAMING SERVERS</h3>
+<p class="notice">TMDB supplies metadata only. Use a direct MEDIA SERVER...So you  are authorized to stream.</p>
+<div class="server-row">
+<button class="server active" data-server="Default Server" onclick="playDefault()">▶<br>Default Server<small>PLAY DEFAULT</small></button>
+<button class="server" data-server="Server 2" onclick="fakeServer(this)">▤<br>Server 2<small>2</small></button>
+<button class="server" data-server="Server 3" onclick="fakeServer(this)">▶<br>Server 3<small>3</small></button>
+<button class="server" data-server="Manual Link" onclick="toggleManual(this)">🔗<br>Direct Server Url<small>PASTE URL</small></button>
+</div>
+<div class="urlbox" id="manualBox" style="display:none"><b>Manual video URL</b><div class="urlrow" style="margin-top:10px"><input id="videoUrl" type="url" placeholder="Paste direct MP4 / WebM / M3U8 URL"><button class="yellow" onclick="playUrl()">Play</button><button class="action green" onclick="downloadUrl()">Download</button></div><div class="notice" id="urlStatus">Paste a direct media URL.</div></div>
+<div class="notice" id="playNotice" style="display:none;margin:8px 0 16px">If playback fails, the host may block browser playback or require a different streaming format.</div></div>
+<div class="similar"><div class="section-title">Similar Content</div><div class="grid" id="similarGrid"></div></div>
+</section>
+<footer class="footer">Guuu TV UI  • Single-file front-end prototype • Use authorized MEDIA only</footer>
+</div>
+<div class="modal" id="modal"><div class="modalbox"><button class="close" onclick="closeModal()">×</button><h3 id="modalTitle">Demo action</h3><p id="modalText"></p><button class="yellow" onclick="closeModal()">Got it</button></div></div>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<script>
+const DEFAULT_VIDEO_URL = "https://cloud-dl.hf0bdjedh77.workers.dev/7ae120900d9d221785d3f15b03aceb4f4ce285cc076b1908c8ab26f86ef0b6a4d5f6523ed2c5596dd6d0bee3487e1ff233cbbf5ecf3554890100b9946fe710c1096ec14734e84edc92cd80b85b9b95024afab2332c7b0a741b6d9845659ee3a6362c14b3498f5f6cfa068511e9c4630a995a765205360576a430c6b63d1a98299625db5b8af0a10a393b55f7e798f873442e4fa83d7d7b688c068a3874f160ee65f23ed1d0b873d03bc411e7e4d47d71::e27bd69093250e6e15c57fc10d650711/(Movies4u.Foo).Spider-Man.Brand.New.Day.2026.iMAX.1080p.HEVC.WEBRip.Hindi.5.1-English.5.1.ESub.x265.mkv?bytes=2227787222"; // Replace this placeholder with your authorized direct video URL.
+let hlsInstance = null;
+
+const TMDB_API_KEY = 'd90efc736c0dbbf4cc57bf35d1166206'; // Public demo key; for production, use your own TMDB key/proxy.
+const TMDB_BASES = ['https://api.tmdb.org/3','https://api.themoviedb.org/3'], IMG_BASE='https://image.tmdb.org/t/p/';
+let movies=[], current=null, selectedServer='Server 1', watchlisted=new Set();
+const palette=[['#bd2b48','#062f66'],['#101c34','#590c24'],['#513b2c','#10151b'],['#188c73','#0d4d49']];
+let currentFeed='trending/all/week', currentPage=0, totalPages=1, currentQuery='', isLoading=false, seenIds=new Set();
+async function tmdb(path){
+ let lastError;
+ for(const base of TMDB_BASES){
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),12000);
+  try{
+   const url=new URL(`${base}/${path}`);
+   if(!url.searchParams.has('api_key'))url.searchParams.set('api_key',TMDB_API_KEY);
+   const response=await fetch(url.toString(),{signal:controller.signal,headers:{accept:'application/json'}});
+   if(!response.ok){let detail='';try{const body=await response.json();detail=body.status_message||'';}catch(_){};throw new Error(`TMDB HTTP ${response.status}${detail?': '+detail:''}`);}
+   const data=await response.json();
+   if(data && data.success===false)throw new Error(data.status_message||'TMDB request failed');
+   return data;
+  }catch(err){lastError=err;}finally{clearTimeout(timeout);}
+ }
+ throw lastError||new Error('TMDB request failed');
+}
+function mapMovie(x,type){const p=palette[(x.id||0)%palette.length];return {id:`${type}-${x.id}`,tmdbId:x.id,title:x.title||x.name||'Untitled',type:type==='tv'?'TV SHOW':'MOVIE',mediaType:type,year:(x.release_date||x.first_air_date||'').slice(0,4)||'—',lang:(x.original_language||'').toUpperCase()||'—',rating:Number(x.vote_average||0).toFixed(1),genre:'',desc:x.overview||'No description available.',c1:p[0],c2:p[1],art:'🎬',poster:x.poster_path?IMG_BASE+'w500'+x.poster_path:'',backdrop:x.backdrop_path?IMG_BASE+'w1280'+x.backdrop_path:''};}
+function card(m){return `<article class="card" onclick="openMovie('${m.id}')"><div class="poster" style="--c1:${m.c1};--c2:${m.c2}">${m.poster?`<img src="${m.poster}" alt="${m.title.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" loading="lazy" onerror="this.remove()">`:''}<span class="rating">★ ${m.rating}</span><span class="poster-title">${m.title}</span><span class="tag">${m.type}</span></div><div class="meta">${m.title}</div><div class="sub">${m.year} · ${m.lang}</div></article>`;}
+function render(){document.getElementById('grid').innerHTML=movies.map(card).join('');document.getElementById('similarGrid').innerHTML=movies.filter(x=>!current||x.id!==current.id).slice(0,6).map(card).join('');}
+function updatePaging(){const b=document.getElementById('loadMoreBtn');b.disabled=isLoading||currentPage>=totalPages;b.textContent=isLoading?'Loading…':(currentPage>=totalPages?'No More Results':'＋ Load More Movies & Shows');document.getElementById('pageStatus').textContent=movies.length?`${movies.length} titles loaded · page ${currentPage} of ${totalPages}`:'No titles loaded';}
+async function loadFeedPage(page=1,append=false){if(isLoading)return;isLoading=true;const g=document.getElementById('grid');if(!append)g.innerHTML='<p class="notice">Connecting to TMDB…</p>';updatePaging();try{let path;if(currentQuery){path=`search/multi?query=${encodeURIComponent(currentQuery)}&include_adult=false&language=en-US&page=${page}`;}else{path=`${currentFeed}?language=en-US&page=${page}`;}const d=await tmdb(path);const defaultType=currentFeed.startsWith('tv/')?'tv':'movie';const items=(d.results||[]).filter(x=>x.media_type==='movie'||x.media_type==='tv'||(!x.media_type&&['movie','tv'].includes(defaultType))).map(x=>mapMovie(x,x.media_type||defaultType));if(!append){movies=[];seenIds.clear();}for(const m of items){if(!seenIds.has(m.id)){movies.push(m);seenIds.add(m.id);}}currentPage=page;totalPages=Math.min(Number(d.total_pages||1),500);render();if(!movies.length)g.innerHTML='<p class="notice">No results found. Try another search or category.</p>';}catch(e){if(!append)g.innerHTML=`<div class="notice" style="color:#ffd0d8;background:#400b2b;padding:14px;border-radius:10px"><b>TMDB could not load.</b><br>${String(e.message||e).replace(/&/g,'&amp;').replace(/</g,'&lt;')}<br><br>Check internet/API key. If opened as a local file, try hosting it or opening through a local web server.</div>`;console.error('Guuu TV TMDB error:',e);}finally{isLoading=false;updatePaging();}}
+function loadTrending(){currentQuery='';currentFeed='trending/all/week';currentPage=0;totalPages=1;loadFeedPage(1,false);}
+function loadMore(){if(!isLoading&&currentPage<totalPages)loadFeedPage(currentPage+1,true);}
+function changeFeed(btn,feed){currentQuery='';currentFeed=feed;currentPage=0;totalPages=1;document.querySelectorAll('#categoryToolbar .toolbtn').forEach(x=>x.classList.toggle('active',x===btn));loadFeedPage(1,false);}
+async function searchTMDB(q){currentQuery=q;currentPage=0;totalPages=1;loadFeedPage(1,false);}
+function openFeatured(){if(movies.length)openMovie(movies[0].id);}
+function openMovie(id){
+ const m=movies.find(x=>String(x.id)===String(id));if(!m)return;
+ stopVideo();current=m;
+ document.getElementById('home').style.display='none';
+ document.getElementById('detail').style.display='block';
+ document.getElementById('detailPoster').style.setProperty('--c1',m.c1);
+ document.getElementById('detailPoster').style.setProperty('--c2',m.c2);
+ document.getElementById('detailPoster').innerHTML=m.poster?`<img src="${m.poster}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`:m.title;
+ document.getElementById('detailType').textContent=m.type+' · TMDB';
+ document.getElementById('detailTitle').textContent=m.title;
+ document.getElementById('detailPills').innerHTML=`<span class="pill">TMDB ★ ${m.rating}</span><span class="pill">${m.year}</span><span class="pill">${m.lang}</span>`;
+ document.getElementById('detailDesc').textContent=m.desc;
+ document.getElementById('previewArt').textContent='▶';
+ document.getElementById('previewTitle').textContent=m.title+' · Preview';
+ document.getElementById('servers').style.display='none';
+ document.getElementById('manualBox').style.display='none';
+ document.getElementById('videoUrl').value='';
+ document.getElementById('urlStatus').textContent='Paste a direct media URL.';
+ document.getElementById('playNotice').style.display='none';
+ document.getElementById('watchlist').textContent=watchlisted.has(id)?'✓ In Watchlist':'＋ Watchlist';
+ window.scrollTo(0,0);
+}
+function goHome(){stopVideo();document.getElementById('detail').style.display='none';document.getElementById('home').style.display='block';window.scrollTo(0,0)}
+function showServers(){document.getElementById('servers').style.display='block';document.getElementById('servers').scrollIntoView({behavior:'smooth',block:'start'});if(isSpiderManTitle() && isDefaultUrlConfigured())playDefault();}
+function setActive(btn){document.querySelectorAll('.server').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active')}
+function fakeServer(btn){setActive(btn);showModal('Demo server','This server is a UI placeholder. Choose Default Server or Manual Link to test playback.')}
+function toggleManual(btn){setActive(btn);const box=document.getElementById('manualBox');box.style.display=box.style.display==='none'?'block':'none';if(box.style.display==='block')box.scrollIntoView({behavior:'smooth',block:'center'})}
+function isSpiderManTitle(){return !!current && current.title.trim().toLowerCase()==='spider-man: brand new day';}
+function isDefaultUrlConfigured(){return DEFAULT_VIDEO_URL.trim()!=='' && DEFAULT_VIDEO_URL!=='authorised DEFAULT Media FOR SPIDER MAN' && /^https?:\/\//i.test(DEFAULT_VIDEO_URL);}
+function playDefault(){if(!isSpiderManTitle()){showModal('Default Server Unavailable','Default streaming URL is configured only for Spider-Man: Brand New Day. Use Manual Link for other titles.');return}if(!isDefaultUrlConfigured()){showModal('Add Authorized URL','Replace the text authorised DEFAULT Media FOR SPIDER MAN in DEFAULT_VIDEO_URL with your authorized direct video URL.');return}setActive(document.querySelector('[data-server="Default Server"]'));document.getElementById('manualBox').style.display='none';playMedia(DEFAULT_VIDEO_URL,'Spider-Man Default Link')}
+function playUrl(){const raw=document.getElementById('videoUrl').value.trim();if(!raw){document.getElementById('urlStatus').textContent='Please paste a direct video URL first.';return}let u;try{u=new URL(raw);if(!['http:','https:'].includes(u.protocol))throw 0}catch(e){document.getElementById('urlStatus').textContent='Please enter a valid http/https media URL.';return}playMedia(u.href,'Manual URL');document.getElementById('urlStatus').textContent='Loading URL…'}
+function playMedia(url,label){
+ const v=document.getElementById('video');
+ if(hlsInstance){hlsInstance.destroy();hlsInstance=null}
+ v.pause();v.removeAttribute('src');v.load();
+ document.getElementById('previewPlaceholder').style.display='none';
+ v.style.display='block';
+ document.getElementById('playNotice').style.display='block';
+ document.getElementById('playNotice').textContent=label+' selected. If playback fails, the host may block browser playback or the URL may not be a direct media URL.';
+ if(url.toLowerCase().includes('.m3u8')&&window.Hls&&Hls.isSupported()){
+   hlsInstance=new Hls();hlsInstance.loadSource(url);hlsInstance.attachMedia(v);
+   hlsInstance.on(Hls.Events.MANIFEST_PARSED,()=>v.play().catch(()=>{}));
+ }else if(url.toLowerCase().includes('.m3u8')&&v.canPlayType('application/vnd.apple.mpegurl')){
+   v.src=url;v.play().catch(()=>{});
+ }else{v.src=url;v.load();v.play().catch(()=>{});}
+ document.getElementById('feature').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function downloadUrl(){const raw=document.getElementById('videoUrl').value.trim();if(!raw){document.getElementById('urlStatus').textContent='Paste a URL first.';return}const a=document.createElement('a');a.href=raw;a.download='video';a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();document.getElementById('urlStatus').textContent='Download requested; the host may stream the file instead of downloading it.'}
+function stopVideo(){
+ const v=document.getElementById('video');
+ if(v){v.pause();v.removeAttribute('src');v.load();v.style.display='none'}
+ if(hlsInstance){hlsInstance.destroy();hlsInstance=null}
+ const preview=document.getElementById('previewPlaceholder');
+ if(preview)preview.style.display='block';
+ const notice=document.getElementById('playNotice');
+ if(notice)notice.style.display='none';
+}
+function toggleWatchlist(){if(!current)return;if(watchlisted.has(current.id))watchlisted.delete(current.id);else watchlisted.add(current.id);document.getElementById('watchlist').textContent=watchlisted.has(current.id)?'✓ In Watchlist':'＋ Watchlist'}
+function trailer(){showModal('Trailer preview','Trailer playback is a demo action. Connect an official trailer URL to enable it.')}
+function showModal(t,m){document.getElementById('modalTitle').textContent=t;document.getElementById('modalText').textContent=m;document.getElementById('modal').style.display='flex'}function closeModal(){document.getElementById('modal').style.display='none'}
+let searchTimer;
+document.getElementById('search').addEventListener('input',e=>{const q=e.target.value.trim();clearTimeout(searchTimer);if(!q){document.querySelectorAll('#categoryToolbar .toolbtn').forEach(x=>x.classList.toggle('active',x.dataset.feed==='trending/all/week'));loadTrending();return;}searchTimer=setTimeout(()=>searchTMDB(q),350);});
+loadTrending();
+</script>
+</body></html>
