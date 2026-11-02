@@ -1677,10 +1677,17 @@
             b.scrollTop = b.scrollHeight;
         }
 
-        function logout() {
-            localStorage.removeItem("token");
-            localStorage.removeItem("username");
-            window.location.href = "login.html";
+        
+            function logout() {
+    if (confirm("Confirm to LogOut !!!")) {
+   localStorage.removeItem("privateChats");
+        localStorage.removeItem("privateUsers");
+        localStorage.removeItem("privateInboxMeta");
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        sessionStorage.clear();
+        localStorage.clear();
+        window.location.href = "login.html";
         }
     </script>
 
