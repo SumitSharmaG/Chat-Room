@@ -66,7 +66,7 @@
         }
 
         .top {
-            padding: 12px 16px;
+            padding: 12px 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -78,7 +78,7 @@
         .nav-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .page-back-btn {
@@ -114,9 +114,29 @@
             font-size: 1.05rem;
         }
 
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 35px;
+            height: 35px;
+            border: 1px solid rgba(181, 148, 97, 0.35);
+            border-radius: 50%;
+            background: #1d1d1d;
+            color: var(--accent-gold);
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .add-btn {
-            width: 36px;
-            height: 36px;
+            width: 35px;
+            height: 35px;
             border: none;
             border-radius: 50%;
             background: var(--accent-gold);
@@ -129,15 +149,15 @@
             justify-content: center;
         }
 
-        /* SEARCH / NEW CHAT BOX */
-        #searchBox {
+        /* NEW CHAT & FILTER SEARCH BOXES */
+        #searchBox, #inboxFilterBox {
             display: none;
             padding: 12px;
             background: #161616;
             border-bottom: 1px solid #222;
         }
 
-        #usernameInput {
+        #usernameInput, #inboxSearchInput {
             width: 100%;
             padding: 10px 12px;
             background: #1d1d1d;
@@ -171,25 +191,113 @@
             transition: opacity 0.2s;
         }
 
+        /* INBOX LIST & 3-DOT MENU */
         .inbox-list {
             flex: 1;
             overflow-y: auto;
             padding: 10px;
+            padding-bottom: 80px;
         }
 
         .inbox {
             background: #1b1b1b;
-            padding: 14px 15px;
+            padding: 13px 14px;
             border-radius: 12px;
             margin-bottom: 8px;
             cursor: pointer;
             border: 1px solid rgba(255, 255, 255, 0.04);
             transition: border-color 0.2s, background 0.2s;
+            position: relative;
         }
 
         .inbox:hover, .inbox.active {
             border-color: var(--accent-gold);
             background: #222;
+        }
+
+        .inbox.pinned-chat {
+            border-left: 3px solid var(--accent-gold);
+            background: #1e1c18;
+        }
+
+        .inbox-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+        }
+
+        .three-dot-btn {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            font-size: 18px;
+            font-weight: bold;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .three-dot-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent-gold);
+        }
+
+        .inbox-dropdown {
+            position: absolute;
+            right: 0;
+            top: 34px;
+            background: #181818;
+            border: 1px solid rgba(181, 148, 97, 0.4);
+            border-radius: 10px;
+            width: 175px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .inbox-dropdown.show {
+            display: flex;
+        }
+
+        .dropdown-item {
+            padding: 10px 12px;
+            font-size: 12px;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: left;
+            background: none;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+            width: 100%;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: #252525;
+            color: var(--accent-gold);
+        }
+
+        .dropdown-item.delete-opt {
+            color: var(--accent-red);
+        }
+
+        .dropdown-item.delete-opt:hover {
+            background: rgba(255, 77, 77, 0.12);
         }
 
         /* CHAT AREA */
@@ -319,7 +427,6 @@
             gap: 4px;
         }
 
-        /* Exact world-chat.html info-btn style */
         .info-btn {
             background: transparent;
             border: 0px solid #b59461;
@@ -381,7 +488,7 @@
             cursor: pointer;
         }
 
-        /* INPUT AREA & ATTACHMENT UI (Same as world-chat.html) */
+        /* INPUT AREA & ATTACHMENT UI */
         .send-box {
             padding: 10px 12px;
             background: var(--bg-card);
@@ -491,7 +598,7 @@
             flex-shrink: 0;
         }
 
-        /* FULL SCREEN MEDIA OVERLAY (From world-chat.html) */
+        /* FULL SCREEN MEDIA OVERLAY */
         .media-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -568,15 +675,23 @@
         <div class="sidebar" id="sidebar">
             <div class="top">
                 <div class="nav-left">
-                    <!-- Back Arrow Button + Home Button -->
                     <button class="page-back-btn" onclick="navigateBack()" title="Go Back">←</button>
                     <a href="https://chat-room-three-pied.vercel.app/" class="home-link" title="Home">🏠</a>
                 </div>
                 <h2>Private Chats</h2>
-                <button class="add-btn" onclick="toggleSearch()" title="New Chat">+</button>
+                <div class="top-actions">
+                    <!-- Search Icon 🔎 next to + Icon -->
+                    <button class="icon-btn" onclick="toggleInboxFilter()" title="Search Inbox">🔎</button>
+                    <button class="add-btn" onclick="toggleSearch()" title="New Chat">+</button>
+                </div>
             </div>
 
-            <!-- NEW CHAT USERNAME BOX WITH VALIDATION -->
+            <!-- INBOX SEARCH FILTER BOX (🔎) -->
+            <div id="inboxFilterBox">
+                <input type="text" id="inboxSearchInput" placeholder="🔎 Search user or nickname..." autocomplete="off" oninput="loadInbox()">
+            </div>
+
+            <!-- NEW CHAT USERNAME BOX (+) WITH VALIDATION -->
             <div id="searchBox">
                 <input type="text" id="usernameInput" placeholder="Enter username (e.g. rahul_01)" autocomplete="off">
                 <div id="usernameStatus"></div>
@@ -671,13 +786,27 @@
         let selectedUser = "";
         let typingTimeout;
 
-        // 3-Finger Hold Screenshot Variables
-        let threeFingerTimer = null;
+        // Screenshot & Reload Timers
+        let gestureTimer = null;
         let lastScreenshotAlert = 0;
+        let backReloadTimer = null;
+        let inboxIdleReloadInterval = null;
+        let openDropdownUser = null;
 
         // ==========================================
-        // 1. TOP BACK NAVIGATION BUTTON
+        // 1. AUTO-RELOAD TIMERS (3s on Back, 10s on Inbox)
         // ==========================================
+        function startInboxIdleReloadTimer() {
+            clearInterval(inboxIdleReloadInterval);
+            inboxIdleReloadInterval = setInterval(() => {
+                const isSearchOpen = $("searchBox").style.display === "block" || $("inboxFilterBox").style.display === "block";
+                // Reload every 10s only when user is idle on Inbox Home (no active chat, no open dropdown/search)
+                if (!selectedUser && !isSearchOpen && !openDropdownUser) {
+                    location.reload();
+                }
+            }, 10000);
+        }
+
         function navigateBack() {
             if (window.history.length > 1) {
                 window.history.back();
@@ -686,27 +815,104 @@
             }
         }
 
-        // Load saved chats & inbox immediately on page open/reload
         window.addEventListener("DOMContentLoaded", () => {
             loadInbox();
             const lastOpen = sessionStorage.getItem("activePrivateChat");
             if (lastOpen) {
                 openChat(lastOpen);
+            } else {
+                startInboxIdleReloadTimer();
             }
         });
 
-        // Close attach menu when clicking outside
+        // Close attach menu & 3-dot dropdown when clicking outside
         document.addEventListener("click", function(e) {
             const menu = $("attachMenu");
             const btn = $("attachBtn");
             if (menu && btn && !menu.contains(e.target) && e.target !== btn) {
                 menu.classList.remove("show");
             }
+            if (!e.target.closest(".inbox-right")) {
+                closeAllDropdowns();
+            }
         });
 
         // ==========================================
-        // 2. USERNAME VALIDATION LOGIC (+ NEW CHAT)
+        // 2. SCREENSHOT ALERT (EXACT 800ms + PrintScreen)
         // ==========================================
+        function sendScreenshotAlert(reason = "captured screen") {
+            const now = Date.now();
+            if (!selectedUser || now - lastScreenshotAlert < 2500) return;
+            lastScreenshotAlert = now;
+
+            const time = formatAMPM(new Date());
+            const alertData = {
+                id: "alert_" + now + "_" + Math.random().toString(36).substr(2, 5),
+                sender: currentUser,
+                receiver: selectedUser,
+                text: `⚠️ Security Alert: @${currentUser} ${reason}!`,
+                time: time,
+                type: "alert"
+            };
+            saveAndRender(alertData);
+            socket.emit("private_message", alertData);
+        }
+
+        // 📱 Mobile (Exact 3-finger 800ms logic)
+        document.addEventListener("touchstart", (e) => {
+            if (e.touches.length === 3) {
+                gestureTimer = setTimeout(() => sendScreenshotAlert(), 800);
+            }
+        });
+
+        document.addEventListener("touchend", () => {
+            if (gestureTimer) clearTimeout(gestureTimer);
+        });
+
+        // 💻 PC
+        window.addEventListener("keyup", (e) => {
+            if (e.key === "PrintScreen" || e.key === "PrtSc") {
+                sendScreenshotAlert();
+            }
+        });
+
+        // ==========================================
+        // 3. SEARCH (🔎) & NEW CHAT (+) VALIDATION
+        // ==========================================
+        function toggleInboxFilter() {
+            const filterBox = $("inboxFilterBox");
+            const searchBox = $("searchBox");
+            searchBox.style.display = "none";
+
+            const isHidden = filterBox.style.display === "none" || filterBox.style.display === "";
+            filterBox.style.display = isHidden ? "block" : "none";
+
+            if (isHidden) {
+                $("inboxSearchInput").value = "";
+                $("inboxSearchInput").focus();
+            } else {
+                $("inboxSearchInput").value = "";
+                loadInbox();
+            }
+        }
+
+        function toggleSearch() {
+            const box = $("searchBox");
+            const filterBox = $("inboxFilterBox");
+            filterBox.style.display = "none";
+            $("inboxSearchInput").value = "";
+
+            const isHidden = box.style.display === "none" || box.style.display === "";
+            box.style.display = isHidden ? "block" : "none";
+            if (isHidden) {
+                usernameInput.value = "";
+                usernameStatus.innerHTML = "";
+                registerBtn.disabled = true;
+                registerBtn.style.opacity = "0.5";
+                usernameInput.focus();
+            }
+        }
+
         const usernameInput = $("usernameInput");
         const usernameStatus = $("usernameStatus");
         const registerBtn = $("startChatBtn");
@@ -780,53 +986,6 @@
         });
 
         // ==========================================
-        // 3. 3-FINGER HOLD (350ms) SCREENSHOT ALERT
-        // ==========================================
-        function triggerScreenshotAlert() {
-            const now = Date.now();
-            if (!selectedUser || now - lastScreenshotAlert < 3000) return;
-            lastScreenshotAlert = now;
-
-            const time = formatAMPM(new Date());
-            const alertData = {
-                id: "alert_" + now + "_" + Math.random().toString(36).substr(2, 5),
-                sender: currentUser,
-                receiver: selectedUser,
-                text: `⚠️ Security Alert: @${currentUser} tried to take a screenshot!`,
-                time: time,
-                type: "alert"
-            };
-            saveAndRender(alertData);
-            socket.emit("private_message", alertData);
-        }
-
-        // Trigger only if 3 fingers stay on screen for at least 350 milliseconds
-        document.addEventListener("touchstart", e => {
-            if (e.touches && e.touches.length >= 3) {
-                clearTimeout(threeFingerTimer);
-                threeFingerTimer = setTimeout(() => {
-                    triggerScreenshotAlert();
-                }, 350);
-            }
-        }, { passive: true });
-
-        document.addEventListener("touchend", e => {
-            if (!e.touches || e.touches.length < 3) {
-                clearTimeout(threeFingerTimer);
-            }
-        }, { passive: true });
-
-        document.addEventListener("touchcancel", () => {
-            clearTimeout(threeFingerTimer);
-        }, { passive: true });
-
-        document.addEventListener("keyup", e => {
-            if (e.key === "PrintScreen") {
-                triggerScreenshotAlert();
-            }
-        });
-
-        // ==========================================
         // 4. SOCKET CONNECTION & TYPING LOGIC
         // ==========================================
         socket.on("connect", () => {
@@ -861,7 +1020,7 @@
         });
 
         // ==========================================
-        // 5. TIME FORMATTER & INBOX FUNCTIONS
+        // 5. INBOX & 3-DOT MENU OPTIONS (Pin, Nickname, Read/Unread, Delete)
         // ==========================================
         function formatAMPM(date) {
             let hours = date.getHours();
@@ -873,17 +1032,10 @@
             return (hours < 10 ? "0" + hours : hours) + ":" + minutes + ampm;
         }
 
-        function toggleSearch() {
-            const box = $("searchBox");
-            const isHidden = box.style.display === "none" || box.style.display === "";
-            box.style.display = isHidden ? "block" : "none";
-            if (isHidden) {
-                usernameInput.value = "";
-                usernameStatus.innerHTML = "";
-                registerBtn.disabled = true;
-                registerBtn.style.opacity = "0.5";
-                usernameInput.focus();
-            }
+        function getDisplayTitle(u) {
+            const meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+            const nick = meta[u]?.nickname;
+            return nick ? `${nick} (@${u})` : `@${u}`;
         }
 
         function startChat() {
@@ -910,14 +1062,126 @@
             }
         }
 
+        function closeAllDropdowns() {
+            openDropdownUser = null;
+            document.querySelectorAll(".inbox-dropdown").forEach(el => el.classList.remove("show"));
+        }
+
+        function toggleUserDropdown(e, u) {
+            e.stopPropagation();
+            const menuId = `dropdown_${u}`;
+            const menu = $(menuId);
+            const isAlreadyOpen = menu && menu.classList.contains("show");
+            closeAllDropdowns();
+            if (menu && !isAlreadyOpen) {
+                menu.classList.add("show");
+                openDropdownUser = u;
+            }
+        }
+
+        // Option 1: Pin / Unpin Chat
+        function togglePinChat(e, u) {
+            e.stopPropagation();
+            closeAllDropdowns();
+            let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+            if (!meta[u]) meta[u] = { unread: 0, lastMessage: "", lastTime: "", lastActivity: 0 };
+            meta[u].pinned = !meta[u].pinned;
+            localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
+            loadInbox();
+        }
+
+        // Option 2: Set Nickname
+        function setChatNickname(e, u) {
+            e.stopPropagation();
+            closeAllDropdowns();
+            let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+            if (!meta[u]) meta[u] = { unread: 0, lastMessage: "", lastTime: "", lastActivity: 0 };
+
+            const currentNick = meta[u].nickname || "";
+            const newNick = prompt(`@${u} ke liye nickname enter karein (Khali chhodne par hat jayega):`, currentNick);
+
+            if (newNick !== null) {
+                meta[u].nickname = newNick.trim();
+                localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
+                if (selectedUser === u) {
+                    $("chatTitle").innerText = getDisplayTitle(u);
+                }
+                loadInbox();
+            }
+        }
+
+        // Option 3: Mark as Unread
+        function markChatUnread(e, u) {
+            e.stopPropagation();
+            closeAllDropdowns();
+            let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+            if (!meta[u]) meta[u] = { unread: 0, lastMessage: "", lastTime: "", lastActivity: Date.now() };
+            meta[u].unread = Math.max(1, meta[u].unread || 1);
+            localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
+            loadInbox();
+        }
+
+        // Option 4: Mark as Read
+        function markChatRead(e, u) {
+            e.stopPropagation();
+            closeAllDropdowns();
+            let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+            if (meta[u]) {
+                meta[u].unread = 0;
+                localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
+            }
+            loadInbox();
+        }
+
+        // Option 5: Delete User from Inbox + Clear History
+        function deleteUserChat(e, u) {
+            e.stopPropagation();
+            closeAllDropdowns();
+            if (confirm(`Kya aap sach me @${u} ko inbox se delete karna chahte hain?`)) {
+                // Remove from privateUsers list
+                let users = JSON.parse(localStorage.getItem("privateUsers")) || [];
+                users = users.filter(item => item.toLowerCase() !== u.toLowerCase());
+                localStorage.setItem("privateUsers", JSON.stringify(users));
+
+                // Remove messages with this user
+                let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+                chats = chats.filter(c => {
+                    const s = (c.sender || "").toLowerCase();
+                    const r = (c.receiver || "").toLowerCase();
+                    return !((s === currentUser && r === u) || (s === u && r === currentUser));
+                });
+                localStorage.setItem("privateChats", JSON.stringify(chats));
+
+                // Remove metadata
+                let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+                delete meta[u];
+                localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
+
+                if (selectedUser === u) {
+                    selectedUser = "";
+                    sessionStorage.removeItem("activePrivateChat");
+                    $("chatTitle").innerText = "Select a Chat";
+                    $("messages").innerHTML = "";
+                    $("appContainer").classList.remove("mobile-chat-open");
+                }
+                loadInbox();
+            }
+        }
+
         function loadInbox() {
             const inbox = $("inboxList");
             inbox.innerHTML = "";
 
             const users = JSON.parse(localStorage.getItem("privateUsers")) || [];
             const meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+            const query = ($("inboxSearchInput")?.value || "").trim().toLowerCase();
 
+            // Sort: Pinned chats on top first, then latest activity
             users.sort((a, b) => {
+                const pinA = meta[a]?.pinned ? 1 : 0;
+                const pinB = meta[b]?.pinned ? 1 : 0;
+                if (pinA !== pinB) return pinB - pinA;
+
                 const timeA = meta[a]?.lastActivity || 0;
                 const timeB = meta[b]?.lastActivity || 0;
                 return timeB - timeA;
@@ -925,25 +1189,62 @@
 
             users.forEach(u => {
                 const info = meta[u] || {};
+                const nickname = (info.nickname || "").toLowerCase();
+
+                // Filter by search query (matches username or nickname)
+                if (query && !u.includes(query) && !nickname.includes(query)) {
+                    return;
+                }
+
                 const unread = info.unread || 0;
+                const isPinned = !!info.pinned;
 
                 const dot = unread > 0
-                    ? `<span style="width:10px;height:10px;background:#00d26a;border-radius:50%;display:inline-block;margin-right:8px;"></span>`
+                    ? `<span style="width:10px;height:10px;background:#00d26a;border-radius:50%;display:inline-block;margin-right:8px;flex-shrink:0;"></span>`
                     : "";
 
                 const badge = unread > 0
                     ? `<span style="background:#00d26a;color:#000;font-weight:bold;border-radius:20px;padding:2px 8px;font-size:11px;">${unread}</span>`
                     : "";
 
+                const pinIcon = isPinned
+                    ? `<span title="Pinned" style="margin-right:6px;font-size:13px;">📌</span>`
+                    : "";
+
+                const displayLabel = info.nickname
+                    ? `<strong>${escapeHTML(info.nickname)}</strong> <span style="font-size:11px;color:#888;">(@${escapeHTML(u)})</span>`
+                    : `<strong>@${escapeHTML(u)}</strong>`;
+
                 const d = document.createElement("div");
-                d.className = "inbox" + (selectedUser === u ? " active" : "");
+                d.className = "inbox" + (selectedUser === u ? " active" : "") + (isPinned ? " pinned-chat" : "");
                 d.innerHTML = `
                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <div style="display:flex;align-items:center;">
+                        <div style="display:flex;align-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                             ${dot}
-                            <strong>@${u}</strong>
+                            ${pinIcon}
+                            <span>${displayLabel}</span>
                         </div>
-                        ${badge}
+                        <div class="inbox-right">
+                            ${badge}
+                            <button class="three-dot-btn" onclick="toggleUserDropdown(event, '${u}')" title="Options">⋮</button>
+                            <div class="inbox-dropdown" id="dropdown_${u}">
+                                <button class="dropdown-item" onclick="togglePinChat(event, '${u}')">
+                                    📌 ${isPinned ? "Unpin Chat" : "Pin Chat"}
+                                </button>
+                                <button class="dropdown-item" onclick="setChatNickname(event, '${u}')">
+                                    ✏️ Set Nickname
+                                </button>
+                                <button class="dropdown-item" onclick="markChatUnread(event, '${u}')">
+                                    🔵 Mark as Unread
+                                </button>
+                                <button class="dropdown-item" onclick="markChatRead(event, '${u}')">
+                                    ✔️ Mark as Read
+                                </button>
+                                <button class="dropdown-item delete-opt" onclick="deleteUserChat(event, '${u}')">
+                                    🗑️ Delete Chat
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 `;
                 d.onclick = () => openChat(u);
@@ -952,9 +1253,13 @@
         }
 
         function openChat(u) {
+            // Cancel any pending auto-reload timers while inside active chat
+            clearTimeout(backReloadTimer);
+            clearInterval(inboxIdleReloadInterval);
+
             selectedUser = u.toLowerCase();
             sessionStorage.setItem("activePrivateChat", selectedUser);
-            $("chatTitle").innerText = "@" + selectedUser;
+            $("chatTitle").innerText = getDisplayTitle(selectedUser);
             $("typing-indicator").style.display = "none";
 
             let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
@@ -963,9 +1268,7 @@
                 localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
             }
 
-            // Mark incoming messages from selectedUser as Seen and notify sender
             markMessagesAsSeen(selectedUser);
-
             loadInbox();
             renderMessages();
 
@@ -978,6 +1281,15 @@
             selectedUser = "";
             sessionStorage.removeItem("activePrivateChat");
             loadInbox();
+
+            // 1. Trigger Auto-Reload 3 seconds after coming back to Inbox Home
+            clearTimeout(backReloadTimer);
+            backReloadTimer = setTimeout(() => {
+                location.reload();
+            }, 3000);
+
+            // 2. Also keep 10-second idle reload timer active
+            startInboxIdleReloadTimer();
         }
 
         // ==========================================
@@ -1001,7 +1313,6 @@
                 localStorage.setItem("privateChats", JSON.stringify(chats));
             }
 
-            // Send hidden seen receipt packet so sender's ⓘ updates to Seen with timestamp
             const seenSignal = {
                 id: "seen_" + Date.now(),
                 sender: currentUser,
@@ -1072,7 +1383,6 @@
                     const file = e.target.files[0];
                     if (!file || !selectedUser) return;
 
-                    // Max size check (10MB limit for smooth socket transfer)
                     if (file.size > 10 * 1024 * 1024) {
                         alert("File size 10MB se kam honi chahiye!");
                         e.target.value = "";
@@ -1242,12 +1552,11 @@
 
             let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
 
-            // 3. DUPLICATE PREVENTION CHECK: Agar ye message ID pehle se saved hai to dobara add mat karo
+            // 3. Duplicate Prevention Check
             if (data.id && chats.some(c => String(c.id) === String(data.id))) {
                 return;
             }
 
-            // If chat with sender is currently open, mark incoming message as seen immediately
             if (sender !== currentUser && selectedUser === sender) {
                 data.seen = true;
                 data.seenAt = formatAMPM(new Date());
@@ -1348,7 +1657,6 @@
                     b.insertAdjacentHTML("beforeend", `<div class="system-alert">${escapeHTML(m.text)} (${m.time})</div>`);
                 } else {
                     const isMy = (m.sender || "").toLowerCase() === currentUser;
-                    // Display "You" for own messages, "@username" for received messages
                     const senderName = isMy ? "You" : `@${escapeHTML(m.sender)}`;
                     const tickIcon = isMy ? (m.seen ? `<span style="color:#00d26a;font-weight:bold;">✓✓</span>` : `<span>✓</span>`) : "";
 
@@ -1376,7 +1684,6 @@
         }
     </script>
 
-    <!-- Optional external media scripts if present in your project -->
     <script src="js/mediaManager.js"></script>
     <script src="js/attachments.js"></script>
 
