@@ -1,102 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!--  -->
-<script>
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-        window.location.href = "login.html";
-    }
-</script>
+    <script>
+        const token = localStorage.getItem("token");
+        if (!token) {
+            window.location.href = "login.html";
+        }
+    </script>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Secure Private Chat Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
-        body{background:#0f0f0f;color:white;height:100dvh;overflow:hidden;width:100%;}
-        .app{display:flex;height:100dvh;width:100%;position:relative;
-            
+        :root {
+            --bg-base: #0a0a0a;
+            --bg-card: #141414;
+            --accent-gold: #b59461;
+            --accent-red: #ff4d4d;
+            --text-main: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', Arial, sans-serif;
             -webkit-user-select: none;
-user-select: none;
--webkit-touch-callout: none;
--webkit-tap-highlight-color: transparent;}
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media print {
+            body { display: none !important; }
+        }
+
+        body {
+            background: var(--bg-base);
+            color: var(--text-main);
+            height: 100dvh;
+            overflow: hidden;
+            width: 100%;
+            position: fixed;
+        }
+
+        .app {
+            display: flex;
+            height: 100dvh;
+            width: 100%;
+            position: relative;
+        }
 
         /* SIDEBAR */
-        .sidebar{width:320px;background:#121212;border-right:1px solid #222;display:flex;flex-direction:column;flex-shrink:0;}
-        .top{padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #222;}
-        .top h2{color:#d4af6a;font-size:20px;}
-        .home-link{text-decoration:none;font-size:20px;}
-        .add-btn{width:35px;height:35px;border:none;border-radius:50%;background:#d4af6a;cursor:pointer;font-weight:bold;font-size:20px;}
+        .sidebar {
+            width: 340px;
+            background: #121212;
+            border-right: 1px solid rgba(181, 148, 97, 0.2);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            height: 100%;
+            z-index: 2;
+        }
 
-        .inbox-list{flex:1;overflow-y:auto;padding:10px;}
-        .inbox{background:#1b1b1b;padding:15px;border-radius:12px;margin-bottom:8px;cursor:pointer;border:1px solid transparent;}
+        .top {
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(181, 148, 97, 0.2);
+            height: 70px;
+            background: var(--bg-card);
+        }
+
+        .top h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--accent-gold);
+            font-size: 1.1rem;
+        }
+
+        .home-link {
+            text-decoration: none;
+            font-size: 20px;
+        }
+
+        .add-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            color: #000;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* SEARCH / NEW CHAT BOX */
+        #searchBox {
+            display: none;
+            padding: 12px;
+            background: #161616;
+            border-bottom: 1px solid #222;
+        }
+
+        #usernameInput {
+            width: 100%;
+            padding: 10px 12px;
+            background: #1d1d1d;
+            color: white;
+            border: 1px solid rgba(181, 148, 97, 0.4);
+            border-radius: 8px;
+            outline: none;
+            font-size: 13px;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+
+        #usernameStatus {
+            font-size: 11px;
+            margin-top: 6px;
+            min-height: 16px;
+            color: #ff6b6b;
+        }
+
+        #startChatBtn {
+            width: 100%;
+            margin-top: 6px;
+            padding: 9px;
+            background: var(--accent-gold);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .inbox-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .inbox {
+            background: #1b1b1b;
+            padding: 14px 15px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .inbox:hover, .inbox.active {
+            border-color: var(--accent-gold);
+            background: #222;
+        }
 
         /* CHAT AREA */
-        .chat-area{flex:1;display:flex;flex-direction:column;background:#0f0f0f;height:100%;}
-        .chat-header{padding:10px 15px;background:#151515;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between;min-height:65px;}
-        .back-btn{display:none;background:none;border:none;color:#d4af6a;font-size:22px;cursor:pointer;}
-        #chatTitle{color:#d4af6a;font-weight:bold;font-size:14px;}
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-base);
+            background-image: radial-gradient(at 0% 0%, rgba(30, 20, 16, 0.4) 0px, transparent 50%);
+            height: 100%;
+            z-index: 1;
+        }
+
+        .chat-header {
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border-bottom: 1px solid rgba(181, 148, 97, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+
+        .back-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--accent-gold);
+            font-size: 22px;
+            cursor: pointer;
+            padding-right: 6px;
+        }
+
+        #chatTitle {
+            color: var(--accent-gold);
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .header-btn {
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .clear-btn {
+            color: var(--accent-red);
+            border: 1px solid var(--accent-red);
+        }
+
+        .logout-btn {
+            color: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+        }
 
         /* MESSAGES */
-        .messages{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:12px;}
-        .msg{max-width:85%;padding:10px 12px;border-radius:15px;word-wrap:break-word;font-size:14px;position:relative;}
-        .received-msg{background:#1d1d1d;align-self:flex-start;border-bottom-left-radius:2px;}
-        .my-msg{background:#d4af6a;color:black;align-self:flex-end;border-bottom-right-radius:2px;}
-        
-        /* ALERT STYLE */
-        .system-alert{background: #f1c40f; color: #000; padding: 5px 12px; border-radius: 8px; font-size: 11px; text-align: center; align-self: center; font-weight: bold; margin: 5px 0;}
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
+        }
 
-        .msg-meta{font-size:9px;display:flex;justify-content:flex-end;align-items:center;margin-top:5px;opacity:0.8;}
-        .info-btn{background:none;border:none;color:inherit;font-size:11px;cursor:pointer;margin-left:5px;}
+        .msg {
+            max-width: 82%;
+            width: fit-content;
+            padding: 10px 14px;
+            border-radius: 15px;
+            word-wrap: break-word;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .received-msg {
+            background: rgba(255, 255, 255, 0.07);
+            color: var(--text-main);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .my-msg {
+            background: rgba(181, 148, 97, 0.18);
+            color: var(--text-main);
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+            border: 1px solid var(--accent-gold);
+        }
+
+        /* SYSTEM & SCREENSHOT ALERT STYLE */
+        .system-alert {
+            background: #f1c40f;
+            color: #000;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            text-align: center;
+            align-self: center;
+            font-weight: 600;
+            margin: 5px 0;
+            max-width: 90%;
+            box-shadow: 0 2px 10px rgba(241, 196, 15, 0.25);
+        }
+
+        .msg-meta {
+            font-size: 10px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 5px;
+            opacity: 0.75;
+            gap: 5px;
+        }
+
+        .info-btn {
+            background: transparent;
+            border: none;
+            color: var(--accent-gold);
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         /* INPUT AREA */
-        .send-box{padding:10px;background:#111;border-top:1px solid #222;display:flex;gap:8px;align-items:center;padding-bottom: env(safe-area-inset-bottom, 10px);}
-        .send-box input{flex:1;padding:12px 15px;border:none;outline:none;border-radius:25px;background:#1d1d1d;color:white;font-size:14px;}
-        .send-box button{width:45px;height:45px;border:none;border-radius:50%;background:#d4af6a;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+        .send-box {
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border-top: 1px solid rgba(181, 148, 97, 0.15);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        }
 
-        @media(max-width:768px){
-            .sidebar{width:100%;position:absolute;height:100%;z-index:1;}
-            .chat-area{width:100%;position:absolute;height:100%;z-index:2;display:none;}
-            .back-btn{display:block;}
+        .send-box input {
+            flex: 1;
+            min-width: 0;
+            padding: 12px 18px;
+            border: 1px solid rgba(181, 148, 97, 0.3);
+            outline: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 14px;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+
+        .send-box button {
+            width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* RESPONSIVE MOBILE + PC LOGIC */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+            .chat-area {
+                width: 100%;
+                position: absolute;
+                left: 0;
+                top: 0;
+                display: none;
+            }
+            .app.mobile-chat-open .sidebar {
+                display: none;
+            }
+            .app.mobile-chat-open .chat-area {
+                display: flex;
+            }
+            .back-btn {
+                display: inline-block;
+            }
         }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <div class="app">
+    <div class="app" id="appContainer">
+        <!-- SIDEBAR -->
         <div class="sidebar" id="sidebar">
             <div class="top">
-                <a href="/" class="home-link">🏠</a>
+                <a href="https://chat-room-three-pied.vercel.app/" class="home-link">🏠</a>
                 <h2>Private Chats</h2>
-                <button class="add-btn" onclick="toggleSearch()">+</button>
+                <button class="add-btn" onclick="toggleSearch()" title="New Chat">+</button>
             </div>
-            <div id="searchBox" style="display:none; padding:12px;">
-                <input type="text" id="usernameInput" placeholder="username" style="width:100%; padding:10px; background:#1d1d1d; color:white; border:1px solid #333; border-radius:8px;">
-                <button onclick="startChat()" style="width:100%; margin-top:5px; padding:8px; background:#d4af6a; border:none; border-radius:8px; font-weight:bold;">Start</button>
+
+            <!-- NEW CHAT USERNAME BOX WITH VALIDATION -->
+            <div id="searchBox">
+                <input type="text" id="usernameInput" placeholder="Enter username (e.g. rahul_01)" autocomplete="off">
+                <div id="usernameStatus"></div>
+                <button id="startChatBtn" onclick="startChat()" disabled>Start Chat</button>
             </div>
+
             <div class="inbox-list" id="inboxList"></div>
         </div>
 
+        <!-- CHAT AREA -->
         <div class="chat-area" id="chatArea">
             <div class="chat-header">
-                <div style="display:flex; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:8px;">
                     <button class="back-btn" onclick="goBack()">←</button>
-                    <div><span id="chatTitle">Select Chat</span><br><span id="typing-indicator" style="font-size:10px; color:#d4af6a; display:none;">typing...</span></div>
+                    <div>
+                        <span id="chatTitle">Select a Chat</span><br>
+                        <span id="typing-indicator" style="font-size:11px; color:var(--accent-gold); display:none;">typing...</span>
+                    </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <span style="font-size:10px;">👁️ <span id="online-count">0</span></span>
-                    <button onclick="clearAllChat()" style="color:#ff4d4d; background:none; border:1px solid #ff4d4d; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">Clear</button>
-                    <button onclick="logout()" style="color:#d4af6a; background:none; border:1px solid #d4af6a; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">Logout</button>
+                    <span style="font-size:12px; color:var(--accent-gold); margin-right:4px;">👁️ <span id="online-count">0</span></span>
+                    <button class="header-btn clear-btn" onclick="clearAllChat()">Clear</button>
+                    <button class="header-btn logout-btn" onclick="logout()">Logout</button>
                 </div>
             </div>
 
             <div class="messages" id="messages"></div>
 
             <div class="send-box">
-                <input type="text" id="messageInput" placeholder="Type message..." oninput="handleTyping()">
-                <button onclick="sendMessage()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+                <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
+                <button onclick="sendMessage()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
@@ -104,344 +412,492 @@ user-select: none;
     <script src="https://chat-backend-gtg5.onrender.com/socket.io/socket.io.js"></script>
     <script>
         const $ = id => document.getElementById(id);
-        const socket = io(
-    "https://chat-backend-gtg5.onrender.com",
-    {
-        transports: ["websocket"],
-        auth: {
-            token: localStorage.getItem("token")
-        }
-    }
-);
-        const currentUser = localStorage.getItem("username") || "guest";
+
+        const socket = io("https://chat-backend-gtg5.onrender.com", {
+            transports: ["websocket"],
+            auth: { token: localStorage.getItem("token") }
+        });
+
+        const currentUser = (localStorage.getItem("username") || "guest").toLowerCase();
         let selectedUser = "";
         let typingTimeout;
+        let lastScreenshotAlert = 0;
 
-        // --- 3-Finger Screenshot Alert (In-Chat Yellow Alert) ---
-        document.addEventListener('touchstart', e => {
-            if(e.touches.length >= 3 && selectedUser) {
-                const time = formatAMPM(new Date());
-                const alertData = { sender: "SYSTEM", receiver: selectedUser, text: "⚠️ Security Alert: Someone tried to take a screenshot!", time: time, type: "alert" };
-                saveAndRender(alertData);
-                socket.emit("private_message", alertData); // Notify other user
+        // ==========================================
+        // 1. USERNAME VALIDATION LOGIC (+ NEW CHAT)
+        // ==========================================
+        const usernameInput = $("usernameInput");
+        const usernameStatus = $("usernameStatus");
+        const registerBtn = $("startChatBtn");
+
+        usernameInput.addEventListener("input", function(e) {
+            let value = e.target.value;
+
+            value = value.toLowerCase();
+            value = value.replace(/\s+/g, "_");
+            value = value.replace(/[^a-z0-9._]/g, "");
+            value = value.slice(0, 20);
+
+            e.target.value = value;
+
+            registerBtn.disabled = true;
+            registerBtn.style.opacity = "0.5";
+
+            if (value.length === 0) {
+                usernameStatus.innerHTML = "";
+                return;
+            }
+
+            if (value.length < 3) {
+                usernameStatus.style.color = "#ff6b6b";
+                usernameStatus.innerHTML = "Username must be at least 3 characters";
+                return;
+            }
+
+            if (value.length > 20) {
+                usernameStatus.style.color = "#ff6b6b";
+                usernameStatus.innerHTML = "Username cannot exceed 20 characters";
+                registerBtn.disabled = true;
+                registerBtn.style.opacity = "0.5";
+                return;
+            }
+
+            if (
+                value.startsWith("_") ||
+                value.startsWith(".") ||
+                value.endsWith("_") ||
+                value.endsWith(".") ||
+                value.includes("__") ||
+                value.includes("..") ||
+                value.includes("_.") ||
+                value.includes("._")
+            ) {
+                usernameStatus.style.color = "#ff6b6b";
+                usernameStatus.innerHTML = "❌ Invalid username format";
+                registerBtn.disabled = true;
+                registerBtn.style.opacity = "0.5";
+                return;
+            }
+
+            if (value === currentUser) {
+                usernameStatus.style.color = "#ff6b6b";
+                usernameStatus.innerHTML = "❌ You cannot chat with yourself";
+                return;
+            }
+
+            // Valid Username
+            usernameStatus.style.color = "#00d26a";
+            usernameStatus.innerHTML = "✓ Valid username";
+            registerBtn.disabled = false;
+            registerBtn.style.opacity = "1";
+        });
+
+        // Enter key inside username search input
+        usernameInput.addEventListener("keydown", function(e) {
+            if (e.key === "Enter" && !registerBtn.disabled) {
+                e.preventDefault();
+                startChat();
             }
         });
 
+        // ==========================================
+        // 2. 3-FINGER & PRINTSCREEN SCREENSHOT ALERT
+        // ==========================================
+        function triggerScreenshotAlert() {
+            const now = Date.now();
+            if (!selectedUser || now - lastScreenshotAlert < 2500) return;
+            lastScreenshotAlert = now;
+
+            const time = formatAMPM(new Date());
+            const alertData = {
+                sender: currentUser,
+                receiver: selectedUser,
+                text: `⚠️ Security Alert: @${currentUser} tried to take a screenshot!`,
+                time: time,
+                type: "alert",
+                id: now
+            };
+            saveAndRender(alertData);
+            socket.emit("private_message", alertData);
+        }
+
+        // Mobile 3-Finger Touch Detection
+        document.addEventListener("touchstart", e => {
+            if (e.touches && e.touches.length >= 3) {
+                triggerScreenshotAlert();
+            }
+        }, { passive: true });
+
+        // PC PrintScreen Key Detection
+        document.addEventListener("keyup", e => {
+            if (e.key === "PrintScreen") {
+                triggerScreenshotAlert();
+            }
+        });
+
+        // ==========================================
+        // 3. SOCKET CONNECTION & TYPING LOGIC
+        // ==========================================
         socket.on("connect", () => {
             socket.emit("userJoined", currentUser);
             loadInbox();
         });
 
-        socket.on("updateUserCount", count => $("online-count").innerText = count);
+        socket.on("updateUserCount", count => {
+            $("online-count").innerText = count;
+        });
 
-        // --- Typing ---
         function handleTyping() {
+            if (!selectedUser) return;
+            socket.emit("typing", currentUser);
 
-    if (!selectedUser) return;
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                socket.emit("stopTyping", currentUser);
+            }, 1000);
+        }
 
-    socket.emit("typing", currentUser);
+        socket.on("userTyping", username => {
+            if (!username || username.toLowerCase() !== selectedUser.toLowerCase()) return;
+            $("typing-indicator").innerText = "@" + username + " is typing...";
+            $("typing-indicator").style.display = "inline-block";
+        });
 
-    clearTimeout(typingTimeout);
+        socket.on("userStopTyping", username => {
+            if (!username || username.toLowerCase() === selectedUser.toLowerCase()) {
+                $("typing-indicator").style.display = "none";
+            }
+        });
 
-    typingTimeout = setTimeout(() => {
-
-        socket.emit(
-            "stopTyping",
-            currentUser
-        );
-
-    }, 1000);
-}
-
-socket.on("userTyping", username => {
-
-    if (username === currentUser) return;
-
-    $("typing-indicator").innerText =
-        username + " typing...";
-
-    $("typing-indicator").style.display =
-        "block";
-});
-
-socket.on("userStopTyping", () => {
-
-    $("typing-indicator").style.display =
-        "none";
-});
-
-        // --- Time Formatter (02:30pm) ---
+        // ==========================================
+        // 4. TIME FORMATTER & INBOX FUNCTIONS
+        // ==========================================
         function formatAMPM(date) {
             let hours = date.getHours();
             let minutes = date.getMinutes();
-            let ampm = hours >= 12 ? 'pm' : 'am';
+            let ampm = hours >= 12 ? "pm" : "am";
             hours = hours % 12;
             hours = hours ? hours : 12;
-            minutes = minutes < 10 ? '0'+minutes : minutes;
-            return (hours < 10 ? '0'+hours : hours) + ':' + minutes + ampm;
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            return (hours < 10 ? "0" + hours : hours) + ":" + minutes + ampm;
         }
 
-        function startChat() {
-            const u = $("usernameInput").value.trim().replace("@","");
-            if(u) { addInbox(u); openChat(u); $("usernameInput").value = ""; $("searchBox").style.display = "none"; }
-        }
-
-        function toggleSearch() { $("searchBox").style.display = ($("searchBox").style.display === "block" ? "none" : "block"); }
-
-        function addInbox(u) {
-            let users = JSON.parse(localStorage.getItem("privateUsers")) || [];
-            if(!users.includes(u)) { users.push(u); localStorage.setItem("privateUsers", JSON.stringify(users)); loadInbox(); }
-        }
-
-        function loadInbox() {
-
-    const inbox = $("inboxList");
-    inbox.innerHTML = "";
-
-    const users =
-        JSON.parse(localStorage.getItem("privateUsers")) || [];
-
-    const meta =
-        JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
-
-    // Latest chat on top
-    users.sort((a, b) => {
-
-        const timeA = meta[a]?.lastActivity || 0;
-        const timeB = meta[b]?.lastActivity || 0;
-
-        return timeB - timeA;
-
-    });
-
-    users.forEach(u => {
-
-        const info = meta[u] || {};
-
-        const unread = info.unread || 0;
-
-        const dot =
-            unread > 0
-                ? `<span style="width:10px;height:10px;background:#00d26a;border-radius:50%;display:inline-block;margin-right:6px;"></span>`
-                : "";
-
-        const badge =
-            unread > 0
-                ? `<span style="background:#00d26a;color:white;border-radius:20px;padding:2px 7px;font-size:11px;">${unread}</span>`
-                : "";
-
-        const d = document.createElement("div");
-
-        d.className = "inbox";
-
-        d.innerHTML = `
-
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-
-                <div style="display:flex;align-items:center;">
-
-                    ${dot}
-
-                    <strong>@${u}</strong>
-
-                </div>
-
-                ${badge}
-
-            </div>
-
-        `;
-
-        d.onclick = () => openChat(u);
-
-        inbox.appendChild(d);
-
-    });
-
-}
-
-        function openChat(u) {
-
-    selectedUser = u;
-
-    $("chatTitle").innerText = "@" + u;
-
-    // ===== NEW : Clear unread =====
-    let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
-
-    if (meta[u]) {
-        meta[u].unread = 0;
-
-        localStorage.setItem(
-            "privateInboxMeta",
-            JSON.stringify(meta)
-        );
-
-        loadInbox();
-    }
-
-    renderMessages();
-
-    if (window.innerWidth <= 768) {
-        $("sidebar").style.display = "none";
-        $("chatArea").style.display = "flex";
-    }
-
-}
-
-        function sendMessage() {
-            const txt = $("messageInput").value.trim();
-            if(!txt || !selectedUser) return;
-            const data = { sender: currentUser, receiver: selectedUser, text: txt, time: formatAMPM(new Date()), id: Date.now() };
-            socket.emit("private_message", data);
-            saveAndRender(data);
-            $("messageInput").focus();
-        }
-
-        function saveAndRender(data) {
-
-    // Save Messages (Old Logic)
-    let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
-    chats.push(data);
-    localStorage.setItem("privateChats", JSON.stringify(chats));
-
-    // ===== NEW : Inbox Meta =====
-    let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
-
-    // Inbox owner
-    const user =
-        data.sender === currentUser
-            ? data.receiver
-            : data.sender;
-
-    if (!meta[user]) {
-        meta[user] = {
-            unread: 0,
-            lastMessage: "",
-            lastTime: "",
-            lastActivity: 0
-        };
-    }
-
-    meta[user].lastMessage = data.text;
-    meta[user].lastTime = data.time;
-    meta[user].lastActivity = Date.now();
-
-    // Increase unread only for incoming messages
-    if (
-        data.sender !== currentUser &&
-        selectedUser !== data.sender
-    ) {
-        meta[user].unread++;
-    }
-
-    localStorage.setItem(
-        "privateInboxMeta",
-        JSON.stringify(meta)
-    );
-
-    // Old Logic
-    if (
-        selectedUser === data.sender ||
-        selectedUser === data.receiver
-    ) {
-        renderMessages();
-    }
-            loadInbox();
-
-}
-
-        socket.on("receive_private_message", data => {
-
-    saveAndRender(data);
-
-    loadInbox();
-
-});
-        socket.on("private_chat_created", (data) => {
-
-    // Agar inbox me pehle se nahi hai to add kar do
-    addInbox(data.username);
-
-});
-        function renderMessages() {
-            const b = $("messages"); b.innerHTML = "";
-            const chats = JSON.parse(localStorage.getItem("privateChats")) || [];
-            chats.filter(c => (c.sender === currentUser && c.receiver === selectedUser) || (c.sender === selectedUser && c.receiver === currentUser) || (c.sender === "system" && (c.receiver === selectedUser || c.receiver === currentUser)))
-                 .forEach(m => {
-                    if(m.sender === "system") {
-                        b.insertAdjacentHTML('beforeend', `<div class="system-alert">${m.text}</div>`);
-                    } else {
-                        const isMy = m.sender === currentUser;
-                        b.insertAdjacentHTML('beforeend', `
-                            <div class="msg ${isMy ? 'my-msg' : 'received-msg'}">
-                                ${m.text}
-                                <div class="msg-meta">
-                                    ${m.time} <button class="info-btn" onclick="alert('Sent: ${m.time}\\nSeen: Tik ✓\\nTime: ${m.time}')">ⓘ</button>
-                                </div>
-                            </div>
-                        `);
-                    }
-                 });
-            b.scrollTop = b.scrollHeight;
-        }
-
-        function clearAllChat() {
-            if(confirm("Dono side ke message clear karein?")) {
-                let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
-                chats = chats.filter(c => !((c.sender === currentUser && c.receiver === selectedUser) || (c.sender === selectedUser && c.receiver === currentUser)));
-                localStorage.setItem("privateChats", JSON.stringify(chats));
-                renderMessages();
+        function toggleSearch() {
+            const box = $("searchBox");
+            const isHidden = box.style.display === "none" || box.style.display === "";
+            box.style.display = isHidden ? "block" : "none";
+            if (isHidden) {
+                usernameInput.value = "";
+                usernameStatus.innerHTML = "";
+                registerBtn.disabled = true;
+                registerBtn.style.opacity = "0.5";
+                usernameInput.focus();
             }
         }
 
-        function logout() {
-    localStorage.clear();
-    window.location.href = "login.html";
-}
+        function startChat() {
+            if (registerBtn.disabled) return;
+            const u = usernameInput.value.trim();
+            if (u) {
+                addInbox(u);
+                openChat(u);
+                usernameInput.value = "";
+                usernameStatus.innerHTML = "";
+                registerBtn.disabled = true;
+                registerBtn.style.opacity = "0.5";
+                $("searchBox").style.display = "none";
+            }
+        }
+
+        function addInbox(u) {
+            u = u.toLowerCase();
+            let users = JSON.parse(localStorage.getItem("privateUsers")) || [];
+            if (!users.includes(u)) {
+                users.push(u);
+                localStorage.setItem("privateUsers", JSON.stringify(users));
+                loadInbox();
+            }
+        }
+
+        function loadInbox() {
+            const inbox = $("inboxList");
+            inbox.innerHTML = "";
+
+            const users = JSON.parse(localStorage.getItem("privateUsers")) || [];
+            const meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+
+            users.sort((a, b) => {
+                const timeA = meta[a]?.lastActivity || 0;
+                const timeB = meta[b]?.lastActivity || 0;
+                return timeB - timeA;
+            });
+
+            users.forEach(u => {
+                const info = meta[u] || {};
+                const unread = info.unread || 0;
+
+                const dot = unread > 0
+                    ? `<span style="width:10px;height:10px;background:#00d26a;border-radius:50%;display:inline-block;margin-right:8px;"></span>`
+                    : "";
+
+                const badge = unread > 0
+                    ? `<span style="background:#00d26a;color:#000;font-weight:bold;border-radius:20px;padding:2px 8px;font-size:11px;">${unread}</span>`
+                    : "";
+
+                const d = document.createElement("div");
+                d.className = "inbox" + (selectedUser === u ? " active" : "");
+                d.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div style="display:flex;align-items:center;">
+                            ${dot}
+                            <strong>@${u}</strong>
+                        </div>
+                        ${badge}
+                    </div>
+                `;
+                d.onclick = () => openChat(u);
+                inbox.appendChild(d);
+            });
+        }
+
+        function openChat(u) {
+            selectedUser = u.toLowerCase();
+            $("chatTitle").innerText = "@" + selectedUser;
+            $("typing-indicator").style.display = "none";
+
+            let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+            if (meta[selectedUser]) {
+                meta[selectedUser].unread = 0;
+                localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
+            }
+
+            loadInbox();
+            renderMessages();
+
+            // Mobile view switch
+            $("appContainer").classList.add("mobile-chat-open");
+            setTimeout(() => $("messageInput").focus(), 100);
+        }
+
         function goBack() {
+            $("appContainer").classList.remove("mobile-chat-open");
+            selectedUser = "";
+            loadInbox();
+        }
 
-    // Pehle inbox dikhao
-    $("sidebar").style.display = "flex";
-    $("chatArea").style.display = "none";
+        // ==========================================
+        // 5. SEND, RECEIVE & CLEAR BOTH SIDES LOGIC
+        // ==========================================
+        function sendMessage() {
+            const input = $("messageInput");
+            const txt = input.value.trim();
+            if (!txt || !selectedUser) return;
 
-    // 2 second baad page reload
-    setTimeout(() => {
-        location.reload();
-    }, 200);
+            const data = {
+                sender: currentUser,
+                receiver: selectedUser,
+                text: txt,
+                time: formatAMPM(new Date()),
+                id: Date.now()
+            };
 
-}
-        $("messageInput").onkeydown = e => e.key === "Enter" && sendMessage();
+            socket.emit("private_message", data);
+            socket.emit("stopTyping", currentUser);
+            saveAndRender(data);
+
+            input.value = "";
+            input.focus();
+        }
+
+        // Keyboard Enter to Send & Typing Listener
+        $("messageInput").addEventListener("input", handleTyping);
+        $("messageInput").addEventListener("keydown", function(e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        function performLocalClear(partnerUser) {
+            partnerUser = partnerUser.toLowerCase();
+            let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+            chats = chats.filter(c => {
+                const s = (c.sender || "").toLowerCase();
+                const r = (c.receiver || "").toLowerCase();
+                const isBetweenUsers = (s === currentUser && r === partnerUser) || (s === partnerUser && r === currentUser);
+                return !isBetweenUsers;
+            });
+            localStorage.setItem("privateChats", JSON.stringify(chats));
+
+            let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+            if (meta[partnerUser]) {
+                meta[partnerUser].unread = 0;
+                meta[partnerUser].lastMessage = "";
+                localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
+            }
+
+            if (selectedUser === partnerUser) {
+                renderMessages();
+            }
+            loadInbox();
+        }
+
+        function clearAllChat() {
+            if (!selectedUser) {
+                alert("Pehle koi chat select karein!");
+                return;
+            }
+            if (confirm(`@${selectedUser} ke sath dono side ki chat clear karein?`)) {
+                // 1. Apne local storage se clear karein
+                performLocalClear(selectedUser);
+
+                // 2. Samne wale user ko special sync packet bhejein ताकि uske phone/PC se bhi clear ho jaye
+                const clearSignal = {
+                    sender: currentUser,
+                    receiver: selectedUser,
+                    text: "__CLEAR_CHAT__",
+                    type: "clear_action",
+                    time: formatAMPM(new Date()),
+                    id: Date.now()
+                };
+                socket.emit("private_message", clearSignal);
+                socket.emit("clear_private_chat", { sender: currentUser, receiver: selectedUser });
+            }
+        }
+
+        function saveAndRender(data) {
+            const sender = (data.sender || "").toLowerCase();
+            const receiver = (data.receiver || "").toLowerCase();
+
+            // Check if this message is for current user
+            if (sender !== currentUser && receiver !== currentUser) return;
+
+            // Handle Both-Side Clear Signal
+            if (data.type === "clear_action" || data.text === "__CLEAR_CHAT__") {
+                const partner = sender === currentUser ? receiver : sender;
+                performLocalClear(partner);
+                return;
+            }
+
+            const partner = sender === currentUser ? receiver : sender;
+            addInbox(partner);
+
+            let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+            chats.push(data);
+            localStorage.setItem("privateChats", JSON.stringify(chats));
+
+            let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
+            if (!meta[partner]) {
+                meta[partner] = { unread: 0, lastMessage: "", lastTime: "", lastActivity: 0 };
+            }
+
+            meta[partner].lastMessage = data.text;
+            meta[partner].lastTime = data.time;
+            meta[partner].lastActivity = Date.now();
+
+            if (sender !== currentUser && selectedUser !== sender) {
+                meta[partner].unread = (meta[partner].unread || 0) + 1;
+            }
+
+            localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
+
+            if (selectedUser === sender || selectedUser === receiver) {
+                renderMessages();
+            }
+            loadInbox();
+        }
+
+        socket.on("receive_private_message", data => {
+            saveAndRender(data);
+        });
+
+        socket.on("clear_private_chat", data => {
+            if (!data) return;
+            const sender = (data.sender || "").toLowerCase();
+            const receiver = (data.receiver || "").toLowerCase();
+            if (receiver === currentUser || sender === currentUser) {
+                const partner = sender === currentUser ? receiver : sender;
+                performLocalClear(partner);
+            }
+        });
+
+        socket.on("private_chat_created", data => {
+            if (data && data.username) {
+                addInbox(data.username.toLowerCase());
+            }
+        });
+
+        function escapeHTML(str) {
+            const div = document.createElement("div");
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function renderMessages() {
+            const b = $("messages");
+            b.innerHTML = "";
+            if (!selectedUser) return;
+
+            const chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+
+            chats.filter(c => {
+                const s = (c.sender || "").toLowerCase();
+                const r = (c.receiver || "").toLowerCase();
+                return (s === currentUser && r === selectedUser) || (s === selectedUser && r === currentUser);
+            }).forEach(m => {
+                if (m.type === "alert" || (m.sender && m.sender.toLowerCase() === "system")) {
+                    b.insertAdjacentHTML("beforeend", `<div class="system-alert">${escapeHTML(m.text)} (${m.time})</div>`);
+                } else {
+                    const isMy = (m.sender || "").toLowerCase() === currentUser;
+                    b.insertAdjacentHTML("beforeend", `
+                        <div class="msg ${isMy ? "my-msg" : "received-msg"}">
+                            <div>${escapeHTML(m.text)}</div>
+                            <div class="msg-meta">
+                                <span>${m.time}</span>
+                                <button class="info-btn" onclick="alert('Sent: ${m.time}\\nSeen: Tick ✓\\nTime: ${m.time}')">ⓘ</button>
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+
+            b.scrollTop = b.scrollHeight;
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("username");
+            window.location.href = "login.html";
+        }
     </script>
 
-<script>
+    <script>
+        // Right Click Block
+        document.addEventListener("contextmenu", function(e) {
+            e.preventDefault();
+        });
 
-// Right Click Block
-document.addEventListener("contextmenu", function(e) {
-    e.preventDefault();
-});
+        // Text Selection Block (Except inside Input fields so user can type/edit)
+        document.addEventListener("selectstart", function(e) {
+            if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+                e.preventDefault();
+            }
+        });
 
-// Text Selection Block
-document.addEventListener("selectstart", function(e) {
-    e.preventDefault();
-});
+        // Copy Block
+        document.addEventListener("copy", function(e) {
+            e.preventDefault();
+        });
 
-// Copy Block
-document.addEventListener("copy", function(e) {
-    e.preventDefault();
-});
+        // Cut Block
+        document.addEventListener("cut", function(e) {
+            e.preventDefault();
+        });
 
-// Cut Block
-document.addEventListener("cut", function(e) {
-    e.preventDefault();
-});
-
-// Drag Block
-document.addEventListener("dragstart", function(e) {
-    e.preventDefault();
-});
-
-</script>
-    
+        // Drag Block
+        document.addEventListener("dragstart", function(e) {
+            e.preventDefault();
+        });
+    </script>
 </body>
 </html>
