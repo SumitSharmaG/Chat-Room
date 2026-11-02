@@ -19,6 +19,7 @@
             --accent-gold: #b59461;
             --accent-red: #ff4d4d;
             --text-main: #e0e0e0;
+            --my-chat-bg: rgba(181, 148, 97, 0.15);
         }
 
         * {
@@ -65,7 +66,7 @@
         }
 
         .top {
-            padding: 14px 16px;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -74,15 +75,43 @@
             background: var(--bg-card);
         }
 
-        .top h2 {
-            font-family: 'Playfair Display', serif;
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-back-btn {
+            background: rgba(181, 148, 97, 0.12);
+            border: 1px solid rgba(181, 148, 97, 0.4);
             color: var(--accent-gold);
-            font-size: 1.1rem;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .page-back-btn:active {
+            transform: scale(0.95);
         }
 
         .home-link {
             text-decoration: none;
-            font-size: 20px;
+            font-size: 19px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .top h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--accent-gold);
+            font-size: 1.05rem;
         }
 
         .add-btn {
@@ -172,6 +201,7 @@
             background-image: radial-gradient(at 0% 0%, rgba(30, 20, 16, 0.4) 0px, transparent 50%);
             height: 100%;
             z-index: 1;
+            position: relative;
         }
 
         .chat-header {
@@ -231,29 +261,37 @@
         }
 
         .msg {
-            max-width: 82%;
+            max-width: 85%;
             width: fit-content;
-            padding: 10px 14px;
-            border-radius: 15px;
+            padding: 10px 15px;
+            border-radius: 15px 15px 15px 2px;
             word-wrap: break-word;
             font-size: 14px;
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         .received-msg {
             background: rgba(255, 255, 255, 0.07);
             color: var(--text-main);
             align-self: flex-start;
-            border-bottom-left-radius: 2px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .my-msg {
-            background: rgba(181, 148, 97, 0.18);
+            background: var(--my-chat-bg);
             color: var(--text-main);
             align-self: flex-end;
-            border-bottom-right-radius: 2px;
+            border-radius: 15px 15px 2px 15px;
             border: 1px solid var(--accent-gold);
+        }
+
+        .msg-sender {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--accent-gold);
+            margin-bottom: 4px;
         }
 
         /* SYSTEM & SCREENSHOT ALERT STYLE */
@@ -276,23 +314,74 @@
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            margin-top: 5px;
-            opacity: 0.75;
-            gap: 5px;
+            margin-top: 6px;
+            opacity: 0.85;
+            gap: 4px;
         }
 
+        /* Exact world-chat.html info-btn style */
         .info-btn {
             background: transparent;
-            border: none;
-            color: var(--accent-gold);
-            font-size: 13px;
+            border: 0px solid #b59461;
+            color: #b59461;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 15px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            padding: 0;
+            margin-left: 6px;
         }
 
-        /* INPUT AREA */
+        .info-btn:hover {
+            background: #b59461;
+            color: black;
+        }
+
+        /* MEDIA ITEMS INSIDE CHAT */
+        .chat-media-img {
+            max-width: 240px;
+            max-height: 240px;
+            border-radius: 10px;
+            margin-top: 4px;
+            cursor: pointer;
+            object-fit: cover;
+            border: 1px solid rgba(181, 148, 97, 0.3);
+        }
+
+        .chat-media-video {
+            max-width: 250px;
+            max-height: 240px;
+            border-radius: 10px;
+            margin-top: 4px;
+            background: #000;
+        }
+
+        .chat-media-audio {
+            width: 230px;
+            height: 38px;
+            margin-top: 4px;
+        }
+
+        .chat-media-doc {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(181, 148, 97, 0.3);
+            margin-top: 4px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* INPUT AREA & ATTACHMENT UI (Same as world-chat.html) */
         .send-box {
             padding: 10px 12px;
             background: var(--bg-card);
@@ -301,6 +390,78 @@
             gap: 10px;
             align-items: center;
             padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+            position: relative;
+        }
+
+        .attach-btn {
+            width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 50%;
+            background: #202020;
+            color: #b59461;
+            font-size: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            pointer-events: auto !important;
+        }
+
+        .attach-btn:active {
+            transform: scale(.95);
+        }
+
+        .attach-menu {
+            position: absolute;
+            bottom: 72px;
+            left: 12px;
+            background: #141414;
+            border: 1px solid rgba(181, 148, 97, .3);
+            border-radius: 16px;
+            padding: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 99999 !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,.6);
+            pointer-events: auto !important;
+        }
+
+        .attach-menu.show {
+            display: flex !important;
+        }
+
+        .attach-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 10px;
+        }
+
+        .attach-item:hover {
+            background: #202020;
+        }
+
+        .attach-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2a2a2a;
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        .attach-item span {
+            pointer-events: none;
+            font-size: 13px;
         }
 
         .send-box input {
@@ -317,7 +478,7 @@
             -webkit-user-select: text !important;
         }
 
-        .send-box button {
+        .send-btn {
             width: 45px;
             height: 45px;
             border: none;
@@ -328,6 +489,49 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+        }
+
+        /* FULL SCREEN MEDIA OVERLAY (From world-chat.html) */
+        .media-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 999999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .media-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+        .media-overlay img {
+            max-width: 90%;
+            max-height: 80dvh;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            object-fit: contain;
+        }
+        .media-overlay iframe {
+            width: 90%;
+            height: 85dvh;
+            border: none;
+            background: #fff;
+            border-radius: 12px;
+        }
+        .close-overlay-btn {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            font-size: 1.5rem;
+            width: 45px; height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
         }
 
         /* RESPONSIVE MOBILE + PC LOGIC */
@@ -363,7 +567,11 @@
         <!-- SIDEBAR -->
         <div class="sidebar" id="sidebar">
             <div class="top">
-                <a href="https://chat-room-three-pied.vercel.app/" class="home-link">🏠</a>
+                <div class="nav-left">
+                    <!-- Back Arrow Button + Home Button -->
+                    <button class="page-back-btn" onclick="navigateBack()" title="Go Back">←</button>
+                    <a href="https://chat-room-three-pied.vercel.app/" class="home-link" title="Home">🏠</a>
+                </div>
                 <h2>Private Chats</h2>
                 <button class="add-btn" onclick="toggleSearch()" title="New Chat">+</button>
             </div>
@@ -397,16 +605,57 @@
 
             <div class="messages" id="messages"></div>
 
+            <!-- INPUT AREA WITH + MEDIA BUTTON -->
             <div class="send-box">
+                <button class="attach-btn" id="attachBtn" onclick="event.stopPropagation(); document.getElementById('attachMenu').classList.toggle('show');">
+                    +
+                </button>
                 <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
-                <button onclick="sendMessage()">
+                <button class="send-btn" onclick="sendMessage()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                     </svg>
                 </button>
+
+                <!-- ATTACH MENU POPUP -->
+                <div class="attach-menu" id="attachMenu">
+                    <div class="attach-item" onclick="event.stopPropagation(); triggerFileSelect('cameraInput');">
+                        <div class="attach-icon">📷</div>
+                        <span>Camera</span>
+                    </div>
+                    <div class="attach-item" onclick="event.stopPropagation(); triggerFileSelect('galleryInput');">
+                        <div class="attach-icon">🖼️</div>
+                        <span>Gallery</span>
+                    </div>
+                    <div class="attach-item" onclick="event.stopPropagation(); triggerFileSelect('videoInput');">
+                        <div class="attach-icon">🎥</div>
+                        <span>Video</span>
+                    </div>
+                    <div class="attach-item" onclick="event.stopPropagation(); triggerFileSelect('audioInput');">
+                        <div class="attach-icon">🎵</div>
+                        <span>Audio</span>
+                    </div>
+                    <div class="attach-item" onclick="event.stopPropagation(); triggerFileSelect('documentInput');">
+                        <div class="attach-icon">📄</div>
+                        <span>Document</span>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+
+    <!-- Hidden Native System Input Channels -->
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+    <input type="file" id="galleryInput" accept="image/*" hidden>
+    <input type="file" id="videoInput" accept="video/*" hidden>
+    <input type="file" id="audioInput" accept="audio/*" hidden>
+    <input type="file" id="documentInput" accept="*/*" hidden>
+
+    <!-- Full-Screen Media Viewer Overlay -->
+    <div id="mediaOverlay" class="media-overlay">
+        <button class="close-overlay-btn" onclick="closeMediaPreview()">&times;</button>
+        <div id="overlayContent" style="width:100%; display:flex; justify-content:center; align-items:center;"></div>
     </div>
 
     <script src="https://chat-backend-gtg5.onrender.com/socket.io/socket.io.js"></script>
@@ -421,10 +670,42 @@
         const currentUser = (localStorage.getItem("username") || "guest").toLowerCase();
         let selectedUser = "";
         let typingTimeout;
+
+        // 3-Finger Hold Screenshot Variables
+        let threeFingerTimer = null;
         let lastScreenshotAlert = 0;
 
         // ==========================================
-        // 1. USERNAME VALIDATION LOGIC (+ NEW CHAT)
+        // 1. TOP BACK NAVIGATION BUTTON
+        // ==========================================
+        function navigateBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = "https://chat-room-three-pied.vercel.app/";
+            }
+        }
+
+        // Load saved chats & inbox immediately on page open/reload
+        window.addEventListener("DOMContentLoaded", () => {
+            loadInbox();
+            const lastOpen = sessionStorage.getItem("activePrivateChat");
+            if (lastOpen) {
+                openChat(lastOpen);
+            }
+        });
+
+        // Close attach menu when clicking outside
+        document.addEventListener("click", function(e) {
+            const menu = $("attachMenu");
+            const btn = $("attachBtn");
+            if (menu && btn && !menu.contains(e.target) && e.target !== btn) {
+                menu.classList.remove("show");
+            }
+        });
+
+        // ==========================================
+        // 2. USERNAME VALIDATION LOGIC (+ NEW CHAT)
         // ==========================================
         const usernameInput = $("usernameInput");
         const usernameStatus = $("usernameStatus");
@@ -485,14 +766,12 @@
                 return;
             }
 
-            // Valid Username
             usernameStatus.style.color = "#00d26a";
             usernameStatus.innerHTML = "✓ Valid username";
             registerBtn.disabled = false;
             registerBtn.style.opacity = "1";
         });
 
-        // Enter key inside username search input
         usernameInput.addEventListener("keydown", function(e) {
             if (e.key === "Enter" && !registerBtn.disabled) {
                 e.preventDefault();
@@ -501,34 +780,46 @@
         });
 
         // ==========================================
-        // 2. 3-FINGER & PRINTSCREEN SCREENSHOT ALERT
+        // 3. 3-FINGER HOLD (350ms) SCREENSHOT ALERT
         // ==========================================
         function triggerScreenshotAlert() {
             const now = Date.now();
-            if (!selectedUser || now - lastScreenshotAlert < 2500) return;
+            if (!selectedUser || now - lastScreenshotAlert < 3000) return;
             lastScreenshotAlert = now;
 
             const time = formatAMPM(new Date());
             const alertData = {
+                id: "alert_" + now + "_" + Math.random().toString(36).substr(2, 5),
                 sender: currentUser,
                 receiver: selectedUser,
                 text: `⚠️ Security Alert: @${currentUser} tried to take a screenshot!`,
                 time: time,
-                type: "alert",
-                id: now
+                type: "alert"
             };
             saveAndRender(alertData);
             socket.emit("private_message", alertData);
         }
 
-        // Mobile 3-Finger Touch Detection
+        // Trigger only if 3 fingers stay on screen for at least 350 milliseconds
         document.addEventListener("touchstart", e => {
             if (e.touches && e.touches.length >= 3) {
-                triggerScreenshotAlert();
+                clearTimeout(threeFingerTimer);
+                threeFingerTimer = setTimeout(() => {
+                    triggerScreenshotAlert();
+                }, 350);
             }
         }, { passive: true });
 
-        // PC PrintScreen Key Detection
+        document.addEventListener("touchend", e => {
+            if (!e.touches || e.touches.length < 3) {
+                clearTimeout(threeFingerTimer);
+            }
+        }, { passive: true });
+
+        document.addEventListener("touchcancel", () => {
+            clearTimeout(threeFingerTimer);
+        }, { passive: true });
+
         document.addEventListener("keyup", e => {
             if (e.key === "PrintScreen") {
                 triggerScreenshotAlert();
@@ -536,7 +827,7 @@
         });
 
         // ==========================================
-        // 3. SOCKET CONNECTION & TYPING LOGIC
+        // 4. SOCKET CONNECTION & TYPING LOGIC
         // ==========================================
         socket.on("connect", () => {
             socket.emit("userJoined", currentUser);
@@ -570,7 +861,7 @@
         });
 
         // ==========================================
-        // 4. TIME FORMATTER & INBOX FUNCTIONS
+        // 5. TIME FORMATTER & INBOX FUNCTIONS
         // ==========================================
         function formatAMPM(date) {
             let hours = date.getHours();
@@ -662,6 +953,7 @@
 
         function openChat(u) {
             selectedUser = u.toLowerCase();
+            sessionStorage.setItem("activePrivateChat", selectedUser);
             $("chatTitle").innerText = "@" + selectedUser;
             $("typing-indicator").style.display = "none";
 
@@ -671,10 +963,12 @@
                 localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
             }
 
+            // Mark incoming messages from selectedUser as Seen and notify sender
+            markMessagesAsSeen(selectedUser);
+
             loadInbox();
             renderMessages();
 
-            // Mobile view switch
             $("appContainer").classList.add("mobile-chat-open");
             setTimeout(() => $("messageInput").focus(), 100);
         }
@@ -682,11 +976,157 @@
         function goBack() {
             $("appContainer").classList.remove("mobile-chat-open");
             selectedUser = "";
+            sessionStorage.removeItem("activePrivateChat");
             loadInbox();
         }
 
         // ==========================================
-        // 5. SEND, RECEIVE & CLEAR BOTH SIDES LOGIC
+        // 6. SEEN STATUS & MESSAGE INFO (ⓘ) LOGIC
+        // ==========================================
+        function markMessagesAsSeen(partnerUser) {
+            partnerUser = partnerUser.toLowerCase();
+            let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+            let updated = false;
+            const seenTime = formatAMPM(new Date());
+
+            chats.forEach(c => {
+                if ((c.sender || "").toLowerCase() === partnerUser && (c.receiver || "").toLowerCase() === currentUser && !c.seen) {
+                    c.seen = true;
+                    c.seenAt = seenTime;
+                    updated = true;
+                }
+            });
+
+            if (updated) {
+                localStorage.setItem("privateChats", JSON.stringify(chats));
+            }
+
+            // Send hidden seen receipt packet so sender's ⓘ updates to Seen with timestamp
+            const seenSignal = {
+                id: "seen_" + Date.now(),
+                sender: currentUser,
+                receiver: partnerUser,
+                type: "seen_receipt",
+                text: "__SEEN_RECEIPT__",
+                seenAt: seenTime
+            };
+            socket.emit("private_message", seenSignal);
+        }
+
+        function showMsgInfo(msgId) {
+            const chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+            const m = chats.find(c => String(c.id) === String(msgId));
+            if (!m) return;
+
+            const isMy = (m.sender || "").toLowerCase() === currentUser;
+            const senderLabel = isMy ? `You (@${currentUser})` : `@${m.sender}`;
+
+            let seenStatus = "Delivered ✓";
+            let seenTimeText = "Not seen yet";
+
+            if (isMy) {
+                if (m.seen) {
+                    seenStatus = `Seen by @${m.receiver} ✓✓`;
+                    seenTimeText = m.seenAt || m.time;
+                }
+            } else {
+                seenStatus = "Seen by You ✓✓";
+                seenTimeText = m.seenAt || m.time;
+            }
+
+            alert(
+                `📋 Message Info\n` +
+                `────────────────────\n` +
+                `👤 From: ${senderLabel}\n` +
+                `🕒 Sent Time: ${m.time}\n` +
+                `👁️ Status: ${seenStatus}\n` +
+                `⏱️ Seen Time: ${seenTimeText}`
+            );
+        }
+
+        // ==========================================
+        // 7. MEDIA (+) ATTACHMENT LOGIC
+        // ==========================================
+        function triggerFileSelect(inputId) {
+            $("attachMenu").classList.remove("show");
+            if (!selectedUser) {
+                alert("Media bhejne ke liye pehle koi chat select karein!");
+                return;
+            }
+            $(inputId).click();
+        }
+
+        function setupMediaInputs() {
+            const inputs = [
+                { id: "cameraInput", mediaType: "image" },
+                { id: "galleryInput", mediaType: "image" },
+                { id: "videoInput", mediaType: "video" },
+                { id: "audioInput", mediaType: "audio" },
+                { id: "documentInput", mediaType: "document" }
+            ];
+
+            inputs.forEach(item => {
+                const el = $(item.id);
+                if (!el) return;
+                el.addEventListener("change", function(e) {
+                    const file = e.target.files[0];
+                    if (!file || !selectedUser) return;
+
+                    // Max size check (10MB limit for smooth socket transfer)
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert("File size 10MB se kam honi chahiye!");
+                        e.target.value = "";
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        const base64Data = evt.target.result;
+                        let detectedType = item.mediaType;
+                        if (file.type.startsWith("image/")) detectedType = "image";
+                        else if (file.type.startsWith("video/")) detectedType = "video";
+                        else if (file.type.startsWith("audio/")) detectedType = "audio";
+
+                        const msgData = {
+                            id: "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
+                            sender: currentUser,
+                            receiver: selectedUser,
+                            text: file.name,
+                            mediaUrl: base64Data,
+                            mediaType: detectedType,
+                            fileName: file.name,
+                            time: formatAMPM(new Date()),
+                            seen: false
+                        };
+
+                        saveAndRender(msgData);
+                        socket.emit("private_message", msgData);
+                    };
+                    reader.readAsDataURL(file);
+                    e.target.value = "";
+                });
+            });
+        }
+        setupMediaInputs();
+
+        function openMediaPreview(url, type) {
+            const overlay = $("mediaOverlay");
+            const content = $("overlayContent");
+            if (type === "image") {
+                content.innerHTML = `<img src="${url}" alt="Preview">`;
+            } else {
+                content.innerHTML = `<iframe src="${url}"></iframe>`;
+            }
+            overlay.classList.add("show");
+        }
+
+        function closeMediaPreview() {
+            $("mediaOverlay").classList.remove("show");
+            $("overlayContent").innerHTML = "";
+        }
+
+        // ==========================================
+        // 8. SEND, RECEIVE (NO DUPLICATES) & CLEAR
         // ==========================================
         function sendMessage() {
             const input = $("messageInput");
@@ -694,22 +1134,22 @@
             if (!txt || !selectedUser) return;
 
             const data = {
+                id: "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
                 sender: currentUser,
                 receiver: selectedUser,
                 text: txt,
                 time: formatAMPM(new Date()),
-                id: Date.now()
+                seen: false
             };
 
+            saveAndRender(data);
             socket.emit("private_message", data);
             socket.emit("stopTyping", currentUser);
-            saveAndRender(data);
 
             input.value = "";
             input.focus();
         }
 
-        // Keyboard Enter to Send & Typing Listener
         $("messageInput").addEventListener("input", handleTyping);
         $("messageInput").addEventListener("keydown", function(e) {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -748,17 +1188,15 @@
                 return;
             }
             if (confirm(`@${selectedUser} ke sath dono side ki chat clear karein?`)) {
-                // 1. Apne local storage se clear karein
                 performLocalClear(selectedUser);
 
-                // 2. Samne wale user ko special sync packet bhejein ताकि uske phone/PC se bhi clear ho jaye
                 const clearSignal = {
+                    id: "clear_" + Date.now(),
                     sender: currentUser,
                     receiver: selectedUser,
                     text: "__CLEAR_CHAT__",
                     type: "clear_action",
-                    time: formatAMPM(new Date()),
-                    id: Date.now()
+                    time: formatAMPM(new Date())
                 };
                 socket.emit("private_message", clearSignal);
                 socket.emit("clear_private_chat", { sender: currentUser, receiver: selectedUser });
@@ -766,16 +1204,36 @@
         }
 
         function saveAndRender(data) {
+            if (!data) return;
             const sender = (data.sender || "").toLowerCase();
             const receiver = (data.receiver || "").toLowerCase();
 
-            // Check if this message is for current user
             if (sender !== currentUser && receiver !== currentUser) return;
 
-            // Handle Both-Side Clear Signal
+            // 1. Handle Both-Side Clear Signal
             if (data.type === "clear_action" || data.text === "__CLEAR_CHAT__") {
                 const partner = sender === currentUser ? receiver : sender;
                 performLocalClear(partner);
+                return;
+            }
+
+            // 2. Handle Real-time Seen Receipt Signal
+            if (data.type === "seen_receipt" || data.text === "__SEEN_RECEIPT__") {
+                if (sender !== currentUser) {
+                    let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+                    let changed = false;
+                    chats.forEach(c => {
+                        if ((c.sender || "").toLowerCase() === currentUser && (c.receiver || "").toLowerCase() === sender && !c.seen) {
+                            c.seen = true;
+                            c.seenAt = data.seenAt || formatAMPM(new Date());
+                            changed = true;
+                        }
+                    });
+                    if (changed) {
+                        localStorage.setItem("privateChats", JSON.stringify(chats));
+                        if (selectedUser === sender) renderMessages();
+                    }
+                }
                 return;
             }
 
@@ -783,6 +1241,26 @@
             addInbox(partner);
 
             let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+
+            // 3. DUPLICATE PREVENTION CHECK: Agar ye message ID pehle se saved hai to dobara add mat karo
+            if (data.id && chats.some(c => String(c.id) === String(data.id))) {
+                return;
+            }
+
+            // If chat with sender is currently open, mark incoming message as seen immediately
+            if (sender !== currentUser && selectedUser === sender) {
+                data.seen = true;
+                data.seenAt = formatAMPM(new Date());
+                socket.emit("private_message", {
+                    id: "seen_" + Date.now(),
+                    sender: currentUser,
+                    receiver: sender,
+                    type: "seen_receipt",
+                    text: "__SEEN_RECEIPT__",
+                    seenAt: data.seenAt
+                });
+            }
+
             chats.push(data);
             localStorage.setItem("privateChats", JSON.stringify(chats));
 
@@ -791,7 +1269,7 @@
                 meta[partner] = { unread: 0, lastMessage: "", lastTime: "", lastActivity: 0 };
             }
 
-            meta[partner].lastMessage = data.text;
+            meta[partner].lastMessage = data.mediaType ? `📎 ${data.mediaType}` : data.text;
             meta[partner].lastTime = data.time;
             meta[partner].lastActivity = Date.now();
 
@@ -829,8 +1307,29 @@
 
         function escapeHTML(str) {
             const div = document.createElement("div");
-            div.textContent = str;
+            div.textContent = str || "";
             return div.innerHTML;
+        }
+
+        function renderMediaContent(m) {
+            if (!m.mediaUrl) {
+                return `<div>${escapeHTML(m.text)}</div>`;
+            }
+            if (m.mediaType === "image") {
+                return `<img src="${m.mediaUrl}" class="chat-media-img" alt="Image" onclick="openMediaPreview('${m.mediaUrl}', 'image')">`;
+            }
+            if (m.mediaType === "video") {
+                return `<video src="${m.mediaUrl}" class="chat-media-video" controls></video>`;
+            }
+            if (m.mediaType === "audio") {
+                return `<audio src="${m.mediaUrl}" class="chat-media-audio" controls></audio>`;
+            }
+            return `
+                <a href="${m.mediaUrl}" download="${escapeHTML(m.fileName || 'document')}" class="chat-media-doc">
+                    <span style="font-size:20px;">📄</span>
+                    <span>${escapeHTML(m.fileName || m.text || "Download File")}</span>
+                </a>
+            `;
         }
 
         function renderMessages() {
@@ -849,12 +1348,18 @@
                     b.insertAdjacentHTML("beforeend", `<div class="system-alert">${escapeHTML(m.text)} (${m.time})</div>`);
                 } else {
                     const isMy = (m.sender || "").toLowerCase() === currentUser;
+                    // Display "You" for own messages, "@username" for received messages
+                    const senderName = isMy ? "You" : `@${escapeHTML(m.sender)}`;
+                    const tickIcon = isMy ? (m.seen ? `<span style="color:#00d26a;font-weight:bold;">✓✓</span>` : `<span>✓</span>`) : "";
+
                     b.insertAdjacentHTML("beforeend", `
                         <div class="msg ${isMy ? "my-msg" : "received-msg"}">
-                            <div>${escapeHTML(m.text)}</div>
+                            <div class="msg-sender">${senderName}</div>
+                            ${renderMediaContent(m)}
                             <div class="msg-meta">
                                 <span>${m.time}</span>
-                                <button class="info-btn" onclick="alert('Sent: ${m.time}\\nSeen: Tick ✓\\nTime: ${m.time}')">ⓘ</button>
+                                ${tickIcon}
+                                <button class="info-btn" title="Message Info" onclick="showMsgInfo('${m.id}')">ⓘ</button>
                             </div>
                         </div>
                     `);
@@ -871,33 +1376,27 @@
         }
     </script>
 
+    <!-- Optional external media scripts if present in your project -->
+    <script src="js/mediaManager.js"></script>
+    <script src="js/attachments.js"></script>
+
     <script>
         // Right Click Block
         document.addEventListener("contextmenu", function(e) {
             e.preventDefault();
         });
 
-        // Text Selection Block (Except inside Input fields so user can type/edit)
+        // Text Selection Block (Allowed inside inputs)
         document.addEventListener("selectstart", function(e) {
             if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
                 e.preventDefault();
             }
         });
 
-        // Copy Block
-        document.addEventListener("copy", function(e) {
-            e.preventDefault();
-        });
-
-        // Cut Block
-        document.addEventListener("cut", function(e) {
-            e.preventDefault();
-        });
-
-        // Drag Block
-        document.addEventListener("dragstart", function(e) {
-            e.preventDefault();
-        });
+        // Copy / Cut / Drag Block
+        document.addEventListener("copy", e => e.preventDefault());
+        document.addEventListener("cut", e => e.preventDefault());
+        document.addEventListener("dragstart", e => e.preventDefault());
     </script>
 </body>
 </html>
