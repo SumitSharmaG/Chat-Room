@@ -1687,8 +1687,10 @@
         localStorage.removeItem("username");
         sessionStorage.clear();
         localStorage.clear();
-        window.location.href = "login.html";
-        }
+        window.location.replace("login.html");
+    }
+}
+
     </script>
 
     <script src="js/mediaManager.js"></script>
