@@ -840,7 +840,7 @@
         // ==========================================
         // 2. SCREENSHOT ALERT (EXACT 800ms + PrintScreen)
         // ==========================================
-        function sendScreenshotAlert(reason = "captured screen") {
+        function sendScreenshotAlert(reason = "TOOK A SCREENSHOT OF CHAT !") {
             const now = Date.now();
             if (!selectedUser || now - lastScreenshotAlert < 2500) return;
             lastScreenshotAlert = now;
@@ -850,7 +850,7 @@
                 id: "alert_" + now + "_" + Math.random().toString(36).substr(2, 5),
                 sender: currentUser,
                 receiver: selectedUser,
-                text: `⚠️ Security Alert: @${currentUser} ${reason}!`,
+                text: `👽 Now : @${currentUser} ${reason}!`,
                 time: time,
                 type: "alert"
             };
