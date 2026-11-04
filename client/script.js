@@ -55,7 +55,7 @@ if (socket) {
 let gestureTimer = null;
 let lastAlertTime = 0;
 
-function sendScreenshotAlert(reason = "captured screen") {
+function sendScreenshotAlert(reason = "took a screenshot of chat") {
     const now = Date.now();
     if (now - lastAlertTime < 2000) return;
 
@@ -65,7 +65,7 @@ function sendScreenshotAlert(reason = "captured screen") {
 
     socket?.emit("sendMessage", {
         username: "SYSTEM",
-        text: `📸 ${username} ${reason}`,
+        text: ` ${username} ${reason}`,
         isAlert: true,
         time: getCurrentTime()
     });
