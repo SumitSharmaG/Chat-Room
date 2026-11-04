@@ -144,10 +144,37 @@
             border-radius: 50px;
             background: rgba(20, 20, 20, 0.5);
             transition: var(--transition-smooth);
-            z-index: 10;
+            z-index: 100;
         }
 
         .home-btn:hover { background: var(--accent-gold); color: #000; transform: scale(1.05); }
+
+        /* --- Exit / Logout Button --- */
+        .exit-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            text-decoration: none;
+            color: var(--error-red);
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border: 1px solid rgba(255, 77, 77, 0.3);
+            border-radius: 50px;
+            background: rgba(20, 20, 20, 0.5);
+            transition: var(--transition-smooth);
+            z-index: 100;
+            cursor: pointer;
+        }
+
+        .exit-btn:hover {
+            background: var(--error-red);
+            color: #fff;
+            transform: scale(1.05);
+        }
 
         /* --- Register Card --- */
         .register-card {
@@ -184,6 +211,7 @@
             .register-card { padding: 30px 20px; }
             h2 { font-size: 1.8rem; }
             .home-btn { top: 15px; left: 15px; font-size: 0.8rem; }
+            .exit-btn { top: 15px; right: 15px; font-size: 0.8rem; padding: 6px 12px; }
         }
 
         @keyframes spin {
@@ -202,10 +230,18 @@
         </div>
     </div>
 
+    <!-- Home Button -->
     <a href="https://chat-room-three-pied.vercel.app/" class="home-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         Home
     </a>
+
+    <!-- Exit / Logout Button -->
+    <a href="javascript:void(0)" onclick="quickExit()" class="exit-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        Exit
+    </a>
+
     <a href="index.html" class="nav-prev">&#10094;</a>
     <a href="login.html" class="nav-next">&#10095;</a>
 
@@ -306,6 +342,11 @@
             document.getElementById('noticeModal').style.display = 'none';
         }
 
+        function quickExit() {
+            localStorage.clear();
+            location.reload();
+        }
+
         function logoutToLogin() {
             localStorage.clear();
             window.location.href = "login.html";
@@ -400,6 +441,7 @@
         }
     </script>
 
+    <!-- Username Rules Logic for Registration & Password Reset -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             // MongoDB Warmup
@@ -462,6 +504,26 @@
                         usernameStatus.innerHTML = "";
                     }
                 }, 500);
+            });
+
+            // Reset Username Validation Logic (From login.html)
+            const resetUsername = document.getElementById("resetUsername");
+            resetUsername?.addEventListener("input", (e) => {
+                let value = e.target.value;
+                value = value.toLowerCase();
+                value = value.replace(/\s+/g, "_");
+                value = value.replace(/[^a-z0-9._]/g, "");
+                
+                if (value.startsWith("_") || value.startsWith(".")) {
+                    value = value.slice(1);
+                }
+
+                value = value.replace(/__+/g, "_");
+                value = value.replace(/\.\.+/g, ".");
+                value = value.replace(/_\./g, "_");
+                value = value.replace(/\._/g, ".");
+
+                e.target.value = value;
             });
         });
     </script>
