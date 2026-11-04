@@ -239,7 +239,7 @@
     <!-- Exit / Logout Button -->
     <a href="javascript:void(0)" onclick="quickExit()" class="exit-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-        🚪
+    🚪
     </a>
 
     <a href="index.html" class="nav-prev">&#10094;</a>
@@ -278,11 +278,18 @@
             <form id="registerForm">
                 <input type="text" id="username" placeholder="Choose Username" required autocomplete="username" />
                 <div id="usernameStatus" style="font-size:12px; text-align:left; min-height:18px; color:#999; margin-top:-10px;"></div>
-                <input type="password" id="password" placeholder="Create Password" required autocomplete="new-password" />
+
+<!-- Password Field with View Toggle -->
+<div style="position:relative; width:100%;">
+    <input type="password" id="password" placeholder="Create Password" required autocomplete="new-password" style="width:100%; padding-right:50px;" />
+    <span onclick="togglePassword('password', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:12px; color:#b59461; cursor:pointer; font-weight:600; user-select:none;">View</span>
+</div>
+                
+                
                 <button id="registerBtn" type="submit" disabled>Create Account</button>
             </form>
 
-            <p class="footer-text">Already have an account? <a href="login.html">Login here</a></p>
+            <p class="footer-text">✦ Already have an account? <a href="login.html">Login here</a></p>
             <p class="footer-text">🔻Reset your old password? <a href="javascript:void(0)" onclick="toggleResetBox()">Click here</a></p>
             <p class="footer-text">🔻Know your User & Pass? <a href="javascript:void(0)" onclick="openCredentialsModal()">Click here</a></p>
 
