@@ -239,7 +239,7 @@
     <!-- Exit / Logout Button -->
     <a href="javascript:void(0)" onclick="quickExit()" class="exit-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-        
+        Exit
     </a>
 
     <a href="index.html" class="nav-prev">&#10094;</a>
@@ -283,8 +283,8 @@
             </form>
 
             <p class="footer-text">Already have an account? <a href="login.html">Login here</a></p>
-            <p class="footer-text">♦️Reset your old password? <a href="javascript:void(0)" onclick="toggleResetBox()">Click here</a></p>
-            <p class="footer-text">♦️Know your User & Pass? <a href="javascript:void(0)" onclick="openCredentialsModal()">Click here</a></p>
+            <p class="footer-text">Reset your old password? <a href="javascript:void(0)" onclick="toggleResetBox()">Click here</a></p>
+            <p class="footer-text">Know your User & Pass? <a href="javascript:void(0)" onclick="openCredentialsModal()">Click here</a></p>
 
             <div class="reg-note">
                 <strong>Note :-</strong> When You Click "CREATE ACCOUNT" Please Wait For 7-14 Sec For Connecting the Chat Server
@@ -347,7 +347,7 @@
                 <span onclick="togglePassword('confirmPassword', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:12px; color:#b59461; cursor:pointer; font-weight:600; user-select:none;">View</span>
             </div>
             
-            <button type="button" id="changePassBtn" onclick="changePassword()" style="margin-bottom: 10px;">Change Password</button>
+            <button type="button" id="changePassBtn" onclick="changePassword()" style="margin-bottom: 10px;" disabled>Change Password</button>
             <button type="button" onclick="closeResetModal()">Close</button>
         </div>
     </div>
@@ -552,7 +552,7 @@
                 }, 500);
             });
 
-            // Reset Username Validation & Live Check Logic
+            // Reset Username Validation & Live Server Check Logic
             const resetUsername = document.getElementById("resetUsername");
             const resetUsernameStatus = document.getElementById("resetUsernameStatus");
             const changePassBtn = document.getElementById("changePassBtn");
@@ -582,4 +582,53 @@
                 }
 
                 if (value.length > 20) {
-                    resetUsernameStatus.innerHTML
+                    resetUsernameStatus.innerHTML = "Username cannot exceed 20 characters";
+                    return;
+                }
+
+                if (value.startsWith("_") || value.startsWith(".") || value.endsWith("_") || value.endsWith(".") || value.includes("__") || value.includes("..") || value.includes("_.") || value.includes("._")) {
+                    resetUsernameStatus.innerHTML = "❌ Invalid username format";
+                    return;
+                }
+
+                resetUsernameStatus.innerHTML = `
+                <span style="display:inline-block; width:10px; height:10px; border:2px solid rgba(255,255,255,0.3); border-top:2px solid #ffffff; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-right:5px;"></span>
+                Checking...`;
+
+                clearTimeout(resetTimer);
+                resetTimer = setTimeout(async () => {
+                    try {
+                        const res = await fetch("https://chat-backend-gtg5.onrender.com/api/check-username/" + value);
+                        const data = await res.json();
+
+                        if (resetUsername.value !== value) return;
+
+                        // FIX: For reset password, the username MUST exist in database (meaning data.available must be false)
+                        if (!data.available) {
+                            resetUsernameStatus.innerHTML = "✅ Valid User Found";
+                            if (changePassBtn) {
+                                changePassBtn.disabled = false;
+                                changePassBtn.style.opacity = "1";
+                            }
+                        } else {
+                            resetUsernameStatus.innerHTML = "❌ Username does not exist";
+                        }
+                    } catch {
+                        resetUsernameStatus.innerHTML = "";
+                    }
+                }, 500);
+            });
+        });
+    </script>
+
+    <script>
+        // Security blocks
+        document.addEventListener("contextmenu", e => e.preventDefault());
+        document.addEventListener("selectstart", e => e.preventDefault());
+        document.addEventListener("dragstart", e => e.preventDefault());
+    </script>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
