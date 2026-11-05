@@ -145,7 +145,7 @@
         background-repeat: no-repeat;
     }  
 
-    /* Standard Compact Message Bubble Size (Removed heavy backdrop-filter) */
+    /* Standard Compact Message Bubble Size */
     #messages li {  
         list-style: none; 
         padding: 7px 12px;   
@@ -180,30 +180,129 @@
         display: block;
     }
 
-    /* --- 4. Single & Double Blue Tick Styling --- */
+    /* --- 4. Message Footer: Time, Ticks & Info (ⓘ) Button --- */
     .msg-meta-ticks {
         display: inline-flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 4px;
-        font-size: 0.65rem;
+        gap: 5px;
+        font-size: 0.64rem;
         color: #999;
-        margin-top: 2px;
+        margin-top: 3px;
         align-self: flex-end;
         line-height: 1;
-        pointer-events: none;
+        cursor: pointer;
     }
 
     .tick-icon {
         font-size: 0.76rem;
         font-weight: bold;
         letter-spacing: -2px;
-        margin-left: 3px;
         color: #888; /* Single Unseen Tick */
     }
 
     .tick-icon.seen {
         color: var(--tick-blue) !important; /* Double Blue Tick */
+    }
+
+    .msg-info-trigger, .info-btn {
+        background: transparent;
+        border: none;
+        color: var(--accent-gold);
+        font-size: 0.78rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 2px;
+        opacity: 0.85;
+        transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .msg-info-trigger:hover, .info-btn:hover {
+        opacity: 1;
+        transform: scale(1.15);
+    }
+
+    /* --- Custom Message Info Modal --- */
+    .msg-info-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 999999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .msg-info-modal-overlay.show {
+        display: flex;
+    }
+
+    .msg-info-modal-box {
+        background: #141414;
+        border: 1px solid var(--accent-gold);
+        border-radius: 14px;
+        width: 100%;
+        max-width: 320px;
+        padding: 20px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.85);
+        color: var(--text-main);
+        animation: fadeInModal 0.2s ease-out;
+    }
+
+    @keyframes fadeInModal {
+        from { transform: scale(0.92); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .msg-info-header {
+        font-family: 'Playfair Display', serif;
+        color: var(--accent-gold);
+        font-size: 1.15rem;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(181, 148, 97, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .msg-info-row {
+        font-size: 0.82rem;
+        margin: 8px 0;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        border-bottom: 1px dashed rgba(255,255,255,0.06);
+        padding-bottom: 6px;
+    }
+
+    .msg-info-label {
+        color: #aaa;
+        font-weight: 500;
+    }
+
+    .msg-info-val {
+        color: #fff;
+        font-weight: 600;
+        text-align: right;
+        word-break: break-word;
+    }
+
+    .msg-info-close-btn {
+        margin-top: 14px;
+        width: 100%;
+        background: var(--accent-gold);
+        color: #000;
+        border: none;
+        padding: 9px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.82rem;
+        cursor: pointer;
+        text-transform: uppercase;
     }
 
     /* --- 5. Small Screenshot Alert Styling --- */
@@ -245,10 +344,6 @@
         cursor: pointer; display: flex; align-items: center;   
         justify-content: center; flex-shrink: 0;
     }   
-      
-    .info-btn {  
-        display: none !important;
-    }
 
     /* ===== Fixed Attachment UI ===== */
     .attach-btn {
@@ -454,6 +549,32 @@
     <div id="overlayContent" style="width:100%; display:flex; justify-content:center; align-items:center;"></div>
 </div>
 
+<!-- ===== Message Info (ⓘ) Popup Modal ===== -->
+<div id="msgInfoModal" class="msg-info-modal-overlay" onclick="closeMsgInfoModal()">
+    <div class="msg-info-modal-box" onclick="event.stopPropagation()">
+        <div class="msg-info-header">
+            <span>📋 Message Info</span>
+        </div>
+        <div class="msg-info-row">
+            <span class="msg-info-label">👤 From:</span>
+            <span class="msg-info-val" id="infoFromVal">-</span>
+        </div>
+        <div class="msg-info-row">
+            <span class="msg-info-label">🕒 Sent Time:</span>
+            <span class="msg-info-val" id="infoSentVal">-</span>
+        </div>
+        <div class="msg-info-row">
+            <span class="msg-info-label">👁️ Status:</span>
+            <span class="msg-info-val" id="infoStatusVal">-</span>
+        </div>
+        <div class="msg-info-row">
+            <span class="msg-info-label">⏱️ Seen Time:</span>
+            <span class="msg-info-val" id="infoSeenTimeVal">-</span>
+        </div>
+        <button class="msg-info-close-btn" onclick="closeMsgInfoModal()">OK</button>
+    </div>
+</div>
+
 <script src="https://chat-backend-gtg5.onrender.com/socket.io/socket.io.js"></script>  
 <script src="js/mediaManager.js"></script>
 <script src="js/attachments.js"></script>  
@@ -468,6 +589,17 @@
             menu.classList.remove("show");
         }
     });
+
+    // Helper: Format current time in AM/PM
+    function formatAMPM(date) {
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        return hours + ':' + minutes + ' ' + ampm;
+    }
 
     // =========================================================================
     // 6. BACKGROUND THEME SWITCHER (Click on "World Chat" to cycle backgrounds)
@@ -498,7 +630,72 @@
 
 
     // =========================================================================
-    // 2, 4 & 5. ZERO-LAG MESSAGE ENHANCER (No Infinite Loop!)
+    // 4. MESSAGE INFO (ⓘ) POPUP LOGIC (Works for both World & Private Chat)
+    // =========================================================================
+    function openMsgInfoModal(fromLabel, sentTime, statusText, seenTimeText) {
+        document.getElementById("infoFromVal").textContent = fromLabel;
+        document.getElementById("infoSentVal").textContent = sentTime;
+        document.getElementById("infoStatusVal").textContent = statusText;
+        document.getElementById("infoSeenTimeVal").textContent = seenTimeText;
+        document.getElementById("msgInfoModal").classList.add("show");
+    }
+
+    function closeMsgInfoModal() {
+        document.getElementById("msgInfoModal").classList.remove("show");
+    }
+
+    function showWorldMsgInfo(li) {
+        if (!li) return;
+        const myUser = getMyUsername();
+        const isMy = li.classList.contains("my-message");
+        const senderRaw = li.dataset.sender || (isMy ? myUser : "User");
+        const senderLabel = isMy ? `You (@${myUser})` : `@${senderRaw}`;
+        const sentTime = li.dataset.sentTime || formatAMPM(new Date());
+
+        const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
+        const isSeen = li.dataset.seen === "true" || onlineCount > 1;
+        const seenByUsers = li.dataset.seenBy || "";
+
+        let seenStatus = "Delivered ✓";
+        let seenTimeText = "Not seen yet";
+
+        if (isMy) {
+            if (isSeen) {
+                seenStatus = seenByUsers ? `Seen by ${seenByUsers} ✓✓` : `Seen by Active Users ✓✓`;
+                seenTimeText = li.dataset.seenAt || formatAMPM(new Date());
+            }
+        } else {
+            seenStatus = "Seen by You ✓✓";
+            seenTimeText = li.dataset.seenAt || sentTime;
+        }
+
+        openMsgInfoModal(senderLabel, sentTime, seenStatus, seenTimeText);
+    }
+
+    // Also support direct showMsgInfo(msgId) call if triggered by script.js
+    window.showMsgInfo = function(msgId) {
+        const li = document.querySelector(`li[data-id="${msgId}"], li[id="${msgId}"]`);
+        if (li) {
+            showWorldMsgInfo(li);
+            return;
+        }
+        // Fallback to localStorage check
+        const currentUser = getMyUsername().toLowerCase();
+        const chats = JSON.parse(localStorage.getItem("worldChats") || localStorage.getItem("privateChats") || "[]");
+        const m = chats.find(c => String(c.id) === String(msgId));
+        if (!m) return;
+
+        const isMy = (m.sender || "").toLowerCase() === currentUser;
+        const senderLabel = isMy ? `You (@${currentUser})` : `@${m.sender}`;
+        let seenStatus = m.seen ? `Seen ✓✓` : "Delivered ✓";
+        let seenTimeText = m.seen ? (m.seenAt || m.time) : "Not seen yet";
+
+        openMsgInfoModal(senderLabel, m.time || formatAMPM(new Date()), seenStatus, seenTimeText);
+    };
+
+
+    // =========================================================================
+    // 2, 4 & 5. ZERO-LAG MESSAGE ENHANCER (You Label, Ticks + ⓘ Info, Screenshot)
     // =========================================================================
     function getMyUsername() {
         const fromStorage = localStorage.getItem("username");
@@ -509,7 +706,7 @@
 
     function enhanceSingleMessage(li) {
         if (!li || li.nodeType !== 1 || li.dataset.enhanced === "true") return;
-        li.dataset.enhanced = "true"; // Prevents re-processing and infinite loops
+        li.dataset.enhanced = "true";
 
         const rawText = (li.textContent || "").trim();
         const myUser = getMyUsername();
@@ -525,14 +722,32 @@
             return;
         }
 
-        // Check if message belongs to logged-in user
+        // Detect existing time inside message or assign current time
+        const timeMatch = rawText.match(/\b(\d{1,2}:\d{2}\s?(?:AM|PM|am|pm)?)\b/);
+        const msgTime = timeMatch ? timeMatch[1] : formatAMPM(new Date());
+        li.dataset.sentTime = msgTime;
+
+        // Detect sender name
+        let detectedSender = "";
+        const firstTag = li.querySelector("strong, b, .sender, .username, span:first-child");
+        if (firstTag) {
+            detectedSender = firstTag.textContent.trim().replace(/:$/, "");
+        }
+
         let isMyMsg = li.classList.contains("my-message");
-        if (!isMyMsg && myUser) {
-            const firstTag = li.querySelector("strong, b, .sender, .username, span:first-child");
-            if (firstTag && firstTag.textContent.trim().replace(/:$/, "").toLowerCase() === myUser.toLowerCase()) {
-                isMyMsg = true;
-                li.classList.add("my-message");
-            }
+        if (!isMyMsg && myUser && detectedSender.toLowerCase() === myUser.toLowerCase()) {
+            isMyMsg = true;
+            li.classList.add("my-message");
+        }
+
+        li.dataset.sender = detectedSender || (isMyMsg ? myUser : "User");
+
+        // Extract any existing seen info if script.js attached an info-btn
+        const oldInfoBtn = li.querySelector(".info-btn");
+        if (oldInfoBtn) {
+            const titleAttr = oldInfoBtn.getAttribute("title") || oldInfoBtn.dataset.seenBy || "";
+            if (titleAttr) li.dataset.seenBy = titleAttr;
+            oldInfoBtn.remove(); // Replaced by our unified ⓘ + Tick bar
         }
 
         if (isMyMsg) {
@@ -549,7 +764,7 @@
 
             if (!replaced && myUser) {
                 for (let node of li.childNodes) {
-                    if (node.nodeType === 3) { // Text node
+                    if (node.nodeType === 3) {
                         const regex = new RegExp(`^\\s*${myUser}\\s*:?`, "i");
                         if (regex.test(node.nodeValue)) {
                             node.nodeValue = node.nodeValue.replace(regex, "You:");
@@ -558,25 +773,53 @@
                     }
                 }
             }
-
-            // 4. Add Single / Double Blue Tick
-            const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
-            const isSeen = onlineCount > 1 || li.innerHTML.toLowerCase().includes("seen");
-
-            const tickWrap = document.createElement("span");
-            tickWrap.className = "msg-meta-ticks";
-            tickWrap.innerHTML = `<span class="tick-icon ${isSeen ? 'seen' : ''}">${isSeen ? '✓✓' : '✓'}</span>`;
-            li.appendChild(tickWrap);
         }
+
+        // 4. Add Footer with Ticks (✓ / ✓✓) & Clickable ⓘ Info Button
+        const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
+        const isSeen = onlineCount > 1 || li.innerHTML.toLowerCase().includes("seen");
+        if (isSeen) {
+            li.dataset.seen = "true";
+            li.dataset.seenAt = formatAMPM(new Date());
+        }
+
+        const metaWrap = document.createElement("div");
+        metaWrap.className = "msg-meta-ticks";
+        metaWrap.title = "Click for Message Info";
+        metaWrap.onclick = (e) => {
+            e.stopPropagation();
+            showWorldMsgInfo(li);
+        };
+
+        if (isMyMsg) {
+            metaWrap.innerHTML = `
+                <span class="tick-icon ${isSeen ? 'seen' : ''}">${isSeen ? '✓✓' : '✓'}</span>
+                <button type="button" class="msg-info-trigger" title="Message Info">ⓘ</button>
+            `;
+        } else {
+            metaWrap.innerHTML = `
+                <button type="button" class="msg-info-trigger" title="Message Info">ⓘ</button>
+            `;
+        }
+
+        li.appendChild(metaWrap);
     }
 
-    // Update existing single ticks to double blue ticks when someone else comes online or sees
+    // Update existing single ticks to double blue ticks when someone else comes online
     function updateAllTicksStatus() {
         const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
         if (onlineCount > 1 && messagesBox) {
-            messagesBox.querySelectorAll(".tick-icon:not(.seen)").forEach(tick => {
-                tick.textContent = "✓✓";
-                tick.classList.add("seen");
+            const nowTime = formatAMPM(new Date());
+            messagesBox.querySelectorAll("li.my-message").forEach(li => {
+                if (li.dataset.seen !== "true") {
+                    li.dataset.seen = "true";
+                    li.dataset.seenAt = nowTime;
+                }
+                const tick = li.querySelector(".tick-icon:not(.seen)");
+                if (tick) {
+                    tick.textContent = "✓✓";
+                    tick.classList.add("seen");
+                }
             });
         }
     }
@@ -599,7 +842,7 @@
         fastObserver.observe(messagesBox, { childList: true, subtree: false });
     }
 
-    // Also watch online-count changes to turn ticks blue automatically
+    // Watch online-count changes to turn ticks blue automatically
     const onlineCountEl = document.getElementById("online-count");
     if (onlineCountEl) {
         const countObserver = new MutationObserver(updateAllTicksStatus);
