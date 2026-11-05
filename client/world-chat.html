@@ -472,15 +472,15 @@
     <div class="header-left">  
         <a href="https://chat-room-three-pied.vercel.app/" class="home-btn">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            Home
+        
         </a>  
         <a href="selection.html" class="back-btn">
-            &#10094; Back
+            &#10094;
         </a>
     </div>  
 
     <h2 class="chat-title-trigger" id="bgSwitcherBtn" title="Click to change chat background">
-        World Chat <span style="font-size: 0.75rem; opacity: 0.8;">✦</span>
+        World Chat <span style="font-size: 0.75rem; opacity: 0.8;"></span>
     </h2>  
 
     <div class="header-right">  
@@ -553,23 +553,23 @@
 <div id="msgInfoModal" class="msg-info-modal-overlay" onclick="closeMsgInfoModal()">
     <div class="msg-info-modal-box" onclick="event.stopPropagation()">
         <div class="msg-info-header">
-            <span>📋 Message Info</span>
+            <span>📋 Message Info :</span>
         </div>
         <div class="msg-info-body">
             <div class="msg-info-row">
-                <span class="msg-info-label">👤 From:</span>
+                <span class="msg-info-label">👤 From :</span>
                 <span class="msg-info-val" id="infoFromVal">-</span>
             </div>
             <div class="msg-info-row">
-                <span class="msg-info-label">🕒 Sent Time:</span>
+                <span class="msg-info-label">🕒 Sent Time :</span>
                 <span class="msg-info-val" id="infoSentVal">-</span>
             </div>
             <div class="msg-info-row">
-                <span class="msg-info-label">👁️ Seen Status:</span>
+                <span class="msg-info-label">👁️ Seen Status :</span>
                 <span class="msg-info-val" id="infoStatusVal">-</span>
             </div>
             <div class="msg-info-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
-                <span class="msg-info-label">⏱️ Seen Time:</span>
+                <span class="msg-info-label">⏱️ Seen Time :</span>
                 <div class="msg-info-val" id="infoSeenTimeVal" style="width: 100%; text-align: left; font-weight: normal; font-size: 0.78rem; color: #ccc;">-</div>
             </div>
         </div>
@@ -656,8 +656,8 @@
             seenUsers = Array.isArray(seenMap[msgId]) ? seenMap[msgId] : [seenMap[msgId]];
         }
 
-        let seenStatusText = "Delivered ✓";
-        let seenTimeHtml = "Not seen yet";
+        let seenStatusText = "Delivered";
+        let seenTimeHtml = "(Not seen yet)";
 
         if (seenUsers.length > 0) {
             seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " ✓✓";
@@ -676,7 +676,7 @@
         } else {
             const users = (typeof seenMap !== "undefined" && seenMap[id]) ? seenMap[id] : [];
             const myUser = getMyUsername().toLowerCase();
-            const senderLabel = `You (@${myUser})`;
+            const senderLabel = `@${myUser}(You)`;
             const status = users.length > 0 ? users.map(u => `@${u}`).join(", ") + " ✓✓" : "Delivered ✓";
             const seenTime = users.length > 0 ? users.map(u => `<div><b>@${u}</b>: ${formatAMPM(new Date())}</div>`).join("") : "Not seen yet";
             openMsgInfoModal(senderLabel, formatAMPM(new Date()), status, seenTime);
@@ -703,7 +703,7 @@
             let ssUser = myUser || "user";
             const match = rawText.match(/([a-zA-Z0-9._]+)\s+took\s+a\s+screenshot/i) || rawText.match(/@([a-zA-Z0-9._]+)/);
             if (match && match[1]) ssUser = match[1].replace(/^@/, "");
-            li.textContent = `~ @${ssUser} took a screenshot of chat`;
+            li.textContent = `~ @${ssUser} took a screenshot of chat !`;
             return;
         }
 
