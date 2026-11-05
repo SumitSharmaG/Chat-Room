@@ -68,7 +68,7 @@
         border: 1px solid rgba(181, 148, 97, 0.35);
         border-radius: 20px;
         background: rgba(20, 20, 20, 0.7);
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
 
     .home-btn:hover {
@@ -105,7 +105,7 @@
         cursor: pointer;
         padding: 6px 12px;
         border-radius: 8px;
-        transition: all 0.2s ease;
+        transition: transform 0.15s ease, background 0.2s ease;
         display: flex;
         align-items: center;
         gap: 5px;
@@ -136,40 +136,35 @@
 
     .clear-btn { border-color: var(--accent-red); color: var(--accent-red); }  
 
-    /* --- 3 & 6. Messages Container & Background Support --- */
+    /* --- 3 & 6. Messages Container (Optimized for Zero Lag) --- */
     #messages {   
         flex: 1; overflow-y: auto; padding: 12px 15px;   
         display: flex; flex-direction: column; gap: 8px;  
-        scroll-behavior: smooth;
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        background-attachment: fixed;
-        transition: background-image 0.4s ease-in-out;
     }  
 
-    /* Standard Compact Message Bubble Size */
+    /* Standard Compact Message Bubble Size (Removed heavy backdrop-filter) */
     #messages li {  
         list-style: none; 
         padding: 7px 12px;   
-        background: rgba(22, 22, 22, 0.88);  
-        backdrop-filter: blur(4px);
+        background: #1a1a1a;  
         border-radius: 12px 12px 12px 2px; 
         max-width: 78%;   
         width: fit-content; 
-        border: 1px solid rgba(255,255,255,0.07);  
+        border: 1px solid rgba(255,255,255,0.08);  
         display: flex; 
         flex-direction: column;  
         word-wrap: break-word;  
-        font-size: 0.86rem; /* Standard readable size */
+        font-size: 0.85rem; 
         line-height: 1.38;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         position: relative;
     }  
 
     #messages li.my-message {  
         align-self: flex-end;  
-        background: linear-gradient(145deg, rgba(45, 34, 24, 0.92), rgba(30, 22, 16, 0.92));  
+        background: #281e15;  
         border-color: rgba(181, 148, 97, 0.45);  
         border-radius: 12px 12px 2px 12px;  
     }  
@@ -196,15 +191,15 @@
         margin-top: 2px;
         align-self: flex-end;
         line-height: 1;
+        pointer-events: none;
     }
 
     .tick-icon {
-        font-size: 0.78rem;
+        font-size: 0.76rem;
         font-weight: bold;
         letter-spacing: -2px;
         margin-left: 3px;
-        color: #888; /* Default Single/Unseen Tick */
-        transition: color 0.2s ease;
+        color: #888; /* Single Unseen Tick */
     }
 
     .tick-icon.seen {
@@ -214,7 +209,7 @@
     /* --- 5. Small Screenshot Alert Styling --- */
     #messages li.screenshot-alert {
         align-self: center !important;
-        background: rgba(15, 15, 15, 0.75) !important;
+        background: rgba(18, 18, 18, 0.9) !important;
         border: 1px dashed rgba(181, 148, 97, 0.35) !important;
         color: var(--accent-gold) !important;
         font-size: 0.72rem !important;
@@ -223,7 +218,6 @@
         font-style: italic;
         text-align: center;
         max-width: 90%;
-        box-shadow: none !important;
         margin: 4px 0;
     }
 
@@ -253,7 +247,7 @@
     }   
       
     .info-btn {  
-        display: none !important; /* Hidden since we use Ticks now */
+        display: none !important;
     }
 
     /* ===== Fixed Attachment UI ===== */
@@ -479,14 +473,10 @@
     // 6. BACKGROUND THEME SWITCHER (Click on "World Chat" to cycle backgrounds)
     // =========================================================================
     const chatBackgrounds = [
-        // 1. Default Dark Luxury Gradient (No image)
         "none",
-        // 2. Dark Brown / Coffee Luxury Abstract Texture (Replace URL anytime)
-        "linear-gradient(rgba(10, 10, 10, 0.72), rgba(10, 10, 10, 0.72)), url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1200&q=80')",
-        // 3. Dark Grey / Charcoal Matte Minimal Texture (Replace URL anytime)
-        "linear-gradient(rgba(10, 10, 10, 0.78), rgba(10, 10, 10, 0.78)), url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80')",
-        // 4. Deep Warm Wood / Bronze Aesthetic (Replace URL anytime)
-        "linear-gradient(rgba(12, 10, 8, 0.75), rgba(12, 10, 8, 0.75)), url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1200&q=80')"
+        "linear-gradient(rgba(10, 10, 10, 0.75), rgba(10, 10, 10, 0.75)), url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1000&q=75')",
+        "linear-gradient(rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.8)), url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1000&q=75')",
+        "linear-gradient(rgba(12, 10, 8, 0.78), rgba(12, 10, 8, 0.78)), url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1000&q=75')"
     ];
 
     let currentBgIndex = parseInt(localStorage.getItem("worldChatBgIndex") || "0", 10);
@@ -495,11 +485,9 @@
 
     function applyChatBackground(index) {
         if (!messagesBox) return;
-        const bgValue = chatBackgrounds[index] || "none";
-        messagesBox.style.backgroundImage = bgValue;
+        messagesBox.style.backgroundImage = chatBackgrounds[index] || "none";
     }
 
-    // Load saved background on startup
     applyChatBackground(currentBgIndex);
 
     bgSwitcherBtn?.addEventListener("click", () => {
@@ -510,151 +498,113 @@
 
 
     // =========================================================================
-    // 2, 4 & 5. MESSAGE ENHANCER: "You" Label, Blue Ticks & Screenshot Alert
+    // 2, 4 & 5. ZERO-LAG MESSAGE ENHANCER (No Infinite Loop!)
     // =========================================================================
-    const loggedInUser = (localStorage.getItem("username") || "").trim().toLowerCase();
+    function getMyUsername() {
+        const fromStorage = localStorage.getItem("username");
+        if (fromStorage) return fromStorage.trim();
+        const fromDom = document.getElementById("display-username")?.textContent;
+        return (fromDom || "").replace(/^@/, "").trim();
+    }
 
-    function processMessageElement(li) {
-        if (!li || li.nodeType !== 1) return;
+    function enhanceSingleMessage(li) {
+        if (!li || li.nodeType !== 1 || li.dataset.enhanced === "true") return;
+        li.dataset.enhanced = "true"; // Prevents re-processing and infinite loops
 
         const rawText = (li.textContent || "").trim();
+        const myUser = getMyUsername();
 
-        // --- 5. Format Screenshot Alerts into compact '~ @user took a screenshot of chat' ---
+        // 5. Check if it's a Screenshot Alert
         if (rawText.toLowerCase().includes("screenshot")) {
             li.classList.add("screenshot-alert");
             li.classList.remove("my-message");
-
-            if (!li.dataset.ssFormatted) {
-                // Extract username if present
-                let ssUser = "user";
-                const match = rawText.match(/([a-zA-Z0-9._]+)\s+took\s+a\s+screenshot/i) || rawText.match(/@([a-zA-Z0-9._]+)/);
-                if (match && match[1]) {
-                    ssUser = match[1].replace(/^@/, "");
-                } else if (loggedInUser) {
-                    ssUser = loggedInUser;
-                }
-                li.innerHTML = `~ @${ssUser} took a screenshot of chat`;
-                li.dataset.ssFormatted = "true";
-            }
+            let ssUser = myUser || "user";
+            const match = rawText.match(/([a-zA-Z0-9._]+)\s+took\s+a\s+screenshot/i) || rawText.match(/@([a-zA-Z0-9._]+)/);
+            if (match && match[1]) ssUser = match[1].replace(/^@/, "");
+            li.textContent = `~ @${ssUser} took a screenshot of chat`;
             return;
         }
 
-        const isMyMsg = li.classList.contains("my-message");
+        // Check if message belongs to logged-in user
+        let isMyMsg = li.classList.contains("my-message");
+        if (!isMyMsg && myUser) {
+            const firstTag = li.querySelector("strong, b, .sender, .username, span:first-child");
+            if (firstTag && firstTag.textContent.trim().replace(/:$/, "").toLowerCase() === myUser.toLowerCase()) {
+                isMyMsg = true;
+                li.classList.add("my-message");
+            }
+        }
 
-        // --- 2. Replace current user's name with "You" on their own messages ---
         if (isMyMsg) {
-            const nameSelectors = li.querySelectorAll("strong, b, .sender, .username, span:first-child");
+            // 2. Replace username with "You"
+            const nameTags = li.querySelectorAll("strong, b, .sender, .username");
             let replaced = false;
-
-            nameSelectors.forEach(el => {
-                const txt = el.textContent.trim().replace(/:$/, "").toLowerCase();
-                if (txt === loggedInUser || txt === "me") {
+            nameTags.forEach(el => {
+                const txt = el.textContent.trim().replace(/:$/, "");
+                if (!myUser || txt.toLowerCase() === myUser.toLowerCase()) {
                     el.textContent = "You";
                     replaced = true;
                 }
             });
 
-            // Fallback if username is plain text at start of <li>
-            if (!replaced && loggedInUser) {
-                const walker = document.createTreeWalker(li, NodeFilter.SHOW_TEXT, null, false);
-                const firstTextNode = walker.nextNode();
-                if (firstTextNode) {
-                    const nodeVal = firstTextNode.nodeValue;
-                    const regex = new RegExp(`^\\s*${loggedInUser}\\s*:?`, "i");
-                    if (regex.test(nodeVal)) {
-                        firstTextNode.nodeValue = nodeVal.replace(regex, "You:");
+            if (!replaced && myUser) {
+                for (let node of li.childNodes) {
+                    if (node.nodeType === 3) { // Text node
+                        const regex = new RegExp(`^\\s*${myUser}\\s*:?`, "i");
+                        if (regex.test(node.nodeValue)) {
+                            node.nodeValue = node.nodeValue.replace(regex, "You:");
+                            break;
+                        }
                     }
                 }
             }
+
+            // 4. Add Single / Double Blue Tick
+            const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
+            const isSeen = onlineCount > 1 || li.innerHTML.toLowerCase().includes("seen");
+
+            const tickWrap = document.createElement("span");
+            tickWrap.className = "msg-meta-ticks";
+            tickWrap.innerHTML = `<span class="tick-icon ${isSeen ? 'seen' : ''}">${isSeen ? '✓✓' : '✓'}</span>`;
+            li.appendChild(tickWrap);
         }
+    }
 
-        // --- 4. Replace "Seen by" / Info Button with Single (✓) & Double Blue Ticks (✓✓) ---
-        // Remove old info button or text-based seen indicators
-        const oldInfoBtns = li.querySelectorAll(".info-btn, .seen-list, .seen-by");
-        let isSeenByOthers = false;
-
-        oldInfoBtns.forEach(el => {
-            if (el.textContent.toLowerCase().includes("seen") || el.getAttribute("data-seen") === "true") {
-                isSeenByOthers = true;
-            }
-            el.style.display = "none";
-        });
-
-        // Check if script.js updated any text with "Seen" or online count > 1
+    // Update existing single ticks to double blue ticks when someone else comes online or sees
+    function updateAllTicksStatus() {
         const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
-        if (li.innerHTML.toLowerCase().includes("seen") || li.dataset.seen === "true" || onlineCount > 1) {
-            isSeenByOthers = true;
-        }
-
-        if (isMyMsg) {
-            let tickContainer = li.querySelector(".msg-meta-ticks");
-            if (!tickContainer) {
-                tickContainer = document.createElement("span");
-                tickContainer.className = "msg-meta-ticks";
-                tickContainer.innerHTML = `<span class="tick-icon">✓</span>`;
-                li.appendChild(tickContainer);
-            }
-
-            const tickIcon = tickContainer.querySelector(".tick-icon");
-            if (tickIcon) {
-                if (isSeenByOthers) {
-                    tickIcon.textContent = "✓✓";
-                    tickIcon.classList.add("seen");
-                } else {
-                    tickIcon.textContent = "✓";
-                    tickIcon.classList.remove("seen");
-                }
-            }
-        }
-    }
-
-    // Observe #messages list for new or updated messages from script.js
-    if (messagesBox) {
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeName === "LI") {
-                        processMessageElement(node);
-                    } else if (node.querySelectorAll) {
-                        node.querySelectorAll("li").forEach(processMessageElement);
-                    }
-                });
-                if (mutation.type === "characterData" || mutation.type === "attributes" || mutation.type === "childList") {
-                    const parentLi = mutation.target.closest ? mutation.target.closest("li") : null;
-                    if (parentLi) processMessageElement(parentLi);
-                }
+        if (onlineCount > 1 && messagesBox) {
+            messagesBox.querySelectorAll(".tick-icon:not(.seen)").forEach(tick => {
+                tick.textContent = "✓✓";
+                tick.classList.add("seen");
             });
-        });
-
-        observer.observe(messagesBox, {
-            childList: true,
-            subtree: true,
-            characterData: true,
-            attributes: true
-        });
+        }
     }
 
-    // Built-in Screenshot Detection Fallback (PrintScreen / Shortcuts)
-    window.addEventListener("keyup", (e) => {
-        if (e.key === "PrintScreen") {
-            const activeUser = localStorage.getItem("username") || "user";
-            if (window.socket && typeof window.socket.emit === "function") {
-                window.socket.emit("screenshot", { username: activeUser });
+    // Lightweight Observer: Only watches direct <li> additions to #messages (subtree: false = ZERO LAG)
+    if (messagesBox) {
+        messagesBox.querySelectorAll("li").forEach(enhanceSingleMessage);
+
+        const fastObserver = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+                for (const node of m.addedNodes) {
+                    if (node.nodeName === "LI") {
+                        enhanceSingleMessage(node);
+                    }
+                }
             }
-            // Local fallback display if script.js doesn't append it automatically
-            const existingAlerts = messagesBox?.querySelectorAll(".screenshot-alert");
-            const lastAlert = existingAlerts?.[existingAlerts.length - 1];
-            const alertText = `~ @${activeUser} took a screenshot of chat`;
-            if (!lastAlert || lastAlert.textContent !== alertText) {
-                const li = document.createElement("li");
-                li.className = "screenshot-alert";
-                li.dataset.ssFormatted = "true";
-                li.textContent = alertText;
-                messagesBox?.appendChild(li);
-                messagesBox.scrollTop = messagesBox.scrollHeight;
-            }
-        }
-    });
+            updateAllTicksStatus();
+        });
+
+        fastObserver.observe(messagesBox, { childList: true, subtree: false });
+    }
+
+    // Also watch online-count changes to turn ticks blue automatically
+    const onlineCountEl = document.getElementById("online-count");
+    if (onlineCountEl) {
+        const countObserver = new MutationObserver(updateAllTicksStatus);
+        countObserver.observe(onlineCountEl, { childList: true, characterData: true, subtree: true });
+    }
 </script>
 
 </body>  
