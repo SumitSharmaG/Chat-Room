@@ -645,11 +645,9 @@
         // ONLY SENDER can view message info
         if (!isMy) return;
 
-        const senderRaw = li.dataset.sender || myUser;
         const senderLabel = `You (@${myUser})`;
         const sentTime = li.dataset.sentTime || formatAMPM(new Date());
 
-        // Retrieve recorded seen users map for this specific message element/id
         let seenMap = {};
         try {
             seenMap = JSON.parse(li.dataset.seenMap || "{}");
@@ -663,13 +661,8 @@
             seenStatusText = seenUsers.map(u => `@${u}`).join(", ");
             seenTimeHtml = seenUsers.map(u => `<div><b>@${u}</b>: ${seenMap[u]}</div>`).join("");
         } else {
-            // Fallback if online users are present
-            const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
-            if (onlineCount > 1) {
-                seenStatusText = "Active Users";
-                const fallbackTime = li.dataset.seenAt || formatAMPM(new Date());
-                seenTimeHtml = `<div>Seen at ${fallbackTime}</div>`;
-            }
+            seenStatusText = "Delivered ✓";
+            seenTimeHtml = "Not seen yet";
         }
 
         openMsgInfoModal(senderLabel, sentTime, seenStatusText, seenTimeHtml);
@@ -706,7 +699,6 @@
             return;
         }
 
-        // Extract or generate AM/PM sent time
         const timeMatch = rawText.match(/\b(\d{1,2}:\d{2}\s?(?:AM|PM|am|pm)?)\b/);
         const msgTime = timeMatch ? timeMatch[1].toUpperCase() : formatAMPM(new Date());
         li.dataset.sentTime = msgTime;
@@ -725,12 +717,11 @@
 
         li.dataset.sender = detectedSender || (isMyMsg ? myUser : "User");
 
-        // Initialize empty seen map for message tracking
         if (!li.dataset.seenMap) {
             li.dataset.seenMap = "{}";
         }
 
-        // Track other users who are active/viewing as seen participants
+        // Capture real incoming user interactions or presence as seen from MongoDB/socket flow
         if (!isMyMsg && detectedSender && detectedSender.toLowerCase() !== myUser.toLowerCase()) {
             let seenMap = {};
             try { seenMap = JSON.parse(li.dataset.seenMap); } catch(e) { seenMap = {}; }
@@ -768,11 +759,10 @@
             }
         }
 
-        const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
         let seenMapCheck = {};
         try { seenMapCheck = JSON.parse(li.dataset.seenMap || "{}"); } catch(e) {}
         const hasSeenUsers = Object.keys(seenMapCheck).length > 0;
-        const isSeen = onlineCount > 1 || hasSeenUsers || li.innerHTML.toLowerCase().includes("seen");
+        const isSeen = hasSeenUsers || li.innerHTML.toLowerCase().includes("seen");
 
         const metaWrap = document.createElement("div");
         metaWrap.className = "msg-meta-ticks";
@@ -788,7 +778,6 @@
                 <button type="button" class="msg-info-trigger" title="Message Info">ⓘ</button>
             `;
         } else {
-            // Receiver does not have interactive info trigger
             metaWrap.innerHTML = `
                 <span class="tick-icon ${isSeen ? 'seen' : ''}">${isSeen ? '✓✓' : '✓'}</span>
             `;
@@ -797,24 +786,27 @@
         li.appendChild(metaWrap);
     }
 
-    function updateAllTicksStatus() {
-        const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
-        if (onlineCount > 1 && messagesBox) {
-            const nowTime = formatAMPM(new Date());
-            messagesBox.querySelectorAll("li.my-message").forEach(li => {
-                let seenMap = {};
-                try { seenMap = JSON.parse(li.dataset.seenMap || "{}"); } catch(e) {}
-                if (Object.keys(seenMap).length === 0) {
-                    seenMap["ActiveUser"] = nowTime;
+    // Socket listener or event hooks to capture real seen receipts from backend/MongoDB if emitted by script.js
+    if (window.socket) {
+        window.socket.on("message_seen", (data) => {
+            // data format expected: { msgId, username, time }
+            if (data && data.msgId && data.username) {
+                const li = document.querySelector(`li[data-id="${data.msgId}"], li[id="${data.msgId}"]`);
+                if (li) {
+                    let seenMap = {};
+                    try { seenMap = JSON.parse(li.dataset.seenMap || "{}"); } catch(e) { seenMap = {}; }
+                    seenMap[data.username] = data.time || formatAMPM(new Date());
                     li.dataset.seenMap = JSON.stringify(seenMap);
+                    li.dataset.seen = "true";
+                    
+                    const tick = li.querySelector(".tick-icon");
+                    if (tick) {
+                        tick.textContent = "✓✓";
+                        tick.classList.add("seen");
+                    }
                 }
-                const tick = li.querySelector(".tick-icon:not(.seen)");
-                if (tick) {
-                    tick.textContent = "✓✓";
-                    tick.classList.add("seen");
-                }
-            });
-        }
+            }
+        });
     }
 
     if (messagesBox) {
@@ -828,16 +820,9 @@
                     }
                 }
             }
-            updateAllTicksStatus();
         });
 
         fastObserver.observe(messagesBox, { childList: true, subtree: false });
-    }
-
-    const onlineCountEl = document.getElementById("online-count");
-    if (onlineCountEl) {
-        const countObserver = new MutationObserver(updateAllTicksStatus);
-        countObserver.observe(onlineCountEl, { childList: true, characterData: true, subtree: true });
     }
 </script>
 
