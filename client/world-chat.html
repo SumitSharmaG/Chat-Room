@@ -22,7 +22,6 @@
         --tick-blue: #34b7f1;
     }  
 
-    /* SECURITY & UI RESET */  
     * {   
         margin: 0; padding: 0; box-sizing: border-box;   
         font-family: 'Poppins', sans-serif;  
@@ -47,7 +46,6 @@
         z-index: 10;  
     }  
 
-    /* --- Left Header: Home & Back Button Styling --- */
     .header-left {
         display: flex;
         flex-direction: column;
@@ -97,7 +95,6 @@
         background: rgba(181, 148, 97, 0.1);
     }
 
-    /* --- Center Title (Background Switcher Trigger) --- */
     .chat-title-trigger {
         font-family: 'Playfair Display', serif; 
         color: var(--accent-gold); 
@@ -136,7 +133,6 @@
 
     .clear-btn { border-color: var(--accent-red); color: var(--accent-red); }  
 
-    /* --- Messages Container --- */
     #messages {   
         flex: 1; overflow-y: auto; padding: 12px 15px;   
         display: flex; flex-direction: column; gap: 8px;  
@@ -178,7 +174,6 @@
         display: block;
     }
 
-    /* --- Message Footer: Time, Ticks & Info (ⓘ) Button --- */
     .msg-meta-ticks {
         display: inline-flex;
         align-items: center;
@@ -222,7 +217,7 @@
         transform: scale(1.15);
     }
 
-    /* --- Custom Message Info Modal --- */
+    /* --- Auto-Adjustable Custom Message Info Modal --- */
     .msg-info-modal-overlay {
         position: fixed;
         inset: 0;
@@ -243,7 +238,10 @@
         border: 1px solid var(--accent-gold);
         border-radius: 14px;
         width: 100%;
-        max-width: 320px;
+        max-width: 340px;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
         padding: 20px;
         box-shadow: 0 15px 40px rgba(0,0,0,0.85);
         color: var(--text-main);
@@ -265,6 +263,13 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        flex-shrink: 0;
+    }
+
+    .msg-info-body {
+        overflow-y: auto;
+        flex-grow: 1;
+        padding-right: 2px;
     }
 
     .msg-info-row {
@@ -280,6 +285,7 @@
     .msg-info-label {
         color: #aaa;
         font-weight: 500;
+        flex-shrink: 0;
     }
 
     .msg-info-val {
@@ -301,9 +307,9 @@
         font-size: 0.82rem;
         cursor: pointer;
         text-transform: uppercase;
+        flex-shrink: 0;
     }
 
-    /* --- Screenshot Alert Styling --- */
     #messages li.screenshot-alert {
         align-self: center !important;
         background: rgba(18, 18, 18, 0.9) !important;
@@ -343,7 +349,6 @@
         justify-content: center; flex-shrink: 0;
     }   
 
-    /* ===== Attachment UI ===== */
     .attach-btn {
         width: 42px;
         height: 42px;
@@ -410,7 +415,6 @@
         pointer-events: none;
     }
 
-    /* ===== Full Screen Media Viewer Layer Container ===== */
     .media-overlay {
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
@@ -545,27 +549,29 @@
     <div id="overlayContent" style="width:100%; display:flex; justify-content:center; align-items:center;"></div>
 </div>
 
-<!-- ===== Message Info (ⓘ) Popup Modal ===== -->
+<!-- ===== Auto-Adjustable Message Info (ⓘ) Popup Modal ===== -->
 <div id="msgInfoModal" class="msg-info-modal-overlay" onclick="closeMsgInfoModal()">
     <div class="msg-info-modal-box" onclick="event.stopPropagation()">
         <div class="msg-info-header">
             <span>📋 Message Info</span>
         </div>
-        <div class="msg-info-row">
-            <span class="msg-info-label">👤 From:</span>
-            <span class="msg-info-val" id="infoFromVal">-</span>
-        </div>
-        <div class="msg-info-row">
-            <span class="msg-info-label">🕒 Sent Time:</span>
-            <span class="msg-info-val" id="infoSentVal">-</span>
-        </div>
-        <div class="msg-info-row">
-            <span class="msg-info-label">👁️ Status:</span>
-            <span class="msg-info-val" id="infoStatusVal">-</span>
-        </div>
-        <div class="msg-info-row">
-            <span class="msg-info-label">⏱️ Seen Time:</span>
-            <span class="msg-info-val" id="infoSeenTimeVal">-</span>
+        <div class="msg-info-body">
+            <div class="msg-info-row">
+                <span class="msg-info-label">👤 From:</span>
+                <span class="msg-info-val" id="infoFromVal">-</span>
+            </div>
+            <div class="msg-info-row">
+                <span class="msg-info-label">🕒 Sent Time:</span>
+                <span class="msg-info-val" id="infoSentVal">-</span>
+            </div>
+            <div class="msg-info-row">
+                <span class="msg-info-label">👁️ Seen Status:</span>
+                <span class="msg-info-val" id="infoStatusVal">-</span>
+            </div>
+            <div class="msg-info-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                <span class="msg-info-label">⏱️ Seen Time:</span>
+                <div class="msg-info-val" id="infoSeenTimeVal" style="width: 100%; text-align: left; font-weight: normal; font-size: 0.78rem; color: #ccc;">-</div>
+            </div>
         </div>
         <button class="msg-info-close-btn" onclick="closeMsgInfoModal()">OK</button>
     </div>
@@ -619,11 +625,11 @@
         applyChatBackground(currentBgIndex);
     });
 
-    function openMsgInfoModal(fromLabel, sentTime, statusText, seenTimeText) {
+    function openMsgInfoModal(fromLabel, sentTime, statusText, seenTimeFormatted) {
         document.getElementById("infoFromVal").textContent = fromLabel;
         document.getElementById("infoSentVal").textContent = sentTime;
         document.getElementById("infoStatusVal").textContent = statusText;
-        document.getElementById("infoSeenTimeVal").textContent = seenTimeText;
+        document.getElementById("infoSeenTimeVal").innerHTML = seenTimeFormatted;
         document.getElementById("msgInfoModal").classList.add("show");
     }
 
@@ -633,54 +639,47 @@
 
     function showWorldMsgInfo(li) {
         if (!li) return;
-        const myUser = getMyUsername();
+        const myUser = getMyUsername().toLowerCase();
         const isMy = li.classList.contains("my-message");
-        const senderRaw = li.dataset.sender || (isMy ? myUser : "User");
-        const senderLabel = isMy ? `You (@${myUser})` : `@${senderRaw}`;
+
+        // ONLY SENDER can view message info
+        if (!isMy) return;
+
+        const senderRaw = li.dataset.sender || myUser;
+        const senderLabel = `You (@${myUser})`;
         const sentTime = li.dataset.sentTime || formatAMPM(new Date());
 
-        // Gather all seen users tracked in world chat
-        let seenUsersList = JSON.parse(localStorage.getItem("worldSeenUsers") || "[]");
-        // Ensure current active online or other users are captured dynamically
-        const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
-        
-        let seenStatus = "Delivered ✓";
-        let seenTimeText = "Not seen yet";
+        // Retrieve recorded seen users map for this specific message element/id
+        let seenMap = {};
+        try {
+            seenMap = JSON.parse(li.dataset.seenMap || "{}");
+        } catch(e) { seenMap = {}; }
 
-        if (seenUsersList.length > 0) {
-            let formattedNames = seenUsersList.map(u => `@${u}`).join(", ");
-            seenStatus = `Seen by ${formattedNames} ✓✓`;
-            seenTimeText = li.dataset.seenAt || formatAMPM(new Date());
-        } else if (onlineCount > 1) {
-            seenStatus = `Seen by Active Users ✓✓`;
-            seenTimeText = li.dataset.seenAt || formatAMPM(new Date());
+        let seenUsers = Object.keys(seenMap);
+        let seenStatusText = "Delivered ✓";
+        let seenTimeHtml = "Not seen yet";
+
+        if (seenUsers.length > 0) {
+            seenStatusText = seenUsers.map(u => `@${u}`).join(", ");
+            seenTimeHtml = seenUsers.map(u => `<div><b>@${u}</b>: ${seenMap[u]}</div>`).join("");
+        } else {
+            // Fallback if online users are present
+            const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
+            if (onlineCount > 1) {
+                seenStatusText = "Active Users";
+                const fallbackTime = li.dataset.seenAt || formatAMPM(new Date());
+                seenTimeHtml = `<div>Seen at ${fallbackTime}</div>`;
+            }
         }
 
-        if (!isMy) {
-            seenStatus = `Seen by You ✓✓`;
-            seenTimeText = li.dataset.seenAt || sentTime;
-        }
-
-        openMsgInfoModal(senderLabel, sentTime, seenStatus, seenTimeText);
+        openMsgInfoModal(senderLabel, sentTime, seenStatusText, seenTimeHtml);
     }
 
     window.showMsgInfo = function(msgId) {
         const li = document.querySelector(`li[data-id="${msgId}"], li[id="${msgId}"]`);
         if (li) {
             showWorldMsgInfo(li);
-            return;
         }
-        const currentUser = getMyUsername().toLowerCase();
-        const chats = JSON.parse(localStorage.getItem("worldChats") || "[]");
-        const m = chats.find(c => String(c.id) === String(msgId));
-        if (!m) return;
-
-        const isMy = (m.sender || "").toLowerCase() === currentUser;
-        const senderLabel = isMy ? `You (@${currentUser})` : `@${m.sender}`;
-        let seenStatus = m.seen ? `Seen ✓✓` : "Delivered ✓";
-        let seenTimeText = m.seen ? (m.seenAt || m.time) : "Not seen yet";
-
-        openMsgInfoModal(senderLabel, m.time || formatAMPM(new Date()), seenStatus, seenTimeText);
     };
 
     function getMyUsername() {
@@ -707,8 +706,9 @@
             return;
         }
 
+        // Extract or generate AM/PM sent time
         const timeMatch = rawText.match(/\b(\d{1,2}:\d{2}\s?(?:AM|PM|am|pm)?)\b/);
-        const msgTime = timeMatch ? timeMatch[1] : formatAMPM(new Date());
+        const msgTime = timeMatch ? timeMatch[1].toUpperCase() : formatAMPM(new Date());
         li.dataset.sentTime = msgTime;
 
         let detectedSender = "";
@@ -725,19 +725,24 @@
 
         li.dataset.sender = detectedSender || (isMyMsg ? myUser : "User");
 
-        // Track unique active users as seen participants in world chat
+        // Initialize empty seen map for message tracking
+        if (!li.dataset.seenMap) {
+            li.dataset.seenMap = "{}";
+        }
+
+        // Track other users who are active/viewing as seen participants
         if (!isMyMsg && detectedSender && detectedSender.toLowerCase() !== myUser.toLowerCase()) {
-            let seenList = JSON.parse(localStorage.getItem("worldSeenUsers") || "[]");
-            if (!seenList.includes(detectedSender)) {
-                seenList.push(detectedSender);
-                localStorage.setItem("worldSeenUsers", JSON.stringify(seenList));
+            let seenMap = {};
+            try { seenMap = JSON.parse(li.dataset.seenMap); } catch(e) { seenMap = {}; }
+            if (!seenMap[detectedSender]) {
+                seenMap[detectedSender] = formatAMPM(new Date());
+                li.dataset.seenMap = JSON.stringify(seenMap);
+                li.dataset.seen = "true";
             }
         }
 
         const oldInfoBtn = li.querySelector(".info-btn");
-        if (oldInfoBtn) {
-            oldInfoBtn.remove();
-        }
+        if (oldInfoBtn) oldInfoBtn.remove();
 
         if (isMyMsg) {
             const nameTags = li.querySelectorAll("strong, b, .sender, .username");
@@ -764,28 +769,28 @@
         }
 
         const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
-        const isSeen = onlineCount > 1 || li.innerHTML.toLowerCase().includes("seen");
-        if (isSeen) {
-            li.dataset.seen = "true";
-            li.dataset.seenAt = formatAMPM(new Date());
-        }
+        let seenMapCheck = {};
+        try { seenMapCheck = JSON.parse(li.dataset.seenMap || "{}"); } catch(e) {}
+        const hasSeenUsers = Object.keys(seenMapCheck).length > 0;
+        const isSeen = onlineCount > 1 || hasSeenUsers || li.innerHTML.toLowerCase().includes("seen");
 
         const metaWrap = document.createElement("div");
         metaWrap.className = "msg-meta-ticks";
-        metaWrap.title = "Click for Message Info";
-        metaWrap.onclick = (e) => {
-            e.stopPropagation();
-            showWorldMsgInfo(li);
-        };
 
         if (isMyMsg) {
+            metaWrap.title = "Click for Message Info";
+            metaWrap.onclick = (e) => {
+                e.stopPropagation();
+                showWorldMsgInfo(li);
+            };
             metaWrap.innerHTML = `
                 <span class="tick-icon ${isSeen ? 'seen' : ''}">${isSeen ? '✓✓' : '✓'}</span>
                 <button type="button" class="msg-info-trigger" title="Message Info">ⓘ</button>
             `;
         } else {
+            // Receiver does not have interactive info trigger
             metaWrap.innerHTML = `
-                <button type="button" class="msg-info-trigger" title="Message Info">ⓘ</button>
+                <span class="tick-icon ${isSeen ? 'seen' : ''}">${isSeen ? '✓✓' : '✓'}</span>
             `;
         }
 
@@ -797,9 +802,11 @@
         if (onlineCount > 1 && messagesBox) {
             const nowTime = formatAMPM(new Date());
             messagesBox.querySelectorAll("li.my-message").forEach(li => {
-                if (li.dataset.seen !== "true") {
-                    li.dataset.seen = "true";
-                    li.dataset.seenAt = nowTime;
+                let seenMap = {};
+                try { seenMap = JSON.parse(li.dataset.seenMap || "{}"); } catch(e) {}
+                if (Object.keys(seenMap).length === 0) {
+                    seenMap["ActiveUser"] = nowTime;
+                    li.dataset.seenMap = JSON.stringify(seenMap);
                 }
                 const tick = li.querySelector(".tick-icon:not(.seen)");
                 if (tick) {
