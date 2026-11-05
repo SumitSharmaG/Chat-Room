@@ -1,14 +1,16 @@
-<!DOCTYPE html>  <html lang="en">  
+<!DOCTYPE html>  
+<html lang="en">  
 <head>  
-    <!--  -->  
 <script>  
-    const token = localStorage.getItem("token");  if (!token) {  
-    window.location.href = "login.html";  
-}
-</script>  <meta charset="UTF-8">  
+    const token = localStorage.getItem("token");  
+    if (!token) {  
+        window.location.href = "login.html";  
+    }
+</script>  
+<meta charset="UTF-8">  
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
 <title>Secure Ultra Chat</title>  
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">  
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">  
 <style>  
     :root {  
         --bg-base: #0a0a0a;  
@@ -16,7 +18,8 @@
         --accent-gold: #b59461;  
         --accent-red: #ff4d4d;  
         --text-main: #e0e0e0;  
-        --my-chat-bg: rgba(181, 148, 97, 0.15);  
+        --my-chat-bg: rgba(181, 148, 97, 0.18);  
+        --tick-blue: #34b7f1;
     }  
 
     /* SECURITY & UI RESET */  
@@ -38,111 +41,236 @@
     }  
 
     header {  
-        background: var(--bg-card); padding: 10px 20px;   
+        background: var(--bg-card); padding: 8px 16px;   
         display: flex; justify-content: space-between; align-items: center;   
         border-bottom: 1px solid rgba(181, 148, 97, 0.2); height: 75px;  
         z-index: 10;  
     }  
 
-    .header-right { display: flex; align-items: center; gap: 12px; }  
+    /* --- 1. Left Header: Home & Back Button Styling --- */
+    .header-left {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    .home-btn {
+        text-decoration: none;
+        color: var(--accent-gold);
+        font-size: 0.78rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border: 1px solid rgba(181, 148, 97, 0.35);
+        border-radius: 20px;
+        background: rgba(20, 20, 20, 0.7);
+        transition: all 0.3s ease;
+    }
+
+    .home-btn:hover {
+        background: var(--accent-gold);
+        color: #000;
+    }
+
+    .back-btn {
+        text-decoration: none;
+        color: #a0a0a0;
+        font-size: 0.68rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+        color: var(--accent-gold);
+        border-color: rgba(181, 148, 97, 0.4);
+        background: rgba(181, 148, 97, 0.1);
+    }
+
+    /* --- 6. Center Title (Background Switcher Trigger) --- */
+    .chat-title-trigger {
+        font-family: 'Playfair Display', serif; 
+        color: var(--accent-gold); 
+        font-size: 1.05rem;
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        text-align: center;
+    }
+
+    .chat-title-trigger:hover {
+        background: rgba(181, 148, 97, 0.1);
+    }
+
+    .chat-title-trigger:active {
+        transform: scale(0.95);
+    }
+
+    .header-right { display: flex; align-items: center; gap: 10px; }  
       
     .user-profile-section {  
         display: flex; flex-direction: column; align-items: flex-end; gap: 4px;  
     }  
 
-    .btn-group { display: flex; gap: 8px; }  
+    .btn-group { display: flex; gap: 6px; }  
 
     .logout-btn, .clear-btn {  
         border: 1px solid var(--accent-gold); padding: 4px 10px;   
-        border-radius: 5px; cursor: pointer; font-size: 0.7rem;   
+        border-radius: 5px; cursor: pointer; font-size: 0.68rem;   
         font-weight: 600; background: transparent; color: var(--accent-gold);  
     }  
 
     .clear-btn { border-color: var(--accent-red); color: var(--accent-red); }  
 
+    /* --- 3 & 6. Messages Container & Background Support --- */
     #messages {   
-        flex: 1; overflow-y: auto; padding: 15px;   
-        display: flex; flex-direction: column; gap: 12px;  
-        scroll-behavior: smooth;  
+        flex: 1; overflow-y: auto; padding: 12px 15px;   
+        display: flex; flex-direction: column; gap: 8px;  
+        scroll-behavior: smooth;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        transition: background-image 0.4s ease-in-out;
     }  
 
+    /* Standard Compact Message Bubble Size */
     #messages li {  
-        list-style: none; padding: 10px 15px;   
-        background: rgba(255, 255, 255, 0.07);  
-        border-radius: 15px 15px 15px 2px; max-width: 85%;   
-        width: fit-content; border: 1px solid rgba(255,255,255,0.05);  
-        display: flex; flex-direction: column;  
+        list-style: none; 
+        padding: 7px 12px;   
+        background: rgba(22, 22, 22, 0.88);  
+        backdrop-filter: blur(4px);
+        border-radius: 12px 12px 12px 2px; 
+        max-width: 78%;   
+        width: fit-content; 
+        border: 1px solid rgba(255,255,255,0.07);  
+        display: flex; 
+        flex-direction: column;  
         word-wrap: break-word;  
+        font-size: 0.86rem; /* Standard readable size */
+        line-height: 1.38;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        position: relative;
     }  
 
     #messages li.my-message {  
         align-self: flex-end;  
-        background: var(--my-chat-bg);  
-        border-color: var(--accent-gold);  
-        border-radius: 15px 15px 2px 15px;  
+        background: linear-gradient(145deg, rgba(45, 34, 24, 0.92), rgba(30, 22, 16, 0.92));  
+        border-color: rgba(181, 148, 97, 0.45);  
+        border-radius: 12px 12px 2px 12px;  
     }  
 
+    /* Sender Name ("You" or Username) */
+    #messages li strong, 
+    #messages li .sender-name,
+    #messages li b:first-child {
+        font-size: 0.72rem;
+        color: var(--accent-gold);
+        margin-bottom: 2px;
+        font-weight: 600;
+        display: block;
+    }
+
+    /* --- 4. Single & Double Blue Tick Styling --- */
+    .msg-meta-ticks {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        font-size: 0.65rem;
+        color: #999;
+        margin-top: 2px;
+        align-self: flex-end;
+        line-height: 1;
+    }
+
+    .tick-icon {
+        font-size: 0.78rem;
+        font-weight: bold;
+        letter-spacing: -2px;
+        margin-left: 3px;
+        color: #888; /* Default Single/Unseen Tick */
+        transition: color 0.2s ease;
+    }
+
+    .tick-icon.seen {
+        color: var(--tick-blue) !important; /* Double Blue Tick */
+    }
+
+    /* --- 5. Small Screenshot Alert Styling --- */
+    #messages li.screenshot-alert {
+        align-self: center !important;
+        background: rgba(15, 15, 15, 0.75) !important;
+        border: 1px dashed rgba(181, 148, 97, 0.35) !important;
+        color: var(--accent-gold) !important;
+        font-size: 0.72rem !important;
+        padding: 4px 12px !important;
+        border-radius: 20px !important;
+        font-style: italic;
+        text-align: center;
+        max-width: 90%;
+        box-shadow: none !important;
+        margin: 4px 0;
+    }
+
     .input-area {  
-        background: var(--bg-card); padding: 10px 12px;   
+        background: var(--bg-card); padding: 8px 12px;   
         display: flex; align-items: center; gap: 10px;  
-        border-top: 1px solid rgba(181, 148, 97, 0.1);  
-        padding-bottom: calc(10px + env(safe-area-inset-bottom));  
+        border-top: 1px solid rgba(181, 148, 97, 0.15);  
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));  
         position: relative;
+        z-index: 10;
     }  
 
     #msg {  
         flex: 1; min-width: 0; background: rgba(255,255,255,0.05);   
-        border: 1px solid rgba(181, 148, 97, 0.3); padding: 12px 18px;   
+        border: 1px solid rgba(181, 148, 97, 0.3); padding: 10px 16px;   
         border-radius: 25px; color: #fff; outline: none;   
+        font-size: 0.9rem;
         user-select: text !important;  
         -webkit-user-select: text !important;
     }  
 
     .send-btn {  
         background: var(--accent-gold); border: none;   
-        width: 45px; height: 45px; border-radius: 50%;   
+        width: 42px; height: 42px; border-radius: 50%;   
         cursor: pointer; display: flex; align-items: center;   
-        justify-content: center;  
+        justify-content: center; flex-shrink: 0;
     }   
       
     .info-btn {  
-        background: transparent;  
-        border: 0px solid #b59461;  
-        color: #b59461;  
-        border-radius: 50%;  
-        width: 15px;  
-        height: 15px;  
-        font-size: 17px;  
-        cursor: pointer;  
-        display: inline-flex;  
-        align-items: center;  
-        justify-content: center;  
-        padding: 0;  
-        margin-left: 6px;
-    }
-
-    .info-btn:hover {
-        background: #b59461;
-        color: black;
+        display: none !important; /* Hidden since we use Ticks now */
     }
 
     /* ===== Fixed Attachment UI ===== */
     .attach-btn {
-        width: 45px;
-        height: 45px;
+        width: 42px;
+        height: 42px;
         border: none;
         border-radius: 50%;
         background: #202020;
         color: #b59461;
-        font-size: 28px;
+        font-size: 24px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
         pointer-events: auto !important;
-        -webkit-user-select: auto !important;
-        user-select: auto !important;
     }
 
     .attach-btn:active {
@@ -151,7 +279,7 @@
 
     .attach-menu {
         position: fixed;  
-        bottom: 82px;  
+        bottom: 75px;  
         left: 12px;  
         background: #141414;  
         border: 1px solid rgba(181, 148, 97, .3);  
@@ -159,10 +287,9 @@
         padding: 10px;  
         display: none;  
         flex-direction: column;  
-        gap: 10px;  
+        gap: 8px;  
         z-index: 99999 !important;
         box-shadow: 0 10px 30px rgba(0,0,0,.5);
-        pointer-events: auto !important;
     }
 
     .attach-menu.show {
@@ -175,10 +302,9 @@
         gap: 10px;  
         color: white;  
         cursor: pointer;  
-        padding: 8px 12px;  
+        padding: 6px 12px;  
         border-radius: 10px;
-        -webkit-user-select: auto !important;
-        user-select: auto !important;
+        font-size: 0.85rem;
     }
 
     .attach-item:hover {
@@ -186,22 +312,18 @@
     }
 
     .attach-icon {
-        width: 38px;  
-        height: 38px;  
+        width: 34px;  
+        height: 34px;  
         border-radius: 50%;  
         display: flex;  
         align-items: center;  
         justify-content: center;  
         background: #2a2a2a;  
-        font-size: 18px;
-        pointer-events: none;
-    }
-    
-    .attach-item span {
+        font-size: 16px;
         pointer-events: none;
     }
 
-    /* ===== STEP 2: Full Screen Media Preview Overlay CSS ===== */
+    /* ===== Full Screen Media Preview Overlay CSS ===== */
     .media-overlay {
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
@@ -238,23 +360,42 @@
         border: 1px solid var(--accent-gold);
         color: var(--accent-gold);
         font-size: 1.5rem;
-        width: 45px; height: 45px;
+        width: 42px; height: 42px;
         border-radius: 50%;
         cursor: pointer;
         display: flex; align-items: center; justify-content: center;
+    }
+
+    @media (max-width: 480px) {
+        header { padding: 6px 12px; height: 70px; }
+        .home-btn { font-size: 0.72rem; padding: 3px 8px; }
+        .back-btn { font-size: 0.62rem; padding: 1px 6px; }
+        .chat-title-trigger { font-size: 0.95rem; }
+        #messages li { max-width: 84%; font-size: 0.84rem; }
     }
 </style>
 </head>  
 <body oncontextmenu="return false;">  
 
 <header>  
+    <!-- 1. Home & Back Button in Header Left -->
     <div class="header-left">  
-        <a href="https://chat-room-three-pied.vercel.app/" class="home-btn">⾕</a>  
-        <h2 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 0.9rem;"></h2>  
+        <a href="https://chat-room-three-pied.vercel.app/" class="home-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Home
+        </a>  
+        <a href="selection.html" class="back-btn">
+            &#10094; Back
+        </a>
     </div>  
-    <h2 style="font-family: 'Playfair Display', serif; color: var(--accent-gold); font-size: 1rem;">World Chat</h2>  
+
+    <!-- 6. Clickable World Chat Title to Switch Background Themes -->
+    <h2 class="chat-title-trigger" id="bgSwitcherBtn" title="Click to change chat background">
+        World Chat <span style="font-size: 0.75rem; opacity: 0.8;">✦</span>
+    </h2>  
+
     <div class="header-right">  
-        <div style="color: var(--accent-gold); font-size: 0.8rem; margin-right: 5px;">  
+        <div style="color: var(--accent-gold); font-size: 0.78rem; margin-right: 4px;">  
             👁️ <span id="online-count">0</span>  
         </div>  
         <div class="user-profile-section">  
@@ -262,7 +403,7 @@
                 <button class="clear-btn" onclick="window.clearChat()">Clear</button>  
                 <button class="logout-btn" onclick="window.logout()">Logout</button>  
             </div>  
-            <span id="display-username" style="color: var(--accent-gold); font-size: 0.7rem; font-weight: 600;"></span>  
+            <span id="display-username" style="color: var(--accent-gold); font-size: 0.68rem; font-weight: 600;"></span>  
         </div>  
     </div>  
 </header>  
@@ -275,7 +416,7 @@
     </button>
     <input id="msg" placeholder="Type a message..." autocomplete="off" />
     <button class="send-btn" onclick="window.handleSend()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
         </svg>
@@ -287,35 +428,33 @@
 <input type="file" id="galleryInput" accept="image/*" hidden>
 <input type="file" id="videoInput" accept="video/*" hidden>
 <input type="file" id="audioInput" accept="audio/*" hidden>
-
-<!-- ===== STEP 1 FIXED: Changed accept to "*/*" to allow .apk, .html, .xml, etc. ===== -->
 <input type="file" id="documentInput" accept="*/*" hidden>
 
-<!-- ===== ENTIRE ATTACH-MENU SECTION WITH DIRECT TRIGGERS ===== -->
+<!-- ===== ATTACH-MENU SECTION ===== -->
 <div class="attach-menu" id="attachMenu">  
-    <div class="attach-item" style="pointer-events: auto !important;" onclick="event.stopPropagation(); document.getElementById('cameraInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
-        <div class="attach-icon" style="pointer-events: none;">📷</div>  
-        <span style="pointer-events: none;">Camera</span>
+    <div class="attach-item" onclick="event.stopPropagation(); document.getElementById('cameraInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
+        <div class="attach-icon">📷</div>  
+        <span>Camera</span>
     </div>  
-    <div class="attach-item" style="pointer-events: auto !important;" onclick="event.stopPropagation(); document.getElementById('galleryInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
-        <div class="attach-icon" style="pointer-events: none;">🖼️</div>  
-        <span style="pointer-events: none;">Gallery</span>
+    <div class="attach-item" onclick="event.stopPropagation(); document.getElementById('galleryInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
+        <div class="attach-icon">🖼️</div>  
+        <span>Gallery</span>
     </div>  
-    <div class="attach-item" style="pointer-events: auto !important;" onclick="event.stopPropagation(); document.getElementById('videoInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
-        <div class="attach-icon" style="pointer-events: none;">🎥</div>  
-        <span style="pointer-events: none;">Video</span>
+    <div class="attach-item" onclick="event.stopPropagation(); document.getElementById('videoInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
+        <div class="attach-icon">🎥</div>  
+        <span>Video</span>
     </div>  
-    <div class="attach-item" style="pointer-events: auto !important;" onclick="event.stopPropagation(); document.getElementById('audioInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
-        <div class="attach-icon" style="pointer-events: none;">🎵</div>  
-        <span style="pointer-events: none;">Audio</span>
+    <div class="attach-item" onclick="event.stopPropagation(); document.getElementById('audioInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
+        <div class="attach-icon">🎵</div>  
+        <span>Audio</span>
     </div>  
-    <div class="attach-item" style="pointer-events: auto !important;" onclick="event.stopPropagation(); document.getElementById('documentInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
-        <div class="attach-icon" style="pointer-events: none;">📄</div>  
-        <span style="pointer-events: none;">Document</span>
+    <div class="attach-item" onclick="event.stopPropagation(); document.getElementById('documentInput').click(); document.getElementById('attachMenu').classList.remove('show');">  
+        <div class="attach-icon">📄</div>  
+        <span>Document</span>
     </div>  
 </div>
 
-<!-- ===== STEP 2 FIXED: Full-Screen Media Viewer Layer Container ===== -->
+<!-- ===== Full-Screen Media Viewer Layer Container ===== -->
 <div id="mediaOverlay" class="media-overlay">
     <button class="close-overlay-btn" onclick="document.getElementById('mediaOverlay').classList.remove('show')">&times;</button>
     <div id="overlayContent" style="width:100%; display:flex; justify-content:center; align-items:center;"></div>
@@ -327,7 +466,7 @@
 <script src="script.js"></script>
 
 <script>
-    // Universal screen backdrop click dynamic tracker for closing menu safely
+    // Close attachment menu when clicking outside
     document.addEventListener("click", function(e) {
         const menu = document.getElementById("attachMenu");
         const btn = document.getElementById("attachBtn");
@@ -335,8 +474,188 @@
             menu.classList.remove("show");
         }
     });
+
+    // =========================================================================
+    // 6. BACKGROUND THEME SWITCHER (Click on "World Chat" to cycle backgrounds)
+    // =========================================================================
+    const chatBackgrounds = [
+        // 1. Default Dark Luxury Gradient (No image)
+        "none",
+        // 2. Dark Brown / Coffee Luxury Abstract Texture (Replace URL anytime)
+        "linear-gradient(rgba(10, 10, 10, 0.72), rgba(10, 10, 10, 0.72)), url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1200&q=80')",
+        // 3. Dark Grey / Charcoal Matte Minimal Texture (Replace URL anytime)
+        "linear-gradient(rgba(10, 10, 10, 0.78), rgba(10, 10, 10, 0.78)), url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80')",
+        // 4. Deep Warm Wood / Bronze Aesthetic (Replace URL anytime)
+        "linear-gradient(rgba(12, 10, 8, 0.75), rgba(12, 10, 8, 0.75)), url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1200&q=80')"
+    ];
+
+    let currentBgIndex = parseInt(localStorage.getItem("worldChatBgIndex") || "0", 10);
+    const messagesBox = document.getElementById("messages");
+    const bgSwitcherBtn = document.getElementById("bgSwitcherBtn");
+
+    function applyChatBackground(index) {
+        if (!messagesBox) return;
+        const bgValue = chatBackgrounds[index] || "none";
+        messagesBox.style.backgroundImage = bgValue;
+    }
+
+    // Load saved background on startup
+    applyChatBackground(currentBgIndex);
+
+    bgSwitcherBtn?.addEventListener("click", () => {
+        currentBgIndex = (currentBgIndex + 1) % chatBackgrounds.length;
+        localStorage.setItem("worldChatBgIndex", currentBgIndex);
+        applyChatBackground(currentBgIndex);
+    });
+
+
+    // =========================================================================
+    // 2, 4 & 5. MESSAGE ENHANCER: "You" Label, Blue Ticks & Screenshot Alert
+    // =========================================================================
+    const loggedInUser = (localStorage.getItem("username") || "").trim().toLowerCase();
+
+    function processMessageElement(li) {
+        if (!li || li.nodeType !== 1) return;
+
+        const rawText = (li.textContent || "").trim();
+
+        // --- 5. Format Screenshot Alerts into compact '~ @user took a screenshot of chat' ---
+        if (rawText.toLowerCase().includes("screenshot")) {
+            li.classList.add("screenshot-alert");
+            li.classList.remove("my-message");
+
+            if (!li.dataset.ssFormatted) {
+                // Extract username if present
+                let ssUser = "user";
+                const match = rawText.match(/([a-zA-Z0-9._]+)\s+took\s+a\s+screenshot/i) || rawText.match(/@([a-zA-Z0-9._]+)/);
+                if (match && match[1]) {
+                    ssUser = match[1].replace(/^@/, "");
+                } else if (loggedInUser) {
+                    ssUser = loggedInUser;
+                }
+                li.innerHTML = `~ @${ssUser} took a screenshot of chat`;
+                li.dataset.ssFormatted = "true";
+            }
+            return;
+        }
+
+        const isMyMsg = li.classList.contains("my-message");
+
+        // --- 2. Replace current user's name with "You" on their own messages ---
+        if (isMyMsg) {
+            const nameSelectors = li.querySelectorAll("strong, b, .sender, .username, span:first-child");
+            let replaced = false;
+
+            nameSelectors.forEach(el => {
+                const txt = el.textContent.trim().replace(/:$/, "").toLowerCase();
+                if (txt === loggedInUser || txt === "me") {
+                    el.textContent = "You";
+                    replaced = true;
+                }
+            });
+
+            // Fallback if username is plain text at start of <li>
+            if (!replaced && loggedInUser) {
+                const walker = document.createTreeWalker(li, NodeFilter.SHOW_TEXT, null, false);
+                const firstTextNode = walker.nextNode();
+                if (firstTextNode) {
+                    const nodeVal = firstTextNode.nodeValue;
+                    const regex = new RegExp(`^\\s*${loggedInUser}\\s*:?`, "i");
+                    if (regex.test(nodeVal)) {
+                        firstTextNode.nodeValue = nodeVal.replace(regex, "You:");
+                    }
+                }
+            }
+        }
+
+        // --- 4. Replace "Seen by" / Info Button with Single (✓) & Double Blue Ticks (✓✓) ---
+        // Remove old info button or text-based seen indicators
+        const oldInfoBtns = li.querySelectorAll(".info-btn, .seen-list, .seen-by");
+        let isSeenByOthers = false;
+
+        oldInfoBtns.forEach(el => {
+            if (el.textContent.toLowerCase().includes("seen") || el.getAttribute("data-seen") === "true") {
+                isSeenByOthers = true;
+            }
+            el.style.display = "none";
+        });
+
+        // Check if script.js updated any text with "Seen" or online count > 1
+        const onlineCount = parseInt(document.getElementById("online-count")?.textContent || "1", 10);
+        if (li.innerHTML.toLowerCase().includes("seen") || li.dataset.seen === "true" || onlineCount > 1) {
+            isSeenByOthers = true;
+        }
+
+        if (isMyMsg) {
+            let tickContainer = li.querySelector(".msg-meta-ticks");
+            if (!tickContainer) {
+                tickContainer = document.createElement("span");
+                tickContainer.className = "msg-meta-ticks";
+                tickContainer.innerHTML = `<span class="tick-icon">✓</span>`;
+                li.appendChild(tickContainer);
+            }
+
+            const tickIcon = tickContainer.querySelector(".tick-icon");
+            if (tickIcon) {
+                if (isSeenByOthers) {
+                    tickIcon.textContent = "✓✓";
+                    tickIcon.classList.add("seen");
+                } else {
+                    tickIcon.textContent = "✓";
+                    tickIcon.classList.remove("seen");
+                }
+            }
+        }
+    }
+
+    // Observe #messages list for new or updated messages from script.js
+    if (messagesBox) {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeName === "LI") {
+                        processMessageElement(node);
+                    } else if (node.querySelectorAll) {
+                        node.querySelectorAll("li").forEach(processMessageElement);
+                    }
+                });
+                if (mutation.type === "characterData" || mutation.type === "attributes" || mutation.type === "childList") {
+                    const parentLi = mutation.target.closest ? mutation.target.closest("li") : null;
+                    if (parentLi) processMessageElement(parentLi);
+                }
+            });
+        });
+
+        observer.observe(messagesBox, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+            attributes: true
+        });
+    }
+
+    // Built-in Screenshot Detection Fallback (PrintScreen / Shortcuts)
+    window.addEventListener("keyup", (e) => {
+        if (e.key === "PrintScreen") {
+            const activeUser = localStorage.getItem("username") || "user";
+            if (window.socket && typeof window.socket.emit === "function") {
+                window.socket.emit("screenshot", { username: activeUser });
+            }
+            // Local fallback display if script.js doesn't append it automatically
+            const existingAlerts = messagesBox?.querySelectorAll(".screenshot-alert");
+            const lastAlert = existingAlerts?.[existingAlerts.length - 1];
+            const alertText = `~ @${activeUser} took a screenshot of chat`;
+            if (!lastAlert || lastAlert.textContent !== alertText) {
+                const li = document.createElement("li");
+                li.className = "screenshot-alert";
+                li.dataset.ssFormatted = "true";
+                li.textContent = alertText;
+                messagesBox?.appendChild(li);
+                messagesBox.scrollTop = messagesBox.scrollHeight;
+            }
+        }
+    });
 </script>
 
 </body>  
-    </html>
-    
+</html>
