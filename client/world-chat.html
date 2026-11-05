@@ -637,6 +637,7 @@
         document.getElementById("msgInfoModal").classList.remove("show");
     }
 
+    // Modal popup showing MongoDB users fetched via script.js seenMap
     function showWorldMsgInfo(li) {
         if (!li) return;
         const myUser = getMyUsername().toLowerCase();
@@ -647,31 +648,38 @@
 
         const senderLabel = `You (@${myUser})`;
         const sentTime = li.dataset.sentTime || formatAMPM(new Date());
+        const msgId = li.dataset.id;
 
-        let seenMap = {};
-        try {
-            seenMap = JSON.parse(li.dataset.seenMap || "{}");
-        } catch(e) { seenMap = {}; }
+        // Fetch seen users from script.js seenMap
+        let seenUsers = [];
+        if (typeof seenMap !== "undefined" && msgId && seenMap[msgId]) {
+            seenUsers = Array.isArray(seenMap[msgId]) ? seenMap[msgId] : [seenMap[msgId]];
+        }
 
-        let seenUsers = Object.keys(seenMap);
         let seenStatusText = "Delivered ✓";
         let seenTimeHtml = "Not seen yet";
 
         if (seenUsers.length > 0) {
-            seenStatusText = seenUsers.map(u => `@${u}`).join(", ");
-            seenTimeHtml = seenUsers.map(u => `<div><b>@${u}</b>: ${seenMap[u]}</div>`).join("");
-        } else {
-            seenStatusText = "Delivered ✓";
-            seenTimeHtml = "Not seen yet";
+            seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " ✓✓";
+            const seenTimeRecorded = li.dataset.seenAt || formatAMPM(new Date());
+            seenTimeHtml = seenUsers.map(u => `<div><b>@${u}</b>: ${seenTimeRecorded}</div>`).join("");
         }
 
         openMsgInfoModal(senderLabel, sentTime, seenStatusText, seenTimeHtml);
     }
 
-    window.showMsgInfo = function(msgId) {
-        const li = document.querySelector(`li[data-id="${msgId}"], li[id="${msgId}"]`);
+    // Override script.js showSeen to open our custom stylized modal
+    window.showSeen = function(id) {
+        const li = document.querySelector(`li[data-id="${id}"]`);
         if (li) {
             showWorldMsgInfo(li);
+        } else {
+            const users = (typeof seenMap !== "undefined" && seenMap[id]) ? seenMap[id] : [];
+            const myUser = getMyUsername().toLowerCase();
+            const senderLabel = `You (@${myUser})`;
+            const status = users.length > 0 ? users.map(u => `@${u}`).join(", ") + " ✓✓" : "Delivered ✓";
+            const seenTime = users.length > 0 ? users.map(u => `<div><b>@${u}</b>: ${formatAMPM(new Date())}</div>`).join("") : "Not seen yet";
+            openMsgInfoModal(senderLabel, formatAMPM(new Date()), status, seenTime);
         }
     };
 
@@ -699,9 +707,21 @@
             return;
         }
 
-        const timeMatch = rawText.match(/\b(\d{1,2}:\d{2}\s?(?:AM|PM|am|pm)?)\b/);
+        // AM/PM time sync
+        const timeMatch = rawText.match(/\b(\d{1,2}:\d{2}(?::\d{2})?\s?(?:AM|PM|am|pm)?)\b/);
         const msgTime = timeMatch ? timeMatch[1].toUpperCase() : formatAMPM(new Date());
         li.dataset.sentTime = msgTime;
+
+        // Catch message ID assigned by script.js button onclick="showSeen('xyz')"
+        const existingInfoBtn = li.querySelector(".info-btn");
+        if (existingInfoBtn) {
+            const onclickAttr = existingInfoBtn.getAttribute("onclick") || "";
+            const idMatch = onclickAttr.match(/showSeen\(['"]([^'"]+)['"]\)/);
+            if (idMatch && idMatch[1]) {
+                li.dataset.id = idMatch[1];
+            }
+            existingInfoBtn.remove(); // Remove default raw button
+        }
 
         let detectedSender = "";
         const firstTag = li.querySelector("strong, b, .sender, .username, span:first-child");
@@ -716,24 +736,6 @@
         }
 
         li.dataset.sender = detectedSender || (isMyMsg ? myUser : "User");
-
-        if (!li.dataset.seenMap) {
-            li.dataset.seenMap = "{}";
-        }
-
-        // Capture real incoming user interactions or presence as seen from MongoDB/socket flow
-        if (!isMyMsg && detectedSender && detectedSender.toLowerCase() !== myUser.toLowerCase()) {
-            let seenMap = {};
-            try { seenMap = JSON.parse(li.dataset.seenMap); } catch(e) { seenMap = {}; }
-            if (!seenMap[detectedSender]) {
-                seenMap[detectedSender] = formatAMPM(new Date());
-                li.dataset.seenMap = JSON.stringify(seenMap);
-                li.dataset.seen = "true";
-            }
-        }
-
-        const oldInfoBtn = li.querySelector(".info-btn");
-        if (oldInfoBtn) oldInfoBtn.remove();
 
         if (isMyMsg) {
             const nameTags = li.querySelectorAll("strong, b, .sender, .username");
@@ -759,10 +761,9 @@
             }
         }
 
-        let seenMapCheck = {};
-        try { seenMapCheck = JSON.parse(li.dataset.seenMap || "{}"); } catch(e) {}
-        const hasSeenUsers = Object.keys(seenMapCheck).length > 0;
-        const isSeen = hasSeenUsers || li.innerHTML.toLowerCase().includes("seen");
+        // Check if message is already seen according to script.js seenMap
+        const msgId = li.dataset.id;
+        const isSeen = (typeof seenMap !== "undefined" && msgId && seenMap[msgId] && seenMap[msgId].length > 0);
 
         const metaWrap = document.createElement("div");
         metaWrap.className = "msg-meta-ticks";
@@ -778,6 +779,7 @@
                 <button type="button" class="msg-info-trigger" title="Message Info">ⓘ</button>
             `;
         } else {
+            // Receiver only sees single/double ticks, info modal is disabled
             metaWrap.innerHTML = `
                 <span class="tick-icon ${isSeen ? 'seen' : ''}">${isSeen ? '✓✓' : '✓'}</span>
             `;
@@ -786,24 +788,17 @@
         li.appendChild(metaWrap);
     }
 
-    // Socket listener or event hooks to capture real seen receipts from backend/MongoDB if emitted by script.js
-    if (window.socket) {
-        window.socket.on("message_seen", (data) => {
-            // data format expected: { msgId, username, time }
-            if (data && data.msgId && data.username) {
-                const li = document.querySelector(`li[data-id="${data.msgId}"], li[id="${data.msgId}"]`);
-                if (li) {
-                    let seenMap = {};
-                    try { seenMap = JSON.parse(li.dataset.seenMap || "{}"); } catch(e) { seenMap = {}; }
-                    seenMap[data.username] = data.time || formatAMPM(new Date());
-                    li.dataset.seenMap = JSON.stringify(seenMap);
-                    li.dataset.seen = "true";
-                    
-                    const tick = li.querySelector(".tick-icon");
-                    if (tick) {
-                        tick.textContent = "✓✓";
-                        tick.classList.add("seen");
-                    }
+    // Connect with socket updateSeen event to update ticks & data in real-time
+    if (typeof socket !== "undefined" && socket) {
+        socket.on("updateSeen", ({ messageId, seenBy }) => {
+            const li = document.querySelector(`li[data-id="${messageId}"]`);
+            if (li) {
+                li.dataset.seen = "true";
+                li.dataset.seenAt = formatAMPM(new Date());
+                const tick = li.querySelector(".tick-icon");
+                if (tick) {
+                    tick.textContent = "✓✓";
+                    tick.classList.add("seen");
                 }
             }
         });
