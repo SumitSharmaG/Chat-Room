@@ -81,8 +81,8 @@
         font-weight: 500;
         display: inline-flex;
         align-items: center;
-        gap: 3px;
-        padding: 2px 8px;
+        gap: 4px;
+        padding: 3px 9px;
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(255, 255, 255, 0.03);
@@ -646,7 +646,7 @@
         // ONLY SENDER can view message info
         if (!isMy) return;
 
-        const senderLabel = `You (@${myUser})`;
+        const senderLabel = `@${myUser} (You)`;
         const sentTime = li.dataset.sentTime || formatAMPM(new Date());
         const msgId = li.dataset.id;
 
@@ -656,8 +656,8 @@
             seenUsers = Array.isArray(seenMap[msgId]) ? seenMap[msgId] : [seenMap[msgId]];
         }
 
-        let seenStatusText = "Delivered";
-        let seenTimeHtml = "(Not seen yet)";
+        let seenStatusText = "Delivered √";
+        let seenTimeHtml = "(Not seen yet ✗)";
 
         if (seenUsers.length > 0) {
             seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " ✓✓";
@@ -703,7 +703,7 @@
             let ssUser = myUser || "user";
             const match = rawText.match(/([a-zA-Z0-9._]+)\s+took\s+a\s+screenshot/i) || rawText.match(/@([a-zA-Z0-9._]+)/);
             if (match && match[1]) ssUser = match[1].replace(/^@/, "");
-            li.textContent = `~ @${ssUser} took a screenshot of chat !`;
+            li.textContent = `~ @${ssUser} took a screenshot of chat !!!`;
             return;
         }
 
