@@ -51,7 +51,6 @@
         flex-direction: column;
         align-items: flex-start;
         justify-content: center;
-        gap: 4px;
     }
 
     .home-btn {
@@ -81,12 +80,13 @@
         font-weight: 500;
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        padding: 3px 9px;
+        gap: 3px;
+        padding: 2px 8px;
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(255, 255, 255, 0.03);
         transition: all 0.2s ease;
+        margin-top: 5px; /* Back button ko home icon se niche space dene ke liye */
     }
 
     .back-btn:hover {
@@ -472,15 +472,15 @@
     <div class="header-left">  
         <a href="https://chat-room-three-pied.vercel.app/" class="home-btn">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        
+            Home
         </a>  
         <a href="selection.html" class="back-btn">
-            &#10094;
+            &#10094; Back
         </a>
     </div>  
 
     <h2 class="chat-title-trigger" id="bgSwitcherBtn" title="Click to change chat background">
-        World Chat <span style="font-size: 0.75rem; opacity: 0.8;"></span>
+        World Chat <span style="font-size: 0.75rem; opacity: 0.8;">✦</span>
     </h2>  
 
     <div class="header-right">  
@@ -553,23 +553,23 @@
 <div id="msgInfoModal" class="msg-info-modal-overlay" onclick="closeMsgInfoModal()">
     <div class="msg-info-modal-box" onclick="event.stopPropagation()">
         <div class="msg-info-header">
-            <span>📋 Message Info :</span>
+            <span>📋 Message Info</span>
         </div>
         <div class="msg-info-body">
             <div class="msg-info-row">
-                <span class="msg-info-label">👤 From :</span>
+                <span class="msg-info-label">👤 From:</span>
                 <span class="msg-info-val" id="infoFromVal">-</span>
             </div>
             <div class="msg-info-row">
-                <span class="msg-info-label">🕒 Sent Time :</span>
+                <span class="msg-info-label">🕒 Sent Time:</span>
                 <span class="msg-info-val" id="infoSentVal">-</span>
             </div>
             <div class="msg-info-row">
-                <span class="msg-info-label">👁️ Seen Status :</span>
+                <span class="msg-info-label">👁️ Seen Status:</span>
                 <span class="msg-info-val" id="infoStatusVal">-</span>
             </div>
             <div class="msg-info-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
-                <span class="msg-info-label">⏱️ Seen Time :</span>
+                <span class="msg-info-label">⏱️ Seen Time:</span>
                 <div class="msg-info-val" id="infoSeenTimeVal" style="width: 100%; text-align: left; font-weight: normal; font-size: 0.78rem; color: #ccc;">-</div>
             </div>
         </div>
@@ -604,17 +604,18 @@
     const chatBackgrounds = [
         "none",
         "linear-gradient(rgba(10, 10, 10, 0.75), rgba(10, 10, 10, 0.75)), url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1000&q=75')",
-        "linear-gradient(rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.8)), url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1000&q=75')",
+        "linear-gradient(rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.8)), url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1000&q=75')", // 3rd Image (Index 2)
         "linear-gradient(rgba(12, 10, 8, 0.78), rgba(12, 10, 8, 0.78)), url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1000&q=75')"
     ];
 
-    let currentBgIndex = parseInt(localStorage.getItem("worldChatBgIndex") || "0", 10);
+    // Default set to 3rd image (index 2)
+    let currentBgIndex = parseInt(localStorage.getItem("worldChatBgIndex") !== null ? localStorage.getItem("worldChatBgIndex") : "2", 10);
     const messagesBox = document.getElementById("messages");
     const bgSwitcherBtn = document.getElementById("bgSwitcherBtn");
 
     function applyChatBackground(index) {
         if (!messagesBox) return;
-        messagesBox.style.backgroundImage = chatBackgrounds[index] || "none";
+        messagesBox.style.backgroundImage = chatBackgrounds[index] || chatBackgrounds[2];
     }
 
     applyChatBackground(currentBgIndex);
@@ -637,7 +638,7 @@
         document.getElementById("msgInfoModal").classList.remove("show");
     }
 
-    // Modal popup showing MongoDB users fetched via script.js seenMap
+    // Modal popup showing all MongoDB seen users & timestamps
     function showWorldMsgInfo(li) {
         if (!li) return;
         const myUser = getMyUsername().toLowerCase();
@@ -646,39 +647,50 @@
         // ONLY SENDER can view message info
         if (!isMy) return;
 
-        const senderLabel = `@${myUser} (You)`;
+        const senderLabel = `You (@${myUser})`;
         const sentTime = li.dataset.sentTime || formatAMPM(new Date());
         const msgId = li.dataset.id;
 
-        // Fetch seen users from script.js seenMap
+        // Fetch seen users and map timestamps for each user
         let seenUsers = [];
         if (typeof seenMap !== "undefined" && msgId && seenMap[msgId]) {
             seenUsers = Array.isArray(seenMap[msgId]) ? seenMap[msgId] : [seenMap[msgId]];
         }
 
-        let seenStatusText = "Delivered √";
-        let seenTimeHtml = "(Not seen yet ✗)";
+        let seenTimesMap = {};
+        try {
+            seenTimesMap = JSON.parse(li.dataset.seenTimes || "{}");
+        } catch(e) {
+            seenTimesMap = {};
+        }
+
+        let seenStatusText = "Delivered ✓";
+        let seenTimeHtml = "Not seen yet";
 
         if (seenUsers.length > 0) {
+            // Status shows list of all users who saw
             seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " ✓✓";
-            const seenTimeRecorded = li.dataset.seenAt || formatAMPM(new Date());
-            seenTimeHtml = seenUsers.map(u => `<div><b>@${u}</b>: ${seenTimeRecorded}</div>`).join("");
+
+            // Map each user with their respective seen time
+            seenTimeHtml = seenUsers.map(u => {
+                const userSeenTime = seenTimesMap[u] || li.dataset.seenAt || formatAMPM(new Date());
+                return `<div style="margin: 2px 0;"><b>@${u}</b>: ${userSeenTime}</div>`;
+            }).join("");
         }
 
         openMsgInfoModal(senderLabel, sentTime, seenStatusText, seenTimeHtml);
     }
 
-    // Override script.js showSeen to open our custom stylized modal
     window.showSeen = function(id) {
         const li = document.querySelector(`li[data-id="${id}"]`);
         if (li) {
             showWorldMsgInfo(li);
         } else {
-            const users = (typeof seenMap !== "undefined" && seenMap[id]) ? seenMap[id] : [];
+            const users = (typeof seenMap !== "undefined" && seenMap[id]) ? (Array.isArray(seenMap[id]) ? seenMap[id] : [seenMap[id]]) : [];
             const myUser = getMyUsername().toLowerCase();
-            const senderLabel = `@${myUser}(You)`;
+            const senderLabel = `You (@${myUser})`;
             const status = users.length > 0 ? users.map(u => `@${u}`).join(", ") + " ✓✓" : "Delivered ✓";
-            const seenTime = users.length > 0 ? users.map(u => `<div><b>@${u}</b>: ${formatAMPM(new Date())}</div>`).join("") : "Not seen yet";
+            const seenTime = users.length > 0 ? users.map(u => `<div style="margin: 2px 0;"><b>@${u}</b>: ${formatAMPM(new Date())}</div>`).join("") : "Not seen yet";
             openMsgInfoModal(senderLabel, formatAMPM(new Date()), status, seenTime);
         }
     };
@@ -703,16 +715,14 @@
             let ssUser = myUser || "user";
             const match = rawText.match(/([a-zA-Z0-9._]+)\s+took\s+a\s+screenshot/i) || rawText.match(/@([a-zA-Z0-9._]+)/);
             if (match && match[1]) ssUser = match[1].replace(/^@/, "");
-            li.textContent = `~ @${ssUser} took a screenshot of chat !!!`;
+            li.textContent = `~ @${ssUser} took a screenshot of chat`;
             return;
         }
 
-        // AM/PM time sync
         const timeMatch = rawText.match(/\b(\d{1,2}:\d{2}(?::\d{2})?\s?(?:AM|PM|am|pm)?)\b/);
         const msgTime = timeMatch ? timeMatch[1].toUpperCase() : formatAMPM(new Date());
         li.dataset.sentTime = msgTime;
 
-        // Catch message ID assigned by script.js button onclick="showSeen('xyz')"
         const existingInfoBtn = li.querySelector(".info-btn");
         if (existingInfoBtn) {
             const onclickAttr = existingInfoBtn.getAttribute("onclick") || "";
@@ -720,7 +730,7 @@
             if (idMatch && idMatch[1]) {
                 li.dataset.id = idMatch[1];
             }
-            existingInfoBtn.remove(); // Remove default raw button
+            existingInfoBtn.remove();
         }
 
         let detectedSender = "";
@@ -761,7 +771,6 @@
             }
         }
 
-        // Check if message is already seen according to script.js seenMap
         const msgId = li.dataset.id;
         const isSeen = (typeof seenMap !== "undefined" && msgId && seenMap[msgId] && seenMap[msgId].length > 0);
 
@@ -779,7 +788,6 @@
                 <button type="button" class="msg-info-trigger" title="Message Info">ⓘ</button>
             `;
         } else {
-            // Receiver only sees single/double ticks, info modal is disabled
             metaWrap.innerHTML = `
                 <span class="tick-icon ${isSeen ? 'seen' : ''}">${isSeen ? '✓✓' : '✓'}</span>
             `;
@@ -788,13 +796,31 @@
         li.appendChild(metaWrap);
     }
 
-    // Connect with socket updateSeen event to update ticks & data in real-time
+    // Connect with socket updateSeen event to track all users and individual timestamps
     if (typeof socket !== "undefined" && socket) {
         socket.on("updateSeen", ({ messageId, seenBy }) => {
             const li = document.querySelector(`li[data-id="${messageId}"]`);
             if (li) {
                 li.dataset.seen = "true";
-                li.dataset.seenAt = formatAMPM(new Date());
+                const nowTime = formatAMPM(new Date());
+                li.dataset.seenAt = nowTime;
+
+                // Track individual timestamp for each user who sees the message
+                let seenTimesMap = {};
+                try {
+                    seenTimesMap = JSON.parse(li.dataset.seenTimes || "{}");
+                } catch(e) {
+                    seenTimesMap = {};
+                }
+
+                const usersList = Array.isArray(seenBy) ? seenBy : [seenBy];
+                usersList.forEach(u => {
+                    if (!seenTimesMap[u]) {
+                        seenTimesMap[u] = nowTime;
+                    }
+                });
+                li.dataset.seenTimes = JSON.stringify(seenTimesMap);
+
                 const tick = li.querySelector(".tick-icon");
                 if (tick) {
                     tick.textContent = "✓✓";
