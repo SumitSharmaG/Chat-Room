@@ -826,7 +826,7 @@
         let seenTimeHtml = "Nobody seen yet...";
 
         if (seenUsers.length > 0) {
-            seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + "/";
+            seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " / ";
 
             seenTimeHtml = seenUsers.map(u => {
                 const userSeenTime = cleanCombinedMap[u] || li.dataset.seenAt || formatAMPM(new Date());
