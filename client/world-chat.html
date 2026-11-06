@@ -472,7 +472,6 @@
     <div class="header-left">  
         <a href="https://chat-room-three-pied.vercel.app/" class="home-btn">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        
         </a>  
         <a href="selection.html" class="back-btn">
             &#10094;
@@ -626,6 +625,124 @@
         applyChatBackground(currentBgIndex);
     });
 
+    // =========================================================================
+    // MULTI-USER SEEN TRACKER (Fixes single user overwrite issue)
+    // =========================================================================
+    // Structure: { [msgId]: { [username]: "12:30 PM", ... } }
+    let masterSeenStore = {};
+    try {
+        masterSeenStore = JSON.parse(localStorage.getItem("worldMasterSeenStore") || "{}");
+    } catch(e) {
+        masterSeenStore = {};
+    }
+
+    let currentOpenInfoLi = null;
+
+    function saveMasterSeen() {
+        try {
+            localStorage.setItem("worldMasterSeenStore", JSON.stringify(masterSeenStore));
+        } catch(e) {}
+    }
+
+    function getMyUsername() {
+        const fromStorage = localStorage.getItem("username");
+        if (fromStorage) return fromStorage.trim();
+        const fromDom = document.getElementById("display-username")?.textContent;
+        return (fromDom || "").replace(/^@/, "").trim();
+    }
+
+    // Helper: Add one or multiple users to a message's seen list without overwriting previous users
+    function recordUserSeenForMsg(msgId, rawUsers, timeStr) {
+        if (!msgId || !rawUsers) return;
+        const myUser = getMyUsername().toLowerCase();
+        const timeToUse = timeStr || formatAMPM(new Date());
+
+        if (!masterSeenStore[msgId]) {
+            masterSeenStore[msgId] = {};
+        }
+
+        // Normalize rawUsers (can be array, comma-separated string, or object)
+        let userArray = [];
+        if (Array.isArray(rawUsers)) {
+            userArray = rawUsers;
+        } else if (typeof rawUsers === "string") {
+            userArray = rawUsers.split(",");
+        } else if (typeof rawUsers === "object") {
+            userArray = Object.values(rawUsers);
+        }
+
+        let updated = false;
+        userArray.forEach(u => {
+            if (!u) return;
+            const cleanUser = String(u).replace(/^@/, "").trim();
+            if (!cleanUser || cleanUser.toLowerCase() === myUser || cleanUser.toUpperCase() === "SYSTEM") return;
+
+            // Check case-insensitively so same user isn't added twice
+            const existingKey = Object.keys(masterSeenStore[msgId]).find(k => k.toLowerCase() === cleanUser.toLowerCase());
+            if (!existingKey) {
+                masterSeenStore[msgId][cleanUser] = timeToUse;
+                updated = true;
+            }
+        });
+
+        // Sync back to script.js global seenMap as an array of all accumulated users
+        if (typeof seenMap !== "undefined") {
+            seenMap[msgId] = Object.keys(masterSeenStore[msgId]);
+        }
+
+        // Update DOM element dataset & tick icon
+        const li = document.querySelector(`li[data-id="${msgId}"]`);
+        if (li) {
+            let domMap = {};
+            try { domMap = JSON.parse(li.dataset.seenTimes || "{}"); } catch(e) { domMap = {}; }
+
+            Object.keys(masterSeenStore[msgId]).forEach(u => {
+                if (!domMap[u]) {
+                    domMap[u] = masterSeenStore[msgId][u];
+                    updated = true;
+                } else {
+                    masterSeenStore[msgId][u] = domMap[u];
+                }
+            });
+
+            li.dataset.seenTimes = JSON.stringify(masterSeenStore[msgId]);
+
+            if (Object.keys(masterSeenStore[msgId]).length > 0) {
+                li.dataset.seen = "true";
+                const tick = li.querySelector(".tick-icon");
+                if (tick) {
+                    tick.textContent = "✓✓";
+                    tick.classList.add("seen");
+                }
+            }
+
+            // If modal is currently open for this message, live-refresh it
+            if (currentOpenInfoLi === li && document.getElementById("msgInfoModal").classList.contains("show")) {
+                showWorldMsgInfo(li);
+            }
+        }
+
+        if (updated) {
+            saveMasterSeen();
+        }
+    }
+
+    // When any other user types or sends a message, they have seen all previous messages in chat
+    function markAllPreviousMyMessagesSeenBy(activeUsername) {
+        if (!activeUsername || !messagesBox) return;
+        const cleanUser = String(activeUsername).replace(/^@/, "").trim();
+        const myUser = getMyUsername().toLowerCase();
+        if (!cleanUser || cleanUser.toLowerCase() === myUser || cleanUser.toUpperCase() === "SYSTEM") return;
+
+        const nowTime = formatAMPM(new Date());
+        messagesBox.querySelectorAll("li.my-message").forEach(li => {
+            const msgId = li.dataset.id;
+            if (msgId) {
+                recordUserSeenForMsg(msgId, [cleanUser], nowTime);
+            }
+        });
+    }
+
     function openMsgInfoModal(fromLabel, sentTime, statusText, seenTimeFormatted) {
         document.getElementById("infoFromVal").textContent = fromLabel;
         document.getElementById("infoSentVal").textContent = sentTime;
@@ -636,9 +753,10 @@
 
     function closeMsgInfoModal() {
         document.getElementById("msgInfoModal").classList.remove("show");
+        currentOpenInfoLi = null;
     }
 
-    // Modal popup showing all MongoDB seen users & timestamps
+    // Modal popup showing all MongoDB / Socket seen users & timestamps
     function showWorldMsgInfo(li) {
         if (!li) return;
         const myUser = getMyUsername().toLowerCase();
@@ -647,34 +765,42 @@
         // ONLY SENDER can view message info
         if (!isMy) return;
 
+        currentOpenInfoLi = li;
         const senderLabel = `@${myUser} (You)`;
         const sentTime = li.dataset.sentTime || formatAMPM(new Date());
         const msgId = li.dataset.id;
 
-        // Fetch seen users and map timestamps for each user
-        let seenUsers = [];
+        // 1. Merge any users present in script.js seenMap[msgId]
         if (typeof seenMap !== "undefined" && msgId && seenMap[msgId]) {
-            seenUsers = Array.isArray(seenMap[msgId]) ? seenMap[msgId] : [seenMap[msgId]];
+            recordUserSeenForMsg(msgId, seenMap[msgId], li.dataset.seenAt || formatAMPM(new Date()));
         }
 
-        let seenTimesMap = {};
+        // 2. Merge any users saved in DOM dataset
+        let domTimesMap = {};
         try {
-            seenTimesMap = JSON.parse(li.dataset.seenTimes || "{}");
+            domTimesMap = JSON.parse(li.dataset.seenTimes || "{}");
         } catch(e) {
-            seenTimesMap = {};
+            domTimesMap = {};
         }
+
+        if (msgId && !masterSeenStore[msgId]) {
+            masterSeenStore[msgId] = {};
+        }
+
+        const combinedMap = Object.assign({}, domTimesMap, msgId ? masterSeenStore[msgId] : {});
+        const seenUsers = Object.keys(combinedMap).filter(u => u && u.toLowerCase() !== myUser);
 
         let seenStatusText = "Delivered ✓";
         let seenTimeHtml = "( Not seen yet... )";
 
         if (seenUsers.length > 0) {
-            // Status shows list of all users who saw
-            seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + "/";
+            // Status shows list of ALL users who saw
+            seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " ✓✓";
 
-            // Map each user with their respective seen time
+            // Map each user with their respective seen time in sequence
             seenTimeHtml = seenUsers.map(u => {
-                const userSeenTime = seenTimesMap[u] || li.dataset.seenAt || formatAMPM(new Date());
-                return `<div style="margin: 2px 0;"><b>@${u}</b>: ${userSeenTime}</div>`;
+                const userSeenTime = combinedMap[u] || li.dataset.seenAt || formatAMPM(new Date());
+                return `<div style="margin: 3px 0;"><b>@${u}</b> : ${userSeenTime}</div>`;
             }).join("");
         }
 
@@ -686,21 +812,18 @@
         if (li) {
             showWorldMsgInfo(li);
         } else {
-            const users = (typeof seenMap !== "undefined" && seenMap[id]) ? (Array.isArray(seenMap[id]) ? seenMap[id] : [seenMap[id]]) : [];
+            if (typeof seenMap !== "undefined" && seenMap[id]) {
+                recordUserSeenForMsg(id, seenMap[id], formatAMPM(new Date()));
+            }
+            const userMap = masterSeenStore[id] || {};
+            const users = Object.keys(userMap);
             const myUser = getMyUsername().toLowerCase();
-            const senderLabel = `You (@${myUser})`;
+            const senderLabel = `@${myUser} (You)`;
             const status = users.length > 0 ? users.map(u => `@${u}`).join(", ") + " ✓✓" : "Delivered ✓";
-            const seenTime = users.length > 0 ? users.map(u => `<div style="margin: 2px 0;"><b>@${u}</b>: ${formatAMPM(new Date())}</div>`).join("") : "Not seen yet";
+            const seenTime = users.length > 0 ? users.map(u => `<div style="margin: 3px 0;"><b>@${u}</b> : ${userMap[u]}</div>`).join("") : "( Not seen yet... )";
             openMsgInfoModal(senderLabel, formatAMPM(new Date()), status, seenTime);
         }
     };
-
-    function getMyUsername() {
-        const fromStorage = localStorage.getItem("username");
-        if (fromStorage) return fromStorage.trim();
-        const fromDom = document.getElementById("display-username")?.textContent;
-        return (fromDom || "").replace(/^@/, "").trim();
-    }
 
     function enhanceSingleMessage(li) {
         if (!li || li.nodeType !== 1 || li.dataset.enhanced === "true") return;
@@ -747,6 +870,11 @@
 
         li.dataset.sender = detectedSender || (isMyMsg ? myUser : "User");
 
+        // If another user sent this message, they have obviously seen all our previous messages
+        if (!isMyMsg && detectedSender && detectedSender.toLowerCase() !== myUser.toLowerCase() && detectedSender.toUpperCase() !== "SYSTEM") {
+            markAllPreviousMyMessagesSeenBy(detectedSender);
+        }
+
         if (isMyMsg) {
             const nameTags = li.querySelectorAll("strong, b, .sender, .username");
             let replaced = false;
@@ -772,7 +900,19 @@
         }
 
         const msgId = li.dataset.id;
-        const isSeen = (typeof seenMap !== "undefined" && msgId && seenMap[msgId] && seenMap[msgId].length > 0);
+
+        // Restore any previously saved seen data for this message ID
+        if (msgId) {
+            if (typeof seenMap !== "undefined" && seenMap[msgId]) {
+                recordUserSeenForMsg(msgId, seenMap[msgId], li.dataset.seenAt || msgTime);
+            }
+            if (masterSeenStore[msgId] && Object.keys(masterSeenStore[msgId]).length > 0) {
+                li.dataset.seenTimes = JSON.stringify(masterSeenStore[msgId]);
+                li.dataset.seen = "true";
+            }
+        }
+
+        const hasSeenUsers = (msgId && masterSeenStore[msgId] && Object.keys(masterSeenStore[msgId]).length > 0) || li.dataset.seen === "true";
 
         const metaWrap = document.createElement("div");
         metaWrap.className = "msg-meta-ticks";
@@ -784,49 +924,53 @@
                 showWorldMsgInfo(li);
             };
             metaWrap.innerHTML = `
-                <span class="tick-icon ${isSeen ? 'seen' : ''}">${isSeen ? '✓✓' : '✓'}</span>
+                <span class="tick-icon ${hasSeenUsers ? 'seen' : ''}">${hasSeenUsers ? '✓✓' : '✓'}</span>
                 <button type="button" class="msg-info-trigger" title="Message Info">ⓘ</button>
             `;
         } else {
             metaWrap.innerHTML = `
-                <span class="tick-icon ${isSeen ? 'seen' : ''}">${isSeen ? '✓✓' : '✓'}</span>
+                <span class="tick-icon ${hasSeenUsers ? 'seen' : ''}">${hasSeenUsers ? '✓✓' : '✓'}</span>
             `;
         }
 
         li.appendChild(metaWrap);
     }
 
-    // Connect with socket updateSeen event to track all users and individual timestamps
+    // Connect with socket events to accumulate all seen users & timestamps
     if (typeof socket !== "undefined" && socket) {
-        socket.on("updateSeen", ({ messageId, seenBy }) => {
-            const li = document.querySelector(`li[data-id="${messageId}"]`);
-            if (li) {
-                li.dataset.seen = "true";
-                const nowTime = formatAMPM(new Date());
-                li.dataset.seenAt = nowTime;
-
-                // Track individual timestamp for each user who sees the message
-                let seenTimesMap = {};
-                try {
-                    seenTimesMap = JSON.parse(li.dataset.seenTimes || "{}");
-                } catch(e) {
-                    seenTimesMap = {};
+        // 1. When a user opens/loads chat, emit messageSeen for any unread messages from others
+        socket.on("connect", () => {
+            const myUser = getMyUsername();
+            if (!myUser || !messagesBox) return;
+            messagesBox.querySelectorAll("li:not(.my-message):not(.screenshot-alert)").forEach(li => {
+                const msgId = li.dataset.id;
+                if (msgId) {
+                    socket.emit("messageSeen", { messageId: msgId, username: myUser });
                 }
+            });
+        });
 
-                const usersList = Array.isArray(seenBy) ? seenBy : [seenBy];
-                usersList.forEach(u => {
-                    if (!seenTimesMap[u]) {
-                        seenTimesMap[u] = nowTime;
-                    }
-                });
-                li.dataset.seenTimes = JSON.stringify(seenTimesMap);
-
-                const tick = li.querySelector(".tick-icon");
-                if (tick) {
-                    tick.textContent = "✓✓";
-                    tick.classList.add("seen");
-                }
+        // 2. Accumulate users on updateSeen (Never overwrite previous seen users)
+        socket.on("updateSeen", (payload) => {
+            if (!payload) return;
+            const messageId = payload.messageId || payload._id || payload.id;
+            const seenBy = payload.seenBy || payload.username || payload.users;
+            if (messageId && seenBy) {
+                recordUserSeenForMsg(messageId, seenBy, formatAMPM(new Date()));
             }
+        });
+
+        // 3. If someone is typing in World Chat, they have seen the current messages
+        socket.on("userTyping", (typingUser) => {
+            if (typingUser) {
+                markAllPreviousMyMessagesSeenBy(typingUser);
+            }
+        });
+
+        // 4. Clear masterSeenStore when chat is cleared
+        socket.on("chatCleared", () => {
+            masterSeenStore = {};
+            localStorage.removeItem("worldMasterSeenStore");
         });
     }
 
@@ -840,6 +984,10 @@
                         enhanceSingleMessage(node);
                     }
                 }
+            }
+            // Save updated DOM with data-id and seenTimes to chat_history
+            if (messagesBox.innerHTML.trim() !== "") {
+                localStorage.setItem("chat_history", messagesBox.innerHTML);
             }
         });
 
