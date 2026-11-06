@@ -832,15 +832,22 @@
         const rawText = (li.textContent || "").trim();
         const myUser = getMyUsername();
 
-        if (rawText.toLowerCase().includes("screenshot")) {
+                if (rawText.toLowerCase().includes("screenshot")) {
             li.classList.add("screenshot-alert");
             li.classList.remove("my-message");
+            
             let ssUser = myUser || "user";
             const match = rawText.match(/([a-zA-Z0-9._]+)\s+took\s+a\s+screenshot/i) || rawText.match(/@([a-zA-Z0-9._]+)/);
             if (match && match[1]) ssUser = match[1].replace(/^@/, "");
-            li.textContent = `~ [ @${ssUser} ] took a screenshot of chat !!!`;
+
+            // Original message se time nikalne ke liye (ya current time lagane ke liye)
+            const timeMatch = rawText.match(/\b(\d{1,2}:\d{2}(?::\d{2})?\s?(?:AM|PM|am|pm)?)\b/);
+            const ssTime = timeMatch ? timeMatch[1].toUpperCase() : formatAMPM(new Date());
+
+            li.textContent = `~ [ @${ssUser} ] Took A ScreenShot Of Chat !!! • ${ssTime}`;
             return;
         }
+
 
         const timeMatch = rawText.match(/\b(\d{1,2}:\d{2}(?::\d{2})?\s?(?:AM|PM|am|pm)?)\b/);
         const msgTime = timeMatch ? timeMatch[1].toUpperCase() : formatAMPM(new Date());
