@@ -9,7 +9,7 @@
 </script>  
 <meta charset="UTF-8">  
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
-<title>Secure Ultra Chat</title>  
+<title>World Chat</title>  
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">  
 <style>  
     :root {  
@@ -86,7 +86,7 @@
         border: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(255, 255, 255, 0.03);
         transition: all 0.2s ease;
-        margin-top: 7px; /* Back button ko home icon se niche space dene ke liye */
+        margin-top: 7px;
     }
 
     .back-btn:hover {
@@ -626,12 +626,45 @@
     });
 
     // =========================================================================
-    // MULTI-USER SEEN TRACKER (Fixes single user overwrite issue)
+    // STRICT USERNAME SANITIZER (Prevents message text from mixing with username)
     // =========================================================================
-    // Structure: { [msgId]: { [username]: "12:30 PM", ... } }
+    function extractPureUsername(rawStr) {
+        if (!rawStr) return "";
+        // Take only the part before ':' or whitespace, strip '@' and non-username chars
+        let str = String(rawStr).trim().replace(/^@/, "");
+        str = str.split(":")[0].trim();
+        str = str.split(/\s+/)[0].trim();
+        str = str.replace(/[^a-zA-Z0-9._]/g, "");
+        return str.toLowerCase();
+    }
+
+    function getMyUsername() {
+        const fromStorage = localStorage.getItem("username");
+        if (fromStorage) return extractPureUsername(fromStorage);
+        const fromDom = document.getElementById("display-username")?.textContent;
+        return extractPureUsername(fromDom || "");
+    }
+
+    // =========================================================================
+    // MULTI-USER SEEN TRACKER (Clean & Per-Message)
+    // =========================================================================
     let masterSeenStore = {};
     try {
-        masterSeenStore = JSON.parse(localStorage.getItem("worldMasterSeenStore") || "{}");
+        const rawStore = JSON.parse(localStorage.getItem("worldMasterSeenStore") || "{}");
+        // Sanitize any corrupted keys from previous sessions (like "admin: Hii")
+        Object.keys(rawStore).forEach(msgId => {
+            masterSeenStore[msgId] = {};
+            const entry = rawStore[msgId] || {};
+            Object.keys(entry).forEach(k => {
+                const pureKey = extractPureUsername(k);
+                if (pureKey && pureKey !== "you" && pureKey !== "system") {
+                    if (!masterSeenStore[msgId][pureKey]) {
+                        masterSeenStore[msgId][pureKey] = entry[k];
+                    }
+                }
+            });
+        });
+        localStorage.setItem("worldMasterSeenStore", JSON.stringify(masterSeenStore));
     } catch(e) {
         masterSeenStore = {};
     }
@@ -644,24 +677,16 @@
         } catch(e) {}
     }
 
-    function getMyUsername() {
-        const fromStorage = localStorage.getItem("username");
-        if (fromStorage) return fromStorage.trim();
-        const fromDom = document.getElementById("display-username")?.textContent;
-        return (fromDom || "").replace(/^@/, "").trim();
-    }
-
-    // Helper: Add one or multiple users to a message's seen list without overwriting previous users
+    // Helper: Add one or multiple users to a specific message's seen list
     function recordUserSeenForMsg(msgId, rawUsers, timeStr) {
         if (!msgId || !rawUsers) return;
-        const myUser = getMyUsername().toLowerCase();
+        const myUser = getMyUsername();
         const timeToUse = timeStr || formatAMPM(new Date());
 
         if (!masterSeenStore[msgId]) {
             masterSeenStore[msgId] = {};
         }
 
-        // Normalize rawUsers (can be array, comma-separated string, or object)
         let userArray = [];
         if (Array.isArray(rawUsers)) {
             userArray = rawUsers;
@@ -673,28 +698,32 @@
 
         let updated = false;
         userArray.forEach(u => {
-            if (!u) return;
-            const cleanUser = String(u).replace(/^@/, "").trim();
-            if (!cleanUser || cleanUser.toLowerCase() === myUser || cleanUser.toUpperCase() === "SYSTEM") return;
+            const cleanUser = extractPureUsername(u);
+            if (!cleanUser || cleanUser === myUser || cleanUser === "system" || cleanUser === "you") return;
 
-            // Check case-insensitively so same user isn't added twice
-            const existingKey = Object.keys(masterSeenStore[msgId]).find(k => k.toLowerCase() === cleanUser.toLowerCase());
-            if (!existingKey) {
+            if (!masterSeenStore[msgId][cleanUser]) {
                 masterSeenStore[msgId][cleanUser] = timeToUse;
                 updated = true;
             }
         });
 
-        // Sync back to script.js global seenMap as an array of all accumulated users
         if (typeof seenMap !== "undefined") {
             seenMap[msgId] = Object.keys(masterSeenStore[msgId]);
         }
 
-        // Update DOM element dataset & tick icon
         const li = document.querySelector(`li[data-id="${msgId}"]`);
         if (li) {
+            // Clean any old corrupted dataset entries on this <li>
             let domMap = {};
-            try { domMap = JSON.parse(li.dataset.seenTimes || "{}"); } catch(e) { domMap = {}; }
+            try {
+                const parsedDom = JSON.parse(li.dataset.seenTimes || "{}");
+                Object.keys(parsedDom).forEach(k => {
+                    const pureK = extractPureUsername(k);
+                    if (pureK && pureK !== myUser && pureK !== "system" && pureK !== "you") {
+                        if (!domMap[pureK]) domMap[pureK] = parsedDom[k];
+                    }
+                });
+            } catch(e) { domMap = {}; }
 
             Object.keys(masterSeenStore[msgId]).forEach(u => {
                 if (!domMap[u]) {
@@ -716,7 +745,6 @@
                 }
             }
 
-            // If modal is currently open for this message, live-refresh it
             if (currentOpenInfoLi === li && document.getElementById("msgInfoModal").classList.contains("show")) {
                 showWorldMsgInfo(li);
             }
@@ -727,12 +755,11 @@
         }
     }
 
-    // When any other user types or sends a message, they have seen all previous messages in chat
+    // When another user sends a message or types, mark previous messages as seen by that pure username ONLY
     function markAllPreviousMyMessagesSeenBy(activeUsername) {
-        if (!activeUsername || !messagesBox) return;
-        const cleanUser = String(activeUsername).replace(/^@/, "").trim();
-        const myUser = getMyUsername().toLowerCase();
-        if (!cleanUser || cleanUser.toLowerCase() === myUser || cleanUser.toUpperCase() === "SYSTEM") return;
+        const cleanUser = extractPureUsername(activeUsername);
+        const myUser = getMyUsername();
+        if (!cleanUser || cleanUser === myUser || cleanUser === "system" || cleanUser === "you" || !messagesBox) return;
 
         const nowTime = formatAMPM(new Date());
         messagesBox.querySelectorAll("li.my-message").forEach(li => {
@@ -756,10 +783,9 @@
         currentOpenInfoLi = null;
     }
 
-    // Modal popup showing all MongoDB / Socket seen users & timestamps
     function showWorldMsgInfo(li) {
         if (!li) return;
-        const myUser = getMyUsername().toLowerCase();
+        const myUser = getMyUsername();
         const isMy = li.classList.contains("my-message");
 
         // ONLY SENDER can view message info
@@ -770,36 +796,40 @@
         const sentTime = li.dataset.sentTime || formatAMPM(new Date());
         const msgId = li.dataset.id;
 
-        // 1. Merge any users present in script.js seenMap[msgId]
         if (typeof seenMap !== "undefined" && msgId && seenMap[msgId]) {
             recordUserSeenForMsg(msgId, seenMap[msgId], li.dataset.seenAt || formatAMPM(new Date()));
         }
 
-        // 2. Merge any users saved in DOM dataset
-        let domTimesMap = {};
+        let cleanCombinedMap = {};
         try {
-            domTimesMap = JSON.parse(li.dataset.seenTimes || "{}");
-        } catch(e) {
-            domTimesMap = {};
+            const rawDomMap = JSON.parse(li.dataset.seenTimes || "{}");
+            Object.keys(rawDomMap).forEach(k => {
+                const pureU = extractPureUsername(k);
+                if (pureU && pureU !== myUser && pureU !== "system" && pureU !== "you") {
+                    if (!cleanCombinedMap[pureU]) cleanCombinedMap[pureU] = rawDomMap[k];
+                }
+            });
+        } catch(e) {}
+
+        if (msgId && masterSeenStore[msgId]) {
+            Object.keys(masterSeenStore[msgId]).forEach(k => {
+                const pureU = extractPureUsername(k);
+                if (pureU && pureU !== myUser && pureU !== "system" && pureU !== "you") {
+                    if (!cleanCombinedMap[pureU]) cleanCombinedMap[pureU] = masterSeenStore[msgId][k];
+                }
+            });
         }
 
-        if (msgId && !masterSeenStore[msgId]) {
-            masterSeenStore[msgId] = {};
-        }
-
-        const combinedMap = Object.assign({}, domTimesMap, msgId ? masterSeenStore[msgId] : {});
-        const seenUsers = Object.keys(combinedMap).filter(u => u && u.toLowerCase() !== myUser);
+        const seenUsers = Object.keys(cleanCombinedMap);
 
         let seenStatusText = "Delivered ✓";
         let seenTimeHtml = "Nobody seen yet...";
 
         if (seenUsers.length > 0) {
-            // Status shows list of ALL users who saw
-            seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " /";
+            seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " ✓✓";
 
-            // Map each user with their respective seen time in sequence
             seenTimeHtml = seenUsers.map(u => {
-                const userSeenTime = combinedMap[u] || li.dataset.seenAt || formatAMPM(new Date());
+                const userSeenTime = cleanCombinedMap[u] || li.dataset.seenAt || formatAMPM(new Date());
                 return `<div style="margin: 3px 0;"><b>@${u}</b> : ${userSeenTime}</div>`;
             }).join("");
         }
@@ -817,10 +847,10 @@
             }
             const userMap = masterSeenStore[id] || {};
             const users = Object.keys(userMap);
-            const myUser = getMyUsername().toLowerCase();
+            const myUser = getMyUsername();
             const senderLabel = `@${myUser} (You)`;
             const status = users.length > 0 ? users.map(u => `@${u}`).join(", ") + " ✓✓" : "Delivered ✓";
-            const seenTime = users.length > 0 ? users.map(u => `<div style="margin: 3px 0;"><b>@${u}</b> : ${userMap[u]}</div>`).join("") : "( Not seen yet... )";
+            const seenTime = users.length > 0 ? users.map(u => `<div style="margin: 3px 0;"><b>@${u}</b> : ${userMap[u]}</div>`).join("") : "Nobody seen yet...";
             openMsgInfoModal(senderLabel, formatAMPM(new Date()), status, seenTime);
         }
     };
@@ -832,22 +862,20 @@
         const rawText = (li.textContent || "").trim();
         const myUser = getMyUsername();
 
-                if (rawText.toLowerCase().includes("screenshot")) {
+        if (rawText.toLowerCase().includes("screenshot")) {
             li.classList.add("screenshot-alert");
             li.classList.remove("my-message");
             
             let ssUser = myUser || "user";
             const match = rawText.match(/([a-zA-Z0-9._]+)\s+took\s+a\s+screenshot/i) || rawText.match(/@([a-zA-Z0-9._]+)/);
-            if (match && match[1]) ssUser = match[1].replace(/^@/, "");
+            if (match && match[1]) ssUser = extractPureUsername(match[1]);
 
-            // Original message se time nikalne ke liye (ya current time lagane ke liye)
             const timeMatch = rawText.match(/\b(\d{1,2}:\d{2}(?::\d{2})?\s?(?:AM|PM|am|pm)?)\b/);
             const ssTime = timeMatch ? timeMatch[1].toUpperCase() : formatAMPM(new Date());
 
             li.textContent = `@${ssUser} ~ Took A ScreenShot Of Chat • ${ssTime}`;
             return;
         }
-
 
         const timeMatch = rawText.match(/\b(\d{1,2}:\d{2}(?::\d{2})?\s?(?:AM|PM|am|pm)?)\b/);
         const msgTime = timeMatch ? timeMatch[1].toUpperCase() : formatAMPM(new Date());
@@ -863,22 +891,23 @@
             existingInfoBtn.remove();
         }
 
+        // FIXED: Only select the actual username tag (strong / b / .sender / .username), NOT span:first-child!
         let detectedSender = "";
-        const firstTag = li.querySelector("strong, b, .sender, .username, span:first-child");
-        if (firstTag) {
-            detectedSender = firstTag.textContent.trim().replace(/:$/, "");
+        const nameNode = li.querySelector("strong, b, .sender, .username");
+        if (nameNode) {
+            detectedSender = extractPureUsername(nameNode.textContent);
         }
 
         let isMyMsg = li.classList.contains("my-message");
-        if (!isMyMsg && myUser && detectedSender.toLowerCase() === myUser.toLowerCase()) {
+        if (!isMyMsg && myUser && detectedSender === myUser) {
             isMyMsg = true;
             li.classList.add("my-message");
         }
 
-        li.dataset.sender = detectedSender || (isMyMsg ? myUser : "User");
+        li.dataset.sender = detectedSender || (isMyMsg ? myUser : "user");
 
-        // If another user sent this message, they have obviously seen all our previous messages
-        if (!isMyMsg && detectedSender && detectedSender.toLowerCase() !== myUser.toLowerCase() && detectedSender.toUpperCase() !== "SYSTEM") {
+        // If another user sent this message, mark previous messages as seen by their pure username ONLY
+        if (!isMyMsg && detectedSender && detectedSender !== myUser && detectedSender !== "system" && detectedSender !== "you") {
             markAllPreviousMyMessagesSeenBy(detectedSender);
         }
 
@@ -886,8 +915,8 @@
             const nameTags = li.querySelectorAll("strong, b, .sender, .username");
             let replaced = false;
             nameTags.forEach(el => {
-                const txt = el.textContent.trim().replace(/:$/, "");
-                if (!myUser || txt.toLowerCase() === myUser.toLowerCase()) {
+                const txt = extractPureUsername(el.textContent);
+                if (!myUser || txt === myUser || txt === "you") {
                     el.textContent = "You";
                     replaced = true;
                 }
@@ -908,7 +937,6 @@
 
         const msgId = li.dataset.id;
 
-        // Restore any previously saved seen data for this message ID
         if (msgId) {
             if (typeof seenMap !== "undefined" && seenMap[msgId]) {
                 recordUserSeenForMsg(msgId, seenMap[msgId], li.dataset.seenAt || msgTime);
@@ -916,10 +944,13 @@
             if (masterSeenStore[msgId] && Object.keys(masterSeenStore[msgId]).length > 0) {
                 li.dataset.seenTimes = JSON.stringify(masterSeenStore[msgId]);
                 li.dataset.seen = "true";
+            } else {
+                // Clean any corrupted seenTimes from cached HTML
+                li.dataset.seenTimes = "{}";
             }
         }
 
-        const hasSeenUsers = (msgId && masterSeenStore[msgId] && Object.keys(masterSeenStore[msgId]).length > 0) || li.dataset.seen === "true";
+        const hasSeenUsers = (msgId && masterSeenStore[msgId] && Object.keys(masterSeenStore[msgId]).length > 0);
 
         const metaWrap = document.createElement("div");
         metaWrap.className = "msg-meta-ticks";
@@ -943,9 +974,7 @@
         li.appendChild(metaWrap);
     }
 
-    // Connect with socket events to accumulate all seen users & timestamps
     if (typeof socket !== "undefined" && socket) {
-        // 1. When a user opens/loads chat, emit messageSeen for any unread messages from others
         socket.on("connect", () => {
             const myUser = getMyUsername();
             if (!myUser || !messagesBox) return;
@@ -957,7 +986,6 @@
             });
         });
 
-        // 2. Accumulate users on updateSeen (Never overwrite previous seen users)
         socket.on("updateSeen", (payload) => {
             if (!payload) return;
             const messageId = payload.messageId || payload._id || payload.id;
@@ -967,14 +995,12 @@
             }
         });
 
-        // 3. If someone is typing in World Chat, they have seen the current messages
         socket.on("userTyping", (typingUser) => {
             if (typingUser) {
                 markAllPreviousMyMessagesSeenBy(typingUser);
             }
         });
 
-        // 4. Clear masterSeenStore when chat is cleared
         socket.on("chatCleared", () => {
             masterSeenStore = {};
             localStorage.removeItem("worldMasterSeenStore");
@@ -982,7 +1008,13 @@
     }
 
     if (messagesBox) {
-        messagesBox.querySelectorAll("li").forEach(enhanceSingleMessage);
+        // Clean already-rendered cached messages on load
+        messagesBox.querySelectorAll("li").forEach(li => {
+            li.removeAttribute("data-enhanced");
+            const oldMeta = li.querySelector(".msg-meta-ticks");
+            if (oldMeta) oldMeta.remove();
+            enhanceSingleMessage(li);
+        });
 
         const fastObserver = new MutationObserver((mutations) => {
             for (const m of mutations) {
@@ -992,7 +1024,6 @@
                     }
                 }
             }
-            // Save updated DOM with data-id and seenTimes to chat_history
             if (messagesBox.innerHTML.trim() !== "") {
                 localStorage.setItem("chat_history", messagesBox.innerHTML);
             }
