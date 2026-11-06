@@ -791,11 +791,11 @@
         const seenUsers = Object.keys(combinedMap).filter(u => u && u.toLowerCase() !== myUser);
 
         let seenStatusText = "Delivered ✓";
-        let seenTimeHtml = "( Not seen yet... )";
+        let seenTimeHtml = "Nobody seen yet...";
 
         if (seenUsers.length > 0) {
             // Status shows list of ALL users who saw
-            seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " ✓✓";
+            seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " /";
 
             // Map each user with their respective seen time in sequence
             seenTimeHtml = seenUsers.map(u => {
@@ -838,7 +838,7 @@
             let ssUser = myUser || "user";
             const match = rawText.match(/([a-zA-Z0-9._]+)\s+took\s+a\s+screenshot/i) || rawText.match(/@([a-zA-Z0-9._]+)/);
             if (match && match[1]) ssUser = match[1].replace(/^@/, "");
-            li.textContent = `~ @${ssUser} took a screenshot of chat !!!`;
+            li.textContent = `~ [ @${ssUser} ] took a screenshot of chat !!!`;
             return;
         }
 
