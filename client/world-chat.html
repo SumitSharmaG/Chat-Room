@@ -844,7 +844,7 @@
             const timeMatch = rawText.match(/\b(\d{1,2}:\d{2}(?::\d{2})?\s?(?:AM|PM|am|pm)?)\b/);
             const ssTime = timeMatch ? timeMatch[1].toUpperCase() : formatAMPM(new Date());
 
-            li.textContent = `~ @${ssUser} Took A ScreenShot Of Chat !!! • ${ssTime}`;
+            li.textContent = `~ @${ssUser} Took A ScreenShot Of Chat ! ${ssTime}`;
             return;
         }
 
