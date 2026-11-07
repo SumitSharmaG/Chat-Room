@@ -1426,6 +1426,7 @@
             onlineUsersMap = JSON.parse(localStorage.getItem("privateOnlineUsers") || "{}");
         } catch(e) { onlineUsersMap = {}; }
 
+        let gestureTimer = null;
         let lastScreenshotAlert = 0;
         let activeTouchCount = 0;
         let isMultiTouchGesture = false;
@@ -1464,12 +1465,14 @@
 
             inboxIdleReloadTimer = setInterval(() => {
                 const isSearchOpen = $("searchBox").style.display === "block" || $("inboxFilterBox").style.display === "block";
+                // Reload every 15s when standing idle on Inbox (no active chat, no search, no open 3-dot dropdown)
                 if (!selectedUser && !isSearchOpen && !openDropdownUser) {
                     window.location.reload();
                 }
             }, 15000);
         }
 
+        // Reset 15-sec idle timer whenever user touches or clicks anything on Inbox
         ["touchstart", "mousedown", "keydown"].forEach(evt => {
             document.addEventListener(evt, () => {
                 if (!selectedUser) {
@@ -1513,6 +1516,7 @@
         });
 
         // ==========================================
+                // ==========================================
         // 2. 3-FINGER 400ms + UP-TO-DOWN SWIPE SCREENSHOT LOGIC
         // ==========================================
         let threeFingerStartTime = 0;
@@ -1567,9 +1571,10 @@
             if (!e.touches || e.touches.length !== 3 || !threeFingerStartTime || threeFingerTriggered) return;
 
             const currentAvgY = (e.touches[0].clientY + e.touches[1].clientY + e.touches[2].clientY) / 3;
-            const deltaY = currentAvgY - threeFingerStartY;
+            const deltaY = currentAvgY - threeFingerStartY; // Positive value means Up to Down movement
             const elapsed = Date.now() - threeFingerStartTime;
 
+            // Trigger ONLY when 3 fingers held >= 400ms AND swiped downwards (Up to Down >= 45px)
             if (elapsed >= 400 && deltaY >= 45) {
                 threeFingerTriggered = true;
                 sendScreenshotAlert();
@@ -1599,6 +1604,7 @@
                 sendScreenshotAlert();
             }
         });
+
 
         // ==========================================
         // 3. SEARCH (🔎) & NEW CHAT (+) VALIDATION
@@ -2047,6 +2053,7 @@
         }
 
         window.openChat = function(u) {
+            // Stop reload timers while user is inside an active chat
             clearTimeout(backReloadTimer);
             clearInterval(inboxIdleReloadTimer);
 
@@ -2080,11 +2087,13 @@
             loadInbox();
             broadcastPagePresence(true);
 
+            // 1. Trigger page reload 3 seconds after pressing Back from inside a chat
             clearTimeout(backReloadTimer);
             backReloadTimer = setTimeout(() => {
                 window.location.reload();
             }, 3000);
 
+            // 2. Also keep 15-second Inbox idle reload timer active
             startInboxIdleReloadTimer();
         };
 
@@ -2953,4 +2962,27 @@
             b.scrollTop = b.scrollHeight;
         }
 
-        window.logout
+        window.logout = function() {
+            if (confirm("Confirm to LogOut !!!")) {
+                broadcastPagePresence(false);
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.replace("login.html");
+            }
+        };
+    </script>
+
+    <script src="js/mediaManager.js"></script>
+    <script src="js/attachments.js"></script>
+
+    <script>
+        document.addEventListener("contextmenu", e => e.preventDefault());
+        document.addEventListener("selectstart", e => {
+            if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") e.preventDefault();
+        });
+        document.addEventListener("copy", e => e.preventDefault());
+        document.addEventListener("cut", e => e.preventDefault());
+        document.addEventListener("dragstart", e => e.preventDefault());
+    </script>
+</body>
+</html>
