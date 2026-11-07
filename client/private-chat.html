@@ -10,7 +10,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Secure Private Chat Pro</title>
+    <title>Private Chat</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -147,7 +147,7 @@
             transform: scale(0.95);
         }
 
-        /* --- 2. Right Sidebar Actions: Secondary Logout on Top, Search & + Below --- */
+        /* --- 2. Right Sidebar Actions --- */
         .top-right-stack {
             display: flex;
             flex-direction: column;
@@ -283,7 +283,7 @@
         }
 
         .user-status-sub {
-            font-size: 0.66rem;
+            font-size: 0.65rem;
             opacity: 0.65;
             display: block;
             margin-top: 1px;
@@ -400,6 +400,7 @@
             align-items: center;
             justify-content: space-between;
             height: 75px;
+            z-index: 20;
         }
 
         .back-btn {
@@ -462,10 +463,10 @@
         .messages {
             flex: 1;
             overflow-y: auto;
-            padding: 18px 15px;
+            padding: 28px 15px 24px 15px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 14px;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -474,7 +475,7 @@
         .msg {
             max-width: 78%;
             width: fit-content;
-            min-width: 110px;
+            min-width: 115px;
             padding: 7px 12px;
             border-radius: 12px 12px 12px 2px;
             word-wrap: break-word;
@@ -483,6 +484,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
+            transition: transform 0.1s ease;
         }
 
         .received-msg {
@@ -532,6 +534,7 @@
             align-self: flex-end;
             gap: 5px;
             position: relative;
+            z-index: 30;
         }
 
         .tick-icon {
@@ -545,22 +548,24 @@
             color: var(--tick-blue) !important;
         }
 
+        /* Fixed Reliable Info Button (Works Top, Middle & Bottom) */
         .info-btn {
-            background: rgba(181, 148, 97, 0.12);
-            border: 1px solid rgba(181, 148, 97, 0.35);
+            background: rgba(181, 148, 97, 0.15);
+            border: 1px solid rgba(181, 148, 97, 0.4);
             color: var(--accent-gold);
-            font-size: 0.75rem;
-            width: 20px;
-            height: 20px;
+            font-size: 0.76rem;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             padding: 0;
-            margin-left: 2px;
-            touch-action: manipulation;
-            transition: transform 0.15s ease, background 0.15s ease;
+            margin-left: 3px;
+            position: relative;
+            z-index: 50;
+            pointer-events: auto !important;
         }
 
         .info-btn:hover, .info-btn:active {
@@ -569,35 +574,29 @@
             transform: scale(1.1);
         }
 
-        /* --- Improved Floating Unsend Tablet (Above Bubble, Never Covers Message Text) --- */
+        /* --- Smaller Unsend Bubble (Smart Position for First Msg & Others) --- */
         .unsend-tablet {
             position: absolute;
-            top: -36px;
+            top: -28px;
             right: 0;
-            background: #161616;
+            background: #181818;
             border: 1px solid var(--accent-red);
-            border-radius: 20px;
-            padding: 5px 12px;
+            border-radius: 14px;
+            padding: 3px 9px;
             display: none;
             align-items: center;
-            gap: 6px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9);
+            gap: 4px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.9);
             z-index: 9999;
             white-space: nowrap;
-            animation: popUnsend 0.18s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            animation: popUnsend 0.15s ease-out;
         }
 
-        .unsend-tablet::after {
-            content: "";
-            position: absolute;
-            bottom: -5px;
-            right: 10px;
-            width: 8px;
-            height: 8px;
-            background: #161616;
-            border-right: 1px solid var(--accent-red);
-            border-bottom: 1px solid var(--accent-red);
-            transform: rotate(45deg);
+        /* First message fix so Unsend never hides under top header */
+        .msg:first-child .unsend-tablet {
+            top: auto;
+            bottom: -26px;
+            right: 0;
         }
 
         .unsend-tablet.show {
@@ -605,23 +604,131 @@
         }
 
         @keyframes popUnsend {
-            from { transform: translateY(6px) scale(0.9); opacity: 0; }
-            to { transform: translateY(0) scale(1); opacity: 1; }
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
         .unsend-action-btn {
             background: transparent;
             border: none;
             color: var(--accent-red);
-            font-size: 0.74rem;
+            font-size: 0.65rem;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 3px;
         }
 
-        /* --- Custom Message Info Modal --- */
+        /* --- Emoji Reaction Picker Bar (Long Press on Any Message) --- */
+        .reaction-picker-bar {
+            position: absolute;
+            top: -42px;
+            background: #181818;
+            border: 1px solid rgba(181, 148, 97, 0.5);
+            border-radius: 30px;
+            padding: 4px 8px;
+            display: none;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.85);
+            z-index: 9998;
+            max-width: 270px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            animation: popUnsend 0.15s ease-out;
+        }
+
+        .reaction-picker-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .my-msg .reaction-picker-bar {
+            right: 0;
+        }
+
+        .received-msg .reaction-picker-bar {
+            left: 0;
+        }
+
+        /* First message fix so emoji picker opens below instead of clipping at top */
+        .msg:first-child .reaction-picker-bar {
+            top: auto;
+            bottom: -42px;
+        }
+
+        .reaction-picker-bar.show {
+            display: flex;
+        }
+
+        .react-emoji-opt {
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 2px 3px;
+            transition: transform 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .react-emoji-opt:hover, .react-emoji-opt:active {
+            transform: scale(1.3);
+        }
+
+        /* Corner Reaction Badge on Message */
+        .msg-reaction-corner {
+            position: absolute;
+            bottom: -11px;
+            background: #1f1b16;
+            border: 1px solid rgba(181, 148, 97, 0.5);
+            border-radius: 12px;
+            padding: 1px 6px;
+            font-size: 0.72rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            z-index: 40;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+        }
+
+        .my-msg .msg-reaction-corner {
+            left: 8px;
+        }
+
+        .received-msg .msg-reaction-corner {
+            right: 8px;
+        }
+
+        /* Reaction Details Bubble (Shows Emoji + @username on tap) */
+        .reaction-detail-bubble {
+            position: absolute;
+            bottom: -36px;
+            background: #141414;
+            border: 1px solid var(--accent-gold);
+            color: #fff;
+            padding: 3px 9px;
+            border-radius: 12px;
+            font-size: 0.66rem;
+            white-space: nowrap;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            z-index: 9999;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.9);
+        }
+
+        .my-msg .reaction-detail-bubble {
+            left: 0;
+        }
+
+        .received-msg .reaction-detail-bubble {
+            right: 0;
+        }
+
+        .reaction-detail-bubble.show {
+            display: inline-flex;
+        }
+
+        /* --- Custom Compact Message Info Modal --- */
         .msg-info-modal-overlay {
             position: fixed;
             inset: 0;
@@ -630,7 +737,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 16px;
         }
 
         .msg-info-modal-overlay.show {
@@ -640,16 +747,16 @@
         .msg-info-modal-box {
             background: #141414;
             border: 1px solid var(--accent-gold);
-            border-radius: 14px;
+            border-radius: 12px;
             width: 100%;
-            max-width: 340px;
-            max-height: 85vh;
+            max-width: 280px; /* Compact smaller popup size */
+            max-height: 75vh;
             display: flex;
             flex-direction: column;
-            padding: 20px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.85);
+            padding: 15px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.9);
             color: var(--text-main);
-            animation: fadeInModal 0.2s ease-out;
+            animation: fadeInModal 0.18s ease-out;
         }
 
         @keyframes fadeInModal {
@@ -660,9 +767,9 @@
         .msg-info-header {
             font-family: 'Playfair Display', serif;
             color: var(--accent-gold);
-            font-size: 1.15rem;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
             border-bottom: 1px solid rgba(181, 148, 97, 0.25);
             display: flex;
             align-items: center;
@@ -677,13 +784,13 @@
         }
 
         .msg-info-row {
-            font-size: 0.82rem;
-            margin: 8px 0;
+            font-size: 0.75rem;
+            margin: 6px 0;
             display: flex;
             justify-content: space-between;
-            gap: 10px;
+            gap: 8px;
             border-bottom: 1px dashed rgba(255,255,255,0.06);
-            padding-bottom: 6px;
+            padding-bottom: 5px;
         }
 
         .msg-info-label {
@@ -700,24 +807,24 @@
         }
 
         .msg-info-close-btn {
-            margin-top: 14px;
+            margin-top: 10px;
             width: 100%;
             background: var(--accent-gold);
             color: #000;
             border: none;
-            padding: 9px;
+            padding: 7px;
             border-radius: 6px;
             font-weight: 600;
-            font-size: 0.82rem;
+            font-size: 0.76rem;
             cursor: pointer;
             text-transform: uppercase;
             flex-shrink: 0;
         }
 
-        /* MEDIA ITEMS INSIDE CHAT */
+        /* MEDIA ITEMS & CUSTOM GOLD THEME AUDIO PLAYER (NO 3-DOTS / NO DOWNLOAD) */
         .chat-media-img {
-            max-width: 240px;
-            max-height: 240px;
+            max-width: 230px;
+            max-height: 230px;
             border-radius: 10px;
             margin-top: 4px;
             cursor: pointer;
@@ -726,18 +833,73 @@
         }
 
         .chat-media-video {
-            max-width: 250px;
-            max-height: 240px;
+            max-width: 240px;
+            max-height: 230px;
             border-radius: 10px;
             margin-top: 4px;
             background: #000;
         }
 
-        .chat-media-audio {
-            width: 220px;
-            height: 36px;
-            margin-top: 4px;
+        .custom-chat-audio {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(181, 148, 97, 0.35);
+            padding: 6px 10px;
             border-radius: 20px;
+            margin-top: 4px;
+            min-width: 175px;
+        }
+
+        .custom-audio-play-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent-gold);
+            color: #000;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .audio-wave-decor {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            flex: 1;
+            height: 16px;
+        }
+
+        .audio-wave-decor span {
+            display: inline-block;
+            width: 3px;
+            background: rgba(181, 148, 97, 0.5);
+            border-radius: 2px;
+            transition: background 0.2s ease;
+        }
+
+        .custom-chat-audio.playing .audio-wave-decor span {
+            background: var(--accent-gold);
+            animation: waveBounce 0.6s infinite ease-in-out alternate;
+        }
+
+        @keyframes waveBounce {
+            from { transform: scaleY(0.5); }
+            to { transform: scaleY(1.25); }
+        }
+
+        .custom-audio-time {
+            font-size: 0.68rem;
+            color: var(--accent-gold);
+            font-weight: 600;
+            min-width: 28px;
+            text-align: right;
         }
 
         .chat-media-doc {
@@ -755,9 +917,9 @@
             cursor: pointer;
         }
 
-        /* INPUT AREA, VOICE RECORDING & PREVIEW BAR */
+        /* INPUT AREA, VOICE RECORDING & COMPACT MOBILE PREVIEW BAR */
         .send-box {
-            padding: 8px 12px;
+            padding: 8px 10px;
             background: var(--bg-card);
             border-top: 1px solid rgba(181, 148, 97, 0.15);
             display: flex;
@@ -765,16 +927,17 @@
             align-items: center;
             padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
             position: relative;
+            z-index: 20;
         }
 
         .attach-btn {
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             border: none;
             border-radius: 50%;
             background: #202020;
             color: #b59461;
-            font-size: 24px;
+            font-size: 22px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -789,7 +952,7 @@
 
         .attach-menu {
             position: absolute;
-            bottom: 68px;
+            bottom: 64px;
             left: 12px;
             background: #141414;
             border: 1px solid rgba(181, 148, 97, .3);
@@ -841,13 +1004,13 @@
         .send-box input {
             flex: 1;
             min-width: 0;
-            padding: 10px 16px;
+            padding: 10px 14px;
             border: 1px solid rgba(181, 148, 97, 0.3);
             outline: none;
             border-radius: 25px;
             background: rgba(255, 255, 255, 0.05);
             color: white;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             user-select: text !important;
             -webkit-user-select: text !important;
         }
@@ -855,15 +1018,16 @@
         /* Live Recording Indicator Pill */
         .recording-bar {
             flex: 1;
+            min-width: 0;
             display: none;
             align-items: center;
             justify-content: space-between;
-            padding: 9px 16px;
+            padding: 9px 14px;
             border-radius: 25px;
             background: rgba(255, 77, 77, 0.12);
             border: 1px solid rgba(255, 77, 77, 0.45);
             color: #fff;
-            font-size: 0.84rem;
+            font-size: 0.8rem;
         }
 
         .recording-bar.show {
@@ -871,12 +1035,12 @@
         }
 
         .rec-dot {
-            width: 10px;
-            height: 10px;
+            width: 9px;
+            height: 9px;
             background: var(--accent-red);
             border-radius: 50%;
             display: inline-block;
-            margin-right: 8px;
+            margin-right: 7px;
             animation: blinkRec 0.9s infinite alternate;
         }
 
@@ -885,13 +1049,15 @@
             to { opacity: 0.3; transform: scale(0.8); }
         }
 
-        /* Recorded Audio Preview Bar (Left Discard, Center Audio Line, Right Send) */
+        /* Compact Mobile-Friendly Audio Preview Bar (Left Bin, Center Imaginary Wave + Time, Right Send) */
         .audio-preview-bar {
             flex: 1;
+            min-width: 0;
             display: none;
             align-items: center;
+            justify-content: space-between;
             gap: 8px;
-            padding: 5px 10px;
+            padding: 4px 6px;
             border-radius: 25px;
             background: #1c1915;
             border: 1px solid var(--accent-gold);
@@ -902,13 +1068,13 @@
         }
 
         .discard-audio-btn {
-            width: 34px;
-            height: 34px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            border: 1px solid rgba(255, 77, 77, 0.4);
+            border: 1px solid rgba(255, 77, 77, 0.45);
             background: rgba(255, 77, 77, 0.12);
             color: var(--accent-red);
-            font-size: 15px;
+            font-size: 14px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -916,21 +1082,57 @@
             flex-shrink: 0;
         }
 
-        .discard-audio-btn:hover {
-            background: var(--accent-red);
-            color: #fff;
+        .preview- center-showcase {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            flex: 1;
+            min-width: 0;
+            justify-content: center;
+            overflow: hidden;
         }
 
-        .preview-audio-player {
-            flex: 1;
-            height: 32px;
-            min-width: 0;
-            outline: none;
+        .preview-play-toggle {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(181, 148, 97, 0.25);
+            color: var(--accent-gold);
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .imaginary-wave-line {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            height: 16px;
+            overflow: hidden;
+        }
+
+        .imaginary-wave-line i {
+            display: inline-block;
+            width: 2.5px;
+            background: var(--accent-gold);
+            border-radius: 2px;
+            opacity: 0.75;
+        }
+
+        .preview-time-badge {
+            font-size: 0.74rem;
+            color: var(--accent-gold);
+            font-weight: 600;
+            flex-shrink: 0;
         }
 
         .send-audio-btn {
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             border: none;
             background: var(--accent-gold);
@@ -943,8 +1145,8 @@
         }
 
         .send-btn {
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             border: none;
             border-radius: 50%;
             background: var(--accent-gold);
@@ -960,8 +1162,8 @@
         .send-btn.recording-active {
             background: var(--accent-red);
             color: #fff;
-            transform: scale(1.14);
-            box-shadow: 0 0 18px rgba(255, 77, 77, 0.6);
+            transform: scale(1.12);
+            box-shadow: 0 0 16px rgba(255, 77, 77, 0.6);
         }
 
         /* FULL SCREEN MEDIA OVERLAY */
@@ -1124,17 +1326,23 @@
                 <div class="recording-bar" id="recordingBar">
                     <div style="display:flex; align-items:center;">
                         <span class="rec-dot"></span>
-                        <span>Recording Audio...</span>
+                        <span>Recording...</span>
                     </div>
                     <span id="recordingTimer" style="font-weight:600; color:var(--accent-gold);">0:00</span>
                 </div>
 
-                <!-- Recorded Audio Preview Bar (Left Discard, Center Audio Line, Right Send) -->
+                <!-- Compact Mobile Audio Preview Bar (Left Bin, Center Imaginary Line + Time, Right Send) -->
                 <div class="audio-preview-bar" id="audioPreviewBar">
-                    <button type="button" class="discard-audio-btn" onclick="discardRecordedAudio()" title="Discard Audio">🗑️</button>
-                    <audio id="recordedAudioPreview" class="preview-audio-player" controls></audio>
+                    <button type="button" class="discard-audio-btn" onclick="discardRecordedAudio()" title="Delete Audio">🗑️</button>
+                    <div class="preview-center-showcase" style="display:flex; align-items:center; gap:7px; flex:1; justify-content:center; overflow:hidden;">
+                        <button type="button" class="preview-play-toggle" id="previewPlayBtn" onclick="togglePreviewAudioPlay()">▶</button>
+                        <div class="imaginary-wave-line">
+                            <i style="height:6px"></i><i style="height:12px"></i><i style="height:8px"></i><i style="height:14px"></i><i style="height:10px"></i><i style="height:15px"></i><i style="height:7px"></i><i style="height:13px"></i><i style="height:9px"></i><i style="height:14px"></i><i style="height:6px"></i><i style="height:11px"></i><i style="height:8px"></i>
+                        </div>
+                        <span class="preview-time-badge" id="previewDurationText">0:00</span>
+                    </div>
                     <button type="button" class="send-audio-btn" onclick="sendRecordedAudio()" title="Send Audio">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
                             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                         </svg>
@@ -1194,7 +1402,7 @@
         <div id="overlayContent" style="width:100%; display:flex; justify-content:center; align-items:center;"></div>
     </div>
 
-    <!-- Auto-Adjustable Message Info (ⓘ) Popup Modal -->
+    <!-- Compact Message Info (ⓘ) Popup Modal -->
     <div id="msgInfoModal" class="msg-info-modal-overlay" onclick="closeMsgInfoModal()">
         <div class="msg-info-modal-box" onclick="event.stopPropagation()">
             <div class="msg-info-header">
@@ -1213,9 +1421,9 @@
                     <span class="msg-info-label">👁️ Seen Status :</span>
                     <span class="msg-info-val" id="infoStatusVal">-</span>
                 </div>
-                <div class="msg-info-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                <div class="msg-info-row" style="flex-direction: column; align-items: flex-start; gap: 3px;">
                     <span class="msg-info-label">⏱️ Seen Time :</span>
-                    <div class="msg-info-val" id="infoSeenTimeVal" style="width: 100%; text-align: left; font-weight: normal; font-size: 0.78rem; color: #ccc;">-</div>
+                    <div class="msg-info-val" id="infoSeenTimeVal" style="width: 100%; text-align: left; font-weight: normal; font-size: 0.74rem; color: #ccc;">-</div>
                 </div>
             </div>
             <button class="msg-info-close-btn" onclick="closeMsgInfoModal()">Close</button>
@@ -1235,7 +1443,10 @@
         let selectedUser = "";
         let typingTimeout;
 
-        // Real-Time Online Users Map (Fast 15-second expiry for instant offline detection)
+        // Allowed Reaction Emojis
+        const ALLOWED_EMOJIS = ["👍", "👋🏻", "😁", "😅", "😃", "😄", "🤔", "🤧", "🙉", "🙈", "😭"];
+
+        // Real-Time Online Users Map (Page-level tracking: Online as soon as user enters private-chat.html)
         let onlineUsersMap = {};
         try {
             onlineUsersMap = JSON.parse(sessionStorage.getItem("privateOnlineUsers") || "{}");
@@ -1244,8 +1455,6 @@
         // Screenshot & Reload Timers
         let gestureTimer = null;
         let lastScreenshotAlert = 0;
-        let backReloadTimer = null;
-        let inboxIdleReloadInterval = null;
         let openDropdownUser = null;
 
         // ==========================================
@@ -1273,18 +1482,8 @@
         }
 
         // ==========================================
-        // 1. AUTO-RELOAD TIMERS & INITIALIZATION
+        // 1. INITIALIZATION & OUTSIDE CLICK CLEANUP
         // ==========================================
-        function startInboxIdleReloadTimer() {
-            clearInterval(inboxIdleReloadInterval);
-            inboxIdleReloadInterval = setInterval(() => {
-                const isSearchOpen = $("searchBox").style.display === "block" || $("inboxFilterBox").style.display === "block";
-                if (!selectedUser && !isSearchOpen && !openDropdownUser) {
-                    location.reload();
-                }
-            }, 10000);
-        }
-
         window.addEventListener("DOMContentLoaded", () => {
             if ($("display-username") && currentUser) {
                 $("display-username").innerText = `@${currentUser}`;
@@ -1294,12 +1493,10 @@
             const lastOpen = sessionStorage.getItem("activePrivateChat");
             if (lastOpen) {
                 openChat(lastOpen);
-            } else {
-                startInboxIdleReloadTimer();
             }
         });
 
-        // Close attach menu, 3-dot dropdown & unsend tablet when clicking outside
+        // Close attach menu, 3-dot dropdown, unsend tablet, emoji picker & reaction bubbles when clicking outside
         document.addEventListener("click", function(e) {
             const menu = $("attachMenu");
             const btn = $("attachBtn");
@@ -1311,6 +1508,12 @@
             }
             if (!e.target.closest(".unsend-tablet") && !e.target.closest(".info-btn")) {
                 document.querySelectorAll(".unsend-tablet.show").forEach(el => el.classList.remove("show"));
+            }
+            if (!e.target.closest(".reaction-picker-bar")) {
+                document.querySelectorAll(".reaction-picker-bar.show").forEach(el => el.classList.remove("show"));
+            }
+            if (!e.target.closest(".msg-reaction-corner") && !e.target.closest(".reaction-detail-bubble")) {
+                document.querySelectorAll(".reaction-detail-bubble.show").forEach(el => el.classList.remove("show"));
             }
         });
 
@@ -1327,322 +1530,7 @@
                 id: "alert_" + now + "_" + Math.random().toString(36).substr(2, 5),
                 sender: currentUser,
                 receiver: selectedUser,
-                text: `@${currentUser} ~ ${reason} • ${time}`,
-                time: time,
-                type: "alert"
-            };
-            saveAndRender(alertData);
-            socket.emit("private_message", alertData);
-        }
-
-        document.addEventListener("touchstart", (e) => {
-            if (e.touches.length === 3) {
-                gestureTimer = setTimeout(() => sendScreenshotAlert(), 800);
-            }
-        });
-
-        document.addEventListener("touchend", () => {
-            if (gestureTimer) clearTimeout(gestureTimer);
-        });
-
-        window.addEventListener("keyup", (e) => {
-            if (e.key === "PrintScreen" || e.key === "PrtSc") {
-                sendScreenshotAlert();
-            }
-        });
-
-        // ==========================================
-        // 3. SEARCH (🔎) & NEW CHAT (+) VALIDATION
-        // ==========================================
-        function toggleInboxFilter() {
-            const filterBox = $("inboxFilterBox");
-            const searchBox = $("searchBox");
-            searchBox.style.display = "none";
-
-            const isHidden = filterBox.style.display === "none" || filterBox.style.display === "";
-            filterBox.style.display = isHidden ? "block" : "none";
-
-            if (isHidden) {
-                $("inboxSearchInput").value = "";
-                $("inboxSearchInput").focus();
-            } else {
-                $("inboxSearchInput").value = "";
-                loadInbox();
-            }
-        }
-
-        function toggleSearch() {
-            const box = $("searchBox");
-            const filterBox = $("inboxFilterBox");
-            filterBox.style.display = "none";
-            $("inboxSearchInput").value = "";
-
-            const isHidden = box.style.display === "none" || box.style.display === "";
-            box.style.display = isHidden ? "block" : "none";
-            if (isHidden) {
-                usernameInput.value = "";
-                usernameStatus.innerHTML = "";
-                registerBtn.disabled = true;
-                registerBtn.style.opacity = "0.5";
-                usernameInput.focus();
-            }
-        }
-
-        const usernameInput = $("usernameInput");
-        const usernameStatus = $("usernameStatus");
-        const registerBtn = $("startChatBtn");
-        let checkUserTimer;
-
-        usernameInput.addEventListener("input", function(e) {
-            let value = e.target.value;
-
-            value = value.toLowerCase();
-            value = value.replace(/\s+/g, "_");
-            value = value.replace(/[^a-z0-9._]/g, "");
-            value = value.slice(0, 20);
-
-            e.target.value = value;
-
-            registerBtn.disabled = true;
-            registerBtn.style.opacity = "0.5";
-
-            if (value.length === 0) {
-                usernameStatus.innerHTML = "";
-                return;
-            }
-
-            if (value.length < 3) {
-                usernameStatus.style.color = "#ff6b6b";
-                usernameStatus.innerHTML = "Username must be at least 3 characters";
-                return;
-            }
-
-            if (value.length > 20) {
-                usernameStatus.style.color = "#ff6b6b";
-                usernameStatus.innerHTML = "Username cannot exceed 20 characters";
-                return;
-            }
-
-            if (
-                value.startsWith("_") ||
-                value.startsWith(".") ||
-                value.endsWith("_") ||
-                value.endsWith(".") ||
-                value.includes("__") ||
-                value.includes("..") ||
-                value.includes("_.") ||
-                value.includes("._")
-            ) {
-                usernameStatus.style.color = "#ff6b6b";
-                usernameStatus.innerHTML = "❌ Invalid username format";
-                return;
-            }
-
-            if (value === currentUser) {
-                usernameStatus.style.color = "#ff6b6b";
-                usernameStatus.innerHTML = "❌ You cannot chat with yourself";
-                return;
-            }
-
-            usernameStatus.style.color = "#aaa";
-            usernameStatus.innerHTML = "Checking user...";
-
-            clearTimeout(checkUserTimer);
-            checkUserTimer = setTimeout(async () => {
-                try {
-                    const res = await fetch("https://chat-backend-gtg5.onrender.com/api/check-username/" + value);
-                    const data = await res.json();
-                    if (usernameInput.value !== value) return;
-
-                    if (!data.available) {
-                        usernameStatus.style.color = "#00d26a";
-                        usernameStatus.innerHTML = "✅ Valid User Found";
-                        registerBtn.disabled = false;
-                        registerBtn.style.opacity = "1";
-                    } else {
-                        usernameStatus.style.color = "#ff6b6b";
-                        usernameStatus.innerHTML = "❌ Username does not exist";
-                    }
-                } catch {
-                    usernameStatus.style.color = "#00d26a";
-                    usernameStatus.innerHTML = "✓ Valid username";
-                    registerBtn.disabled = false;
-                    registerBtn.style.opacity = "1";
-                }
-            }, 400);
-        });
-
-        usernameInput.addEventListener("keydown", function(e) {
-            if (e.key === "Enter" && !registerBtn.disabled) {
-                e.preventDefault();
-                startChat();
-            }
-        });
-
-        // ==========================================
-        // 4. INSTANT ONLINE / OFFLINE PRESENCE ENGINE
-        // ==========================================
-        // A user is considered online ONLY if we received a heartbeat/pong within the last 14 seconds
-        const PRESENCE_TIMEOUT_MS = 14000;
-
-        function setUserOnlineStatus(user, isOnline) {
-            if (!user) return;
-            const u = user.toLowerCase().trim();
-            if (u === currentUser || u === "system") return;
-
-            const wasOnline = isPartnerOnline(u);
-            onlineUsersMap[u] = isOnline ? Date.now() : 0;
-            sessionStorage.setItem("privateOnlineUsers", JSON.stringify(onlineUsersMap));
-
-            if (isOnline) {
-                markMyMessagesDeliveredTo(u);
-            }
-
-            if (wasOnline !== isOnline || selectedUser === u) {
-                updateHeaderPartnerStatus();
-                loadInbox();
-            }
-        }
-
-        function isPartnerOnline(user) {
-            if (!user) return false;
-            const u = user.toLowerCase().trim();
-            const lastActive = onlineUsersMap[u] || 0;
-            return lastActive > 0 && (Date.now() - lastActive < PRESENCE_TIMEOUT_MS);
-        }
-
-        function updateHeaderPartnerStatus() {
-            const statusEl = $("partner-status");
-            if (!statusEl) return;
-            if (!selectedUser) {
-                statusEl.style.display = "none";
-                return;
-            }
-            const online = isPartnerOnline(selectedUser);
-            statusEl.style.display = "inline-block";
-            statusEl.className = "user-status-sub " + (online ? "is-online" : "is-offline");
-            statusEl.innerText = online ? "● Online" : "○ Offline";
-        }
-
-        function pingPartnerPresence(targetUser) {
-            if (!targetUser || document.hidden) return;
-            socket.emit("private_message", {
-                id: "ping_" + Date.now(),
-                sender: currentUser,
-                receiver: targetUser.toLowerCase(),
-                type: "presence_ping",
-                text: "__PRESENCE_PING__"
-            });
-        }
-
-        function broadcastOfflineToAllPartners() {
-            const users = JSON.parse(localStorage.getItem("privateUsers")) || [];
-            users.forEach(u => {
-                socket.emit("private_message", {
-                    id: "off_" + Date.now(),
-                    sender: currentUser,
-                    receiver: u.toLowerCase(),
-                    type: "presence_offline",
-                    text: "__PRESENCE_OFFLINE__"
-                });
-            });
-        }
-
-        function broadcastOnlineToAllPartners() {
-            const users = JSON.parse(localStorage.getItem("privateUsers")) || [];
-            users.forEach(u => pingPartnerPresence(u));
-        }
-
-        // Fast 5-second heartbeat check to ping active/inbox users & expire offline users immediately
-        setInterval(() => {
-            if (!document.hidden) {
-                if (selectedUser) {
-                    pingPartnerPresence(selectedUser);
-                } else {
-                    broadcastOnlineToAllPartners();
-                }
-            }
-            updateHeaderPartnerStatus();
-            if (!openDropdownUser) {
-                loadInbox();
-            }
-        }, 5000);
-
-        // Instant Offline broadcast when user closes tab, navigates away, or locks screen
-        window.addEventListener("beforeunload", broadcastOfflineToAllPartners);
-        window.addEventListener("pagehide", broadcastOfflineToAllPartners);
-        document.addEventListener("visibilitychange", () => {
-            if (document.hidden) {
-                broadcastOfflineToAllPartners();
-            } else {
-                broadcastOnlineToAllPartners();
-            }
-        });
-
-        socket.on("connect", () => {
-            socket.emit("userJoined", currentUser);
-            broadcastOnlineToAllPartners();
-            loadInbox();
-        });
-
-        socket.on("updateUserCount", count => {
-            $("online-count").innerText = count;
-            broadcastOnlineToAllPartners();
-        });
-
-        socket.on("onlineUsers", list => {
-            if (Array.isArray(list)) {
-                Object.keys(onlineUsersMap).forEach(k => onlineUsersMap[k] = 0);
-                list.forEach(u => {
-                    if (u) onlineUsersMap[String(u).toLowerCase()] = Date.now();
-                });
-                sessionStorage.setItem("privateOnlineUsers", JSON.stringify(onlineUsersMap));
-                updateHeaderPartnerStatus();
-                loadInbox();
-            }
-        });
-
-        function handleTyping() {
-            if (!selectedUser) return;
-            socket.emit("typing", currentUser);
-
-            clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => {
-                socket.emit("stopTyping", currentUser);
-            }, 1000);
-        }
-
-        socket.on("userTyping", username => {
-            if (!username) return;
-            setUserOnlineStatus(username, true);
-            if (username.toLowerCase() !== selectedUser.toLowerCase()) return;
-            $("typing-indicator").innerText = " • typing...";
-            $("typing-indicator").style.display = "inline-block";
-        });
-
-        socket.on("userStopTyping", username => {
-            if (!username || username.toLowerCase() === selectedUser.toLowerCase()) {
-                $("typing-indicator").style.display = "none";
-            }
-        });
-
-        // ==========================================
-        // 5. INBOX & 3-DOT MENU OPTIONS
-        // ==========================================
-        function formatAMPM(date) {
-            let hours = date.getHours();
-            let minutes = date.getMinutes();
-            const ampm = hours >= 12 ? "PM" : "AM";
-            hours = hours % 12;
-            hours = hours ? hours : 12;
-            minutes = minutes < 10 ? "0" + minutes : minutes;
-            return hours + ":" + minutes + " " + ampm;
-        }
-
-        function getDisplayTitle(u) {
-            const meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
-            const nick = meta[u]?.nickname;
-            return nick ? `${nick} (@${u})` : `@${u}`;
+                text: `@${currentUser} ~${reason} • ${time}`, time: time, type: "alert" }; saveAndRender(alertData); socket.emit("private_message", alertData); }  document.addEventListener("touchstart", (e) => { if (e.touches.length === 3) { gestureTimer = setTimeout(() => sendScreenshotAlert(), 800); } });  document.addEventListener("touchend", () => { if (gestureTimer) clearTimeout(gestureTimer); });  window.addEventListener("keyup", (e) => { if (e.key === "PrintScreen" \vert{}\vert{} e.key === "PrtSc") { sendScreenshotAlert(); } });  // ========================================== // 3. SEARCH (🔎) & NEW CHAT (+) VALIDATION // ========================================== function toggleInboxFilter() { const filterBox = $("inboxFilterBox"); const searchBox = $("searchBox"); searchBox.style.display = "none";  const isHidden = filterBox.style.display === "none" \vert{}\vert{} filterBox.style.display === ""; filterBox.style.display = isHidden ? "block" : "none";  if (isHidden) { $("inboxSearchInput").value = ""; $("inboxSearchInput").focus(); } else { $("inboxSearchInput").value = ""; loadInbox(); } }  function toggleSearch() { const box = $("searchBox"); const filterBox = $("inboxFilterBox"); filterBox.style.display = "none"; $("inboxSearchInput").value = "";  const isHidden = box.style.display === "none" \vert{}\vert{} box.style.display === ""; box.style.display = isHidden ? "block" : "none"; if (isHidden) { usernameInput.value = ""; usernameStatus.innerHTML = ""; registerBtn.disabled = true; registerBtn.style.opacity = "0.5"; usernameInput.focus(); } }  const usernameInput = $("usernameInput"); const usernameStatus = $("usernameStatus"); const registerBtn = $("startChatBtn"); let checkUserTimer;  usernameInput.addEventListener("input", function(e) { let value = e.target.value;  value = value.toLowerCase(); value = value.replace(/\s+/g, "_"); value = value.replace(/[^a-z0-9._]/g, ""); value = value.slice(0, 20);  e.target.value = value;  registerBtn.disabled = true; registerBtn.style.opacity = "0.5";  if (value.length === 0) { usernameStatus.innerHTML = ""; return; }  if (value.length < 3) { usernameStatus.style.color = "#ff6b6b"; usernameStatus.innerHTML = "Username must be at least 3 characters"; return; }  if (value.length > 20) { usernameStatus.style.color = "#ff6b6b"; usernameStatus.innerHTML = "Username cannot exceed 20 characters"; return; }  if ( value.startsWith("_") \vert{}\vert{} value.startsWith(".") \vert{}\vert{} value.endsWith("_") \vert{}\vert{} value.endsWith(".") \vert{}\vert{} value.includes("__") \vert{}\vert{} value.includes("..") \vert{}\vert{} value.includes("_.") \vert{}\vert{} value.includes("._") ) { usernameStatus.style.color = "#ff6b6b"; usernameStatus.innerHTML = "❌ Invalid username format"; return; }  if (value === currentUser) { usernameStatus.style.color = "#ff6b6b"; usernameStatus.innerHTML = "❌ You cannot chat with yourself"; return; }  usernameStatus.style.color = "#aaa"; usernameStatus.innerHTML = "Checking user...";  clearTimeout(checkUserTimer); checkUserTimer = setTimeout(async () => { try { const res = await fetch("https://chat-backend-gtg5.onrender.com/api/check-username/" + value); const data = await res.json(); if (usernameInput.value !== value) return;  if (!data.available) { usernameStatus.style.color = "#00d26a"; usernameStatus.innerHTML = "✅ Valid User Found"; registerBtn.disabled = false; registerBtn.style.opacity = "1"; } else { usernameStatus.style.color = "#ff6b6b"; usernameStatus.innerHTML = "❌ Username does not exist"; } } catch { usernameStatus.style.color = "#00d26a"; usernameStatus.innerHTML = "✓ Valid username"; registerBtn.disabled = false; registerBtn.style.opacity = "1"; } }, 400); });  usernameInput.addEventListener("keydown", function(e) { if (e.key === "Enter" && !registerBtn.disabled) { e.preventDefault(); startChat(); } });  // ========================================== // 4. PAGE-LEVEL ONLINE / OFFLINE ENGINE (Works on Inbox & Inside Chat!) // ========================================== // Timeout is 8 seconds, and we broadcast presence every 3 seconds whenever user is on private-chat.html const PRESENCE_TIMEOUT_MS = 8500;  function setUserOnlineStatus(user, isOnline) { if (!user) return; const u = String(user).replace(/^__PRESENCE_(ONLINE\vert{}OFFLINE)__:/, "").toLowerCase().trim(); if (!u \vert{}\vert{} u === currentUser \vert{}\vert{} u === "system") return;  const wasOnline = isPartnerOnline(u); onlineUsersMap[u] = isOnline ? Date.now() : 0; sessionStorage.setItem("privateOnlineUsers", JSON.stringify(onlineUsersMap));  if (isOnline) { markMyMessagesDeliveredTo(u); }  if (wasOnline !== isOnline \vert{}\vert{} selectedUser === u) { updateHeaderPartnerStatus(); if (!openDropdownUser) loadInbox(); } }  function isPartnerOnline(user) { if (!user) return false; const u = user.toLowerCase().trim(); const lastActive = onlineUsersMap[u] \vert{}\vert{} 0; return lastActive > 0 && (Date.now() - lastActive < PRESENCE_TIMEOUT_MS); }  function updateHeaderPartnerStatus() { const statusEl = $("partner-status"); if (!statusEl) return; if (!selectedUser) { statusEl.style.display = "none"; return; } const online = isPartnerOnline(selectedUser); statusEl.style.display = "inline-block"; statusEl.className = "user-status-sub " + (online ? "is-online" : "is-offline"); statusEl.innerText = online ? "● Online" : "○ Offline"; }  function getAllKnownPartners() { const set = new Set(JSON.parse(localStorage.getItem("privateUsers")) \vert{}\vert{} []); if (selectedUser) set.add(selectedUser); const chats = JSON.parse(localStorage.getItem("privateChats")) \vert{}\vert{} []; chats.forEach(c => { if (c.sender && c.sender.toLowerCase() !== currentUser) set.add(c.sender.toLowerCase()); if (c.receiver && c.receiver.toLowerCase() !== currentUser) set.add(c.receiver.toLowerCase()); }); return Array.from(set); }  // Broadcasts that we are on private-chat.html (works via global server broadcast + direct partner ping) function broadcastPagePresence(isOnline) { if (isOnline && document.hidden) return; const tokenTag = isOnline ? `__PRESENCE_ONLINE__:${currentUser}` : `__PRESENCE_OFFLINE__:${currentUser}`; socket.emit("stopTyping", tokenTag);  const partners = getAllKnownPartners(); partners.forEach(u => { socket.emit("private_message", { id: (isOnline ? "ping_" : "off_") + Date.now(), sender: currentUser, receiver: u.toLowerCase(), type: isOnline ? "presence_ping" : "presence_offline", text: isOnline ? "__PRESENCE_PING__" : "__PRESENCE_OFFLINE__" }); }); }  // Every 3 seconds, announce presence while on private-chat.html & refresh status UI setInterval(() => { if (!document.hidden) { broadcastPagePresence(true); } updateHeaderPartnerStatus(); if (!openDropdownUser) { loadInbox(); } }, 3000);  window.addEventListener("beforeunload", () => broadcastPagePresence(false)); window.addEventListener("pagehide", () => broadcastPagePresence(false)); document.addEventListener("visibilitychange", () => { if (document.hidden) { broadcastPagePresence(false); } else { broadcastPagePresence(true); } });  socket.on("connect", () => { socket.emit("userJoined", currentUser); broadcastPagePresence(true); loadInbox(); });  socket.on("updateUserCount", count => { $("online-count").innerText = count; broadcastPagePresence(true); });  socket.on("onlineUsers", list => { if (Array.isArray(list)) { Object.keys(onlineUsersMap).forEach(k => onlineUsersMap[k] = 0); list.forEach(u => { if (u) onlineUsersMap[String(u).toLowerCase()] = Date.now(); }); sessionStorage.setItem("privateOnlineUsers", JSON.stringify(onlineUsersMap)); updateHeaderPartnerStatus(); loadInbox(); } });  function handleTyping() { if (!selectedUser) return; socket.emit("typing", currentUser);  clearTimeout(typingTimeout); typingTimeout = setTimeout(() => { socket.emit("stopTyping", currentUser); }, 1000); }  socket.on("userTyping", username => { if (!username) return; const raw = String(username); if (raw.startsWith("__PRESENCE_ONLINE__:")) { setUserOnlineStatus(raw.split(":")[1], true); return; } if (raw.startsWith("__PRESENCE_OFFLINE__:")) { setUserOnlineStatus(raw.split(":")[1], false); return; } setUserOnlineStatus(raw, true); if (raw.toLowerCase() !== selectedUser.toLowerCase()) return; $("typing-indicator").innerText = " • typing..."; $("typing-indicator").style.display = "inline-block"; });  socket.on("userStopTyping", username => { if (username) { const raw = String(username); if (raw.startsWith("__PRESENCE_ONLINE__:")) { setUserOnlineStatus(raw.split(":")[1], true); return; } if (raw.startsWith("__PRESENCE_OFFLINE__:")) { setUserOnlineStatus(raw.split(":")[1], false); return; } setUserOnlineStatus(raw, true); } if (!username \vert{}\vert{} String(username).toLowerCase() === selectedUser.toLowerCase()) { $("typing-indicator").style.display = "none"; } });  // ========================================== // 5. INBOX & 3-DOT MENU OPTIONS // ========================================== function formatAMPM(date) { let hours = date.getHours(); let minutes = date.getMinutes(); const ampm = hours >= 12 ? "PM" : "AM"; hours = hours \% 12; hours = hours ? hours : 12; minutes = minutes < 10 ? "0" + minutes : minutes; return hours + ":" + minutes + " " + ampm; }  function getDisplayTitle(u) { const meta = JSON.parse(localStorage.getItem("privateInboxMeta")) \vert{}\vert{} {}; const nick = meta[u]?.nickname; return nick ? `${nick} (@${u})` : `@${u}`;
         }
 
         function startChat() {
@@ -1676,34 +1564,7 @@
 
         function toggleUserDropdown(e, u) {
             e.stopPropagation();
-            const menuId = `dropdown_${u}`;
-            const menu = $(menuId);
-            const isAlreadyOpen = menu && menu.classList.contains("show");
-            closeAllDropdowns();
-            if (menu && !isAlreadyOpen) {
-                menu.classList.add("show");
-                openDropdownUser = u;
-            }
-        }
-
-        function togglePinChat(e, u) {
-            e.stopPropagation();
-            closeAllDropdowns();
-            let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
-            if (!meta[u]) meta[u] = { unread: 0, lastMessage: "", lastTime: "", lastActivity: 0 };
-            meta[u].pinned = !meta[u].pinned;
-            localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
-            loadInbox();
-        }
-
-        function setChatNickname(e, u) {
-            e.stopPropagation();
-            closeAllDropdowns();
-            let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
-            if (!meta[u]) meta[u] = { unread: 0, lastMessage: "", lastTime: "", lastActivity: 0 };
-
-            const currentNick = meta[u].nickname || "";
-            const newNick = prompt(`@${u} ke liye nickname enter karein (Khali chhodne par hat jayega):`, currentNick);
+            const menuId = `dropdown_${u}`; const menu = $(menuId); const isAlreadyOpen = menu && menu.classList.contains("show"); closeAllDropdowns(); if (menu && !isAlreadyOpen) { menu.classList.add("show"); openDropdownUser = u; } }  function togglePinChat(e, u) { e.stopPropagation(); closeAllDropdowns(); let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) \vert{}\vert{} {}; if (!meta[u]) meta[u] = { unread: 0, lastMessage: "", lastTime: "", lastActivity: 0 }; meta[u].pinned = !meta[u].pinned; localStorage.setItem("privateInboxMeta", JSON.stringify(meta)); loadInbox(); }  function setChatNickname(e, u) { e.stopPropagation(); closeAllDropdowns(); let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) \vert{}\vert{} {}; if (!meta[u]) meta[u] = { unread: 0, lastMessage: "", lastTime: "", lastActivity: 0 };  const currentNick = meta[u].nickname \vert{}\vert{} ""; const newNick = prompt(`@${u} ke liye nickname enter karein (Khali chhodne par hat jayega):`, currentNick);
 
             if (newNick !== null) {
                 meta[u].nickname = newNick.trim();
@@ -1812,8 +1673,7 @@
                     : "";
 
                 const displayLabel = info.nickname
-                    ? `<strong>${escapeHTML(info.nickname)}</strong> <span style="font-size:11px;color:#888;">(@${escapeHTML(u)})</span>`
-                    : `<strong>@${escapeHTML(u)}</strong>`;
+                    ? `<strong>${escapeHTML(info.nickname)}</strong> <span style="font-size:11px;color:#888;">(@${escapeHTML(u)})</span>` : `<strong>@${escapeHTML(u)}</strong>`;
 
                 const statusTag = `<span class="user-status-sub ${online ? 'is-online' : 'is-offline'}">${online ? '● Online' : '○ Offline'}</span>`;
 
@@ -1822,11 +1682,9 @@
                 d.innerHTML = `
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <div style="display:flex;align-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                            ${dot}
-                            ${pinIcon}
+                            ${dot}${pinIcon}
                             <div>
-                                <div>${displayLabel}</div>
-                                ${statusTag}
+                                <div>${displayLabel}</div>${statusTag}
                             </div>
                         </div>
                         <div class="inbox-right">
@@ -1858,15 +1716,12 @@
         }
 
         function openChat(u) {
-            clearTimeout(backReloadTimer);
-            clearInterval(inboxIdleReloadInterval);
-
             selectedUser = u.toLowerCase();
             sessionStorage.setItem("activePrivateChat", selectedUser);
             $("chatTitle").innerText = getDisplayTitle(selectedUser);
             $("typing-indicator").style.display = "none";
 
-            pingPartnerPresence(selectedUser);
+            broadcastPagePresence(true);
             updateHeaderPartnerStatus();
 
             let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
@@ -1889,17 +1744,12 @@
             sessionStorage.removeItem("activePrivateChat");
             updateHeaderPartnerStatus();
             loadInbox();
-
-            clearTimeout(backReloadTimer);
-            backReloadTimer = setTimeout(() => {
-                location.reload();
-            }, 3000);
-
-            startInboxIdleReloadTimer();
+            // User is STILL on private-chat.html (Inbox view), so keep broadcasting Online!
+            broadcastPagePresence(true);
         }
 
         // ==========================================
-        // 6. FIXED ⓘ INFO BUTTON & FLOATING UNSEND PILL
+        // 6. FIXED ⓘ INFO BUTTON, UNSEND PILL & EMOJI REACTIONS
         // ==========================================
         function markMyMessagesDeliveredTo(partnerUser) {
             partnerUser = partnerUser.toLowerCase();
@@ -1967,13 +1817,8 @@
             const isMy = (m.sender || "").toLowerCase() === currentUser;
             if (!isMy) return;
 
-            const senderLabel = `@${currentUser} (You)`;
-            let seenStatus = "Sent ✓";
-            let seenTimeHtml = "Nobody seen yet...";
-
-            if (m.seen) {
-                seenStatus = `@${m.receiver} ✓✓`;
-                seenTimeHtml = `<div style="margin: 3px 0;"><b>@${escapeHTML(m.receiver)}</b> : ${m.seenAt || m.time}</div>`;
+            const senderLabel = `@${currentUser} (You)`; let seenStatus = "Sent ✓"; let seenTimeHtml = "Nobody seen yet...";  if (m.seen) { seenStatus = `@${m.receiver} ✓✓`;
+                seenTimeHtml = `<div style="margin: 2px 0;"><b>@${escapeHTML(m.receiver)}</b> :${m.seenAt || m.time}</div>`;
             } else if (m.delivered || isPartnerOnline(m.receiver)) {
                 seenStatus = "Delivered ✓✓";
             }
@@ -1981,37 +1826,23 @@
             openMsgInfoModal(senderLabel, m.time, seenStatus, seenTimeHtml);
         }
 
-        // Unified Pointer Events for ⓘ Button (Works 100% reliably on 1st message & all messages)
-        let infoPressTimer = null;
-        let infoLongPressed = false;
+        // Reliable Tap vs Hold on ⓘ Button (Works for Top, Middle & Bottom messages)
+        let infoHoldTimer = null;
+        let infoWasHeld = false;
 
-        function handleInfoPointerDown(e, msgId) {
+        function onInfoDown(e, msgId) {
             e.stopPropagation();
-            infoLongPressed = false;
-            clearTimeout(infoPressTimer);
-            infoPressTimer = setTimeout(() => {
-                infoLongPressed = true;
+            infoWasHeld = false;
+            clearTimeout(infoHoldTimer);
+            infoHoldTimer = setTimeout(() => {
+                infoWasHeld = true;
                 document.querySelectorAll(".unsend-tablet.show").forEach(el => el.classList.remove("show"));
-                const tab = $(`unsend_tab_${msgId}`);
-                if (tab) tab.classList.add("show");
-            }, 480);
-        }
-
-        function handleInfoPointerUp(e, msgId) {
-            e.stopPropagation();
-            clearTimeout(infoPressTimer);
-            if (!infoLongPressed) {
-                const tab = $(`unsend_tab_${msgId}`);
-                if (tab && tab.classList.contains("show")) {
-                    tab.classList.remove("show");
-                } else {
-                    showMsgInfo(msgId);
-                }
+                const tab = $(`unsend_tab_${msgId}`); if (tab) tab.classList.add("show"); }, 420); }  function onInfoUp(e, msgId) { e.stopPropagation(); clearTimeout(infoHoldTimer); }  function onInfoClick(e, msgId) { e.stopPropagation(); clearTimeout(infoHoldTimer); if (infoWasHeld) { infoWasHeld = false; return; } const tab = $(`unsend_tab_${msgId}`);
+            if (tab && tab.classList.contains("show")) {
+                tab.classList.remove("show");
+            } else {
+                showMsgInfo(msgId);
             }
-        }
-
-        function handleInfoPointerCancel() {
-            clearTimeout(infoPressTimer);
         }
 
         function unsendMessage(e, msgId) {
@@ -2040,7 +1871,29 @@
         }
 
         // ==========================================
-        // 7. HOLD SEND BUTTON FOR VOICE NOTE + PREVIEW BAR
+        // EMOJI REACTION SYSTEM (Long Press on Any Message)
+        // ==========================================
+        let msgBubbleHoldTimer = null;
+
+        function onMsgBubbleDown(e, msgId) {
+            // Ignore if pressing on ⓘ button, audio play button, or popups
+            if (e.target.closest(".info-btn") || e.target.closest(".unsend-tablet") || e.target.closest(".reaction-picker-bar") || e.target.closest(".msg-reaction-corner") || e.target.closest(".custom-audio-play-btn")) {
+                return;
+            }
+            clearTimeout(msgBubbleHoldTimer);
+            msgBubbleHoldTimer = setTimeout(() => {
+                document.querySelectorAll(".reaction-picker-bar.show").forEach(el => el.classList.remove("show"));
+                const picker = $(`react_picker_${msgId}`); if (picker) picker.classList.add("show"); }, 420); }  function onMsgBubbleUp() { clearTimeout(msgBubbleHoldTimer); }  function selectMessageReaction(e, msgId, emoji) { e.stopPropagation(); document.querySelectorAll(".reaction-picker-bar.show").forEach(el => el.classList.remove("show"));  let chats = JSON.parse(localStorage.getItem("privateChats")) \vert{}\vert{} []; const msgObj = chats.find(c => String(c.id) === String(msgId)); if (!msgObj) return;  if (!msgObj.reactions) msgObj.reactions = {};  // Toggle off if clicking same emoji, otherwise set new emoji for currentUser if (msgObj.reactions[currentUser] === emoji) { delete msgObj.reactions[currentUser]; } else { msgObj.reactions[currentUser] = emoji; }  localStorage.setItem("privateChats", JSON.stringify(chats)); renderMessages();  const partner = ((msgObj.sender \vert{}\vert{} "").toLowerCase() === currentUser ? msgObj.receiver : msgObj.sender).toLowerCase(); socket.emit("private_message", { id: "react_" + Date.now(), targetMsgId: msgId, emoji: msgObj.reactions[currentUser] \vert{}\vert{} "", sender: currentUser, receiver: partner, type: "reaction_action", text: "__REACTION_MSG__" }); }  function toggleReactionDetailBubble(e, msgId) { e.stopPropagation(); const bubble = $(`react_detail_${msgId}`);
+            if (!bubble) return;
+            const isShown = bubble.classList.contains("show");
+            document.querySelectorAll(".reaction-detail-bubble.show").forEach(el => el.classList.remove("show"));
+            if (!isShown) {
+                bubble.classList.add("show");
+            }
+        }
+
+        // ==========================================
+        // 7. HOLD SEND BUTTON FOR VOICE NOTE + COMPACT PREVIEW & CUSTOM AUDIO PLAYER
         // ==========================================
         const PAPER_PLANE_SVG = `
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
@@ -2065,6 +1918,12 @@
         let recTimerInterval = null;
         let recSeconds = 0;
         let pendingAudioBase64 = null;
+        let pendingAudioDurationStr = "0:01";
+        let previewAudioObj = new Audio();
+
+        previewAudioObj.onended = () => {
+            if ($("previewPlayBtn")) $("previewPlayBtn").innerText = "▶";
+        };
 
         function handleSendBtnDown(e) {
             e.preventDefault();
@@ -2075,11 +1934,10 @@
             isVoiceHoldActive = false;
             clearTimeout(sendHoldTimer);
 
-            // Hold for 320ms triggers Voice Note Recording
             sendHoldTimer = setTimeout(() => {
                 isVoiceHoldActive = true;
                 startVoiceNoteRecording();
-            }, 320);
+            }, 300);
         }
 
         function handleSendBtnUp(e) {
@@ -2107,7 +1965,6 @@
                 audioChunks = [];
                 pendingAudioBase64 = null;
 
-                // Switch UI to Recording Mode
                 $("mainSendBtn").classList.add("recording-active");
                 $("sendBtnIconWrap").innerHTML = MIC_ICON_SVG;
                 $("messageInput").style.display = "none";
@@ -2115,108 +1972,55 @@
                 $("recordingBar").classList.add("show");
 
                 recSeconds = 0;
+                pendingAudioDurationStr = "0:01";
                 $("recordingTimer").innerText = "0:00";
                 clearInterval(recTimerInterval);
                 recTimerInterval = setInterval(() => {
                     recSeconds++;
                     const mins = Math.floor(recSeconds / 60);
                     const secs = recSeconds % 60;
-                    $("recordingTimer").innerText = `${mins}:${secs < 10 ? '0' + secs : secs}`;
-                }, 1000);
+                    pendingAudioDurationStr = `${mins}:${secs < 10 ? '0' + secs : secs}`; $("recordingTimer").innerText = pendingAudioDurationStr; }, 1000);  mediaRecorder = new MediaRecorder(activeMicStream); mediaRecorder.ondataavailable = (evt) => { if (evt.data && evt.data.size > 0) { audioChunks.push(evt.data); } };  mediaRecorder.onstop = () => { clearInterval(recTimerInterval); if (activeMicStream) { activeMicStream.getTracks().forEach(t => t.stop()); activeMicStream = null; }  $("mainSendBtn").classList.remove("recording-active"); $("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG; $("recordingBar").classList.remove("show");  if (audioChunks.length === 0) { $("messageInput").style.display = "block"; return; }  const audioBlob = new Blob(audioChunks, { type: "audio/webm" }); const reader = new FileReader(); reader.onload = function(evt) { pendingAudioBase64 = evt.target.result; previewAudioObj.src = pendingAudioBase64; $("previewPlayBtn").innerText = "▶"; $("previewDurationText").innerText = pendingAudioDurationStr; $("messageInput").style.display = "none"; $("mainSendBtn").style.display = "none"; $("audioPreviewBar").classList.add("show"); }; reader.readAsDataURL(audioBlob); };  mediaRecorder.start(); } catch (err) { isVoiceHoldActive = false; $("mainSendBtn").classList.remove("recording-active"); $("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG; $("recordingBar").classList.remove("show"); $("messageInput").style.display = "block"; alert("Microphone permission allow karein voice message bhejne ke liye!"); } }  function stopVoiceNoteRecording() { if (mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); } else { clearInterval(recTimerInterval); if (activeMicStream) { activeMicStream.getTracks().forEach(t => t.stop()); activeMicStream = null; } $("mainSendBtn").classList.remove("recording-active"); $("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG; $("recordingBar").classList.remove("show"); $("messageInput").style.display = "block"; } }  function togglePreviewAudioPlay() { if (!pendingAudioBase64) return; if (previewAudioObj.paused) { previewAudioObj.play(); $("previewPlayBtn").innerText = "⏸"; } else { previewAudioObj.pause(); $("previewPlayBtn").innerText = "▶"; } }  function discardRecordedAudio() { previewAudioObj.pause(); previewAudioObj.src = ""; pendingAudioBase64 = null; audioChunks = []; $("audioPreviewBar").classList.remove("show"); $("messageInput").style.display = "block"; $("mainSendBtn").style.display = "flex"; }  function sendRecordedAudio() { if (!pendingAudioBase64 \vert{}\vert{} !selectedUser) return;  const msgData = { id: "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5), sender: currentUser, receiver: selectedUser, text: "🎤 Voice Message", mediaUrl: pendingAudioBase64, mediaType: "audio", audioDuration: pendingAudioDurationStr, fileName: "voice_note.webm", time: formatAMPM(new Date()), delivered: isPartnerOnline(selectedUser), seen: false };  saveAndRender(msgData); socket.emit("private_message", msgData); discardRecordedAudio(); }  // Custom In-Chat Audio Player Controller (No 3-dots, No download) let activeChatAudio = null; let activeChatAudioId = null;  function toggleCustomChatAudio(e, msgId) { e.stopPropagation(); const chats = JSON.parse(localStorage.getItem("privateChats")) \vert{}\vert{} []; const m = chats.find(c => String(c.id) === String(msgId)); if (!m \vert{}\vert{} !m.mediaUrl) return;  const wrap = $(`custom_audio_${msgId}`);
+            const btn = $(`custom_audio_btn_${msgId}`); const timeEl = $(`custom_audio_time_${msgId}`);
 
-                mediaRecorder = new MediaRecorder(activeMicStream);
-                mediaRecorder.ondataavailable = (evt) => {
-                    if (evt.data && evt.data.size > 0) {
-                        audioChunks.push(evt.data);
-                    }
-                };
-
-                mediaRecorder.onstop = () => {
-                    clearInterval(recTimerInterval);
-                    if (activeMicStream) {
-                        activeMicStream.getTracks().forEach(t => t.stop());
-                        activeMicStream = null;
-                    }
-
-                    // Restore Send Button Icon
-                    $("mainSendBtn").classList.remove("recording-active");
-                    $("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG;
-                    $("recordingBar").classList.remove("show");
-
-                    if (audioChunks.length === 0) {
-                        $("messageInput").style.display = "block";
-                        return;
-                    }
-
-                    const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-                    const reader = new FileReader();
-                    reader.onload = function(evt) {
-                        pendingAudioBase64 = evt.target.result;
-                        // Show Preview Bar (Left Discard, Center Audio Line, Right Send)
-                        $("recordedAudioPreview").src = pendingAudioBase64;
-                        $("messageInput").style.display = "none";
-                        $("mainSendBtn").style.display = "none";
-                        $("audioPreviewBar").classList.add("show");
-                    };
-                    reader.readAsDataURL(audioBlob);
-                };
-
-                mediaRecorder.start();
-            } catch (err) {
-                isVoiceHoldActive = false;
-                $("mainSendBtn").classList.remove("recording-active");
-                $("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG;
-                $("recordingBar").classList.remove("show");
-                $("messageInput").style.display = "block";
-                alert("Microphone permission allow karein voice message bhejne ke liye!");
-            }
-        }
-
-        function stopVoiceNoteRecording() {
-            if (mediaRecorder && mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-            } else {
-                clearInterval(recTimerInterval);
-                if (activeMicStream) {
-                    activeMicStream.getTracks().forEach(t => t.stop());
-                    activeMicStream = null;
+            if (activeChatAudio && activeChatAudioId === msgId) {
+                if (activeChatAudio.paused) {
+                    activeChatAudio.play();
+                    if (btn) btn.innerText = "⏸";
+                    if (wrap) wrap.classList.add("playing");
+                } else {
+                    activeChatAudio.pause();
+                    if (btn) btn.innerText = "▶";
+                    if (wrap) wrap.classList.remove("playing");
                 }
-                $("mainSendBtn").classList.remove("recording-active");
-                $("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG;
-                $("recordingBar").classList.remove("show");
-                $("messageInput").style.display = "block";
+                return;
             }
-        }
 
-        function discardRecordedAudio() {
-            pendingAudioBase64 = null;
-            audioChunks = [];
-            $("recordedAudioPreview").pause();
-            $("recordedAudioPreview").src = "";
-            $("audioPreviewBar").classList.remove("show");
-            $("messageInput").style.display = "block";
-            $("mainSendBtn").style.display = "flex";
-        }
+            if (activeChatAudio) {
+                activeChatAudio.pause();
+                const oldBtn = $(`custom_audio_btn_${activeChatAudioId}`); const oldWrap = $(`custom_audio_${activeChatAudioId}`);
+                if (oldBtn) oldBtn.innerText = "▶";
+                if (oldWrap) oldWrap.classList.remove("playing");
+            }
 
-        function sendRecordedAudio() {
-            if (!pendingAudioBase64 || !selectedUser) return;
+            activeChatAudio = new Audio(m.mediaUrl);
+            activeChatAudioId = msgId;
 
-            const msgData = {
-                id: "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
-                sender: currentUser,
-                receiver: selectedUser,
-                text: "🎤 Voice Message",
-                mediaUrl: pendingAudioBase64,
-                mediaType: "audio",
-                fileName: "voice_note.webm",
-                time: formatAMPM(new Date()),
-                delivered: isPartnerOnline(selectedUser),
-                seen: false
+            activeChatAudio.ontimeupdate = () => {
+                const sec = Math.floor(activeChatAudio.currentTime || 0);
+                const mins = Math.floor(sec / 60);
+                const rem = sec % 60;
+                if (timeEl) timeEl.innerText = `${mins}:${rem < 10 ? '0' + rem : rem}`;
             };
 
-            saveAndRender(msgData);
-            socket.emit("private_message", msgData);
-            discardRecordedAudio();
+            activeChatAudio.onended = () => {
+                if (btn) btn.innerText = "▶";
+                if (wrap) wrap.classList.remove("playing");
+                if (timeEl) timeEl.innerText = m.audioDuration || "0:00";
+            };
+
+            activeChatAudio.play();
+            if (btn) btn.innerText = "⏸";
+            if (wrap) wrap.classList.add("playing");
         }
 
         // ==========================================
@@ -2290,80 +2094,7 @@
             if (type === "image") {
                 content.innerHTML = `<img src="${url}" alt="Preview">`;
             } else {
-                content.innerHTML = `<iframe src="${url}"></iframe>`;
-            }
-            overlay.classList.add("show");
-        }
-
-        function closeMediaPreview() {
-            $("mediaOverlay").classList.remove("show");
-            $("overlayContent").innerHTML = "";
-        }
-
-        // ==========================================
-        // 9. SEND, RECEIVE, DELIVERED, UNSEND & CLEAR
-        // ==========================================
-        function sendMessage() {
-            const input = $("messageInput");
-            const txt = input.value.trim();
-            if (!txt || !selectedUser) return;
-
-            const data = {
-                id: "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
-                sender: currentUser,
-                receiver: selectedUser,
-                text: txt,
-                time: formatAMPM(new Date()),
-                delivered: isPartnerOnline(selectedUser),
-                seen: false
-            };
-
-            saveAndRender(data);
-            socket.emit("private_message", data);
-            socket.emit("stopTyping", currentUser);
-
-            input.value = "";
-            input.focus();
-        }
-
-        $("messageInput").addEventListener("input", handleTyping);
-        $("messageInput").addEventListener("keydown", function(e) {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-
-        function performLocalClear(partnerUser) {
-            partnerUser = partnerUser.toLowerCase();
-            let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
-            chats = chats.filter(c => {
-                const s = (c.sender || "").toLowerCase();
-                const r = (c.receiver || "").toLowerCase();
-                const isBetweenUsers = (s === currentUser && r === partnerUser) || (s === partnerUser && r === currentUser);
-                return !isBetweenUsers;
-            });
-            localStorage.setItem("privateChats", JSON.stringify(chats));
-
-            let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) || {};
-            if (meta[partnerUser]) {
-                meta[partnerUser].unread = 0;
-                meta[partnerUser].lastMessage = "";
-                localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
-            }
-
-            if (selectedUser === partnerUser) {
-                renderMessages();
-            }
-            loadInbox();
-        }
-
-        function clearAllChat() {
-            if (!selectedUser) {
-                alert("Pehle koi chat select karein!");
-                return;
-            }
-            if (confirm(`@${selectedUser} ke sath dono side ki chat clear karein?`)) {
+                content.innerHTML = `<iframe src="${url}"></iframe>`; } overlay.classList.add("show"); }  function closeMediaPreview() { $("mediaOverlay").classList.remove("show"); $("overlayContent").innerHTML = ""; }  // ========================================== // 9. SEND, RECEIVE, REACTION, UNSEND & CLEAR // ========================================== function sendMessage() { const input = $("messageInput"); const txt = input.value.trim(); if (!txt \vert{}\vert{} !selectedUser) return;  const data = { id: "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5), sender: currentUser, receiver: selectedUser, text: txt, time: formatAMPM(new Date()), delivered: isPartnerOnline(selectedUser), seen: false };  saveAndRender(data); socket.emit("private_message", data); socket.emit("stopTyping", currentUser);  input.value = ""; input.focus(); }  $("messageInput").addEventListener("input", handleTyping); $("messageInput").addEventListener("keydown", function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } });  function performLocalClear(partnerUser) { partnerUser = partnerUser.toLowerCase(); let chats = JSON.parse(localStorage.getItem("privateChats")) \vert{}\vert{} []; chats = chats.filter(c => { const s = (c.sender \vert{}\vert{} "").toLowerCase(); const r = (c.receiver \vert{}\vert{} "").toLowerCase(); const isBetweenUsers = (s === currentUser && r === partnerUser) \vert{}\vert{} (s === partnerUser && r === currentUser); return !isBetweenUsers; }); localStorage.setItem("privateChats", JSON.stringify(chats));  let meta = JSON.parse(localStorage.getItem("privateInboxMeta")) \vert{}\vert{} {}; if (meta[partnerUser]) { meta[partnerUser].unread = 0; meta[partnerUser].lastMessage = ""; localStorage.setItem("privateInboxMeta", JSON.stringify(meta)); }  if (selectedUser === partnerUser) { renderMessages(); } loadInbox(); }  function clearAllChat() { if (!selectedUser) { alert("Pehle koi chat select karein!"); return; } if (confirm(`@${selectedUser} ke sath dono side ki chat clear karein?`)) {
                 performLocalClear(selectedUser);
 
                 const clearSignal = {
@@ -2439,7 +2170,27 @@
                 return;
             }
 
-            // 3. Handle Delivered Receipt Signal
+            // 3. Handle Emoji Reaction Signal
+            if (data.type === "reaction_action" || data.text === "__REACTION_MSG__") {
+                const targetId = data.targetMsgId;
+                if (targetId) {
+                    let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+                    const m = chats.find(c => String(c.id) === String(targetId));
+                    if (m) {
+                        if (!m.reactions) m.reactions = {};
+                        if (data.emoji) {
+                            m.reactions[sender] = data.emoji;
+                        } else {
+                            delete m.reactions[sender];
+                        }
+                        localStorage.setItem("privateChats", JSON.stringify(chats));
+                        renderMessages();
+                    }
+                }
+                return;
+            }
+
+            // 4. Handle Delivered Receipt Signal
             if (data.type === "delivered_receipt" || data.text === "__DELIVERED_RECEIPT__") {
                 if (sender !== currentUser) {
                     markMyMessagesDeliveredTo(sender);
@@ -2447,7 +2198,7 @@
                 return;
             }
 
-            // 4. Handle Real-time Seen Receipt Signal
+            // 5. Handle Real-time Seen Receipt Signal
             if (data.type === "seen_receipt" || data.text === "__SEEN_RECEIPT__") {
                 if (sender !== currentUser) {
                     let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
@@ -2473,7 +2224,7 @@
 
             let chats = JSON.parse(localStorage.getItem("privateChats")) || [];
 
-            // 5. Duplicate Prevention Check
+            // 6. Duplicate Prevention Check
             if (data.id && chats.some(c => String(c.id) === String(data.id))) {
                 return;
             }
@@ -2511,60 +2262,26 @@
                 meta[partner] = { unread: 0, lastMessage: "", lastTime: "", lastActivity: 0 };
             }
 
-            meta[partner].lastMessage = data.mediaType ? `📎 ${data.mediaType}` : data.text;
-            meta[partner].lastTime = data.time;
-            meta[partner].lastActivity = Date.now();
-
-            if (sender !== currentUser && selectedUser !== sender) {
-                meta[partner].unread = (meta[partner].unread || 0) + 1;
-            }
-
-            localStorage.setItem("privateInboxMeta", JSON.stringify(meta));
-
-            if (selectedUser === sender || selectedUser === receiver) {
-                renderMessages();
-            }
-            loadInbox();
-        }
-
-        socket.on("receive_private_message", data => {
-            saveAndRender(data);
-        });
-
-        socket.on("clear_private_chat", data => {
-            if (!data) return;
-            const sender = (data.sender || "").toLowerCase();
-            const receiver = (data.receiver || "").toLowerCase();
-            if (receiver === currentUser || sender === currentUser) {
-                const partner = sender === currentUser ? receiver : sender;
-                performLocalClear(partner);
-            }
-        });
-
-        socket.on("private_chat_created", data => {
-            if (data && data.username) {
-                addInbox(data.username.toLowerCase());
-            }
-        });
-
-        function escapeHTML(str) {
-            const div = document.createElement("div");
-            div.textContent = str || "";
-            return div.innerHTML;
-        }
-
-        function renderMediaContent(m) {
-            if (!m.mediaUrl) {
-                return `<div>${escapeHTML(m.text)}</div>`;
+            meta[partner].lastMessage = data.mediaType ? `📎 ${data.mediaType}` : data.text; meta[partner].lastTime = data.time; meta[partner].lastActivity = Date.now();  if (sender !== currentUser && selectedUser !== sender) { meta[partner].unread = (meta[partner].unread \vert{}\vert{} 0) + 1; }  localStorage.setItem("privateInboxMeta", JSON.stringify(meta));  if (selectedUser === sender \vert{}\vert{} selectedUser === receiver) { renderMessages(); } loadInbox(); }  socket.on("receive_private_message", data => { saveAndRender(data); });  socket.on("clear_private_chat", data => { if (!data) return; const sender = (data.sender \vert{}\vert{} "").toLowerCase(); const receiver = (data.receiver \vert{}\vert{} "").toLowerCase(); if (receiver === currentUser \vert{}\vert{} sender === currentUser) { const partner = sender === currentUser ? receiver : sender; performLocalClear(partner); } });  socket.on("private_chat_created", data => { if (data && data.username) { addInbox(data.username.toLowerCase()); } });  function escapeHTML(str) { const div = document.createElement("div"); div.textContent = str \vert{}\vert{} ""; return div.innerHTML; }  function renderMediaContent(m) { if (!m.mediaUrl) { return `<div>${escapeHTML(m.text)}</div>`;
             }
             if (m.mediaType === "image") {
                 return `<img src="${m.mediaUrl}" class="chat-media-img" alt="Image" onclick="openMediaPreview('${m.mediaUrl}', 'image')">`;
             }
             if (m.mediaType === "video") {
-                return `<video src="${m.mediaUrl}" class="chat-media-video" controls></video>`;
+                return `<video src="${m.mediaUrl}" class="chat-media-video" controls controlsList="nodownload"></video>`;
             }
+            // Custom Theme Audio Player without 3-dots or download option
             if (m.mediaType === "audio") {
-                return `<audio src="${m.mediaUrl}" class="chat-media-audio" controls></audio>`;
+                const dur = m.audioDuration || "0:05";
+                return `
+                    <div class="custom-chat-audio" id="custom_audio_${m.id}">
+                        <button type="button" class="custom-audio-play-btn" id="custom_audio_btn_${m.id}" onclick="toggleCustomChatAudio(event, '${m.id}')">▶</button>
+                        <div class="audio-wave-decor">
+                            <span style="height:6px"></span><span style="height:12px"></span><span style="height:8px"></span><span style="height:14px"></span><span style="height:9px"></span><span style="height:15px"></span><span style="height:7px"></span><span style="height:13px"></span><span style="height:10px"></span><span style="height:6px"></span><span style="height:12px"></span><span style="height:8px"></span>
+                        </div>
+                        <span class="custom-audio-time" id="custom_audio_time_${m.id}">${dur}</span>
+                    </div>
+                `;
             }
             return `
                 <a href="${m.mediaUrl}" download="${escapeHTML(m.fileName || 'document')}" class="chat-media-doc">
@@ -2587,10 +2304,7 @@
                 return (s === currentUser && r === selectedUser) || (s === selectedUser && r === currentUser);
             }).forEach(m => {
                 if (m.type === "alert" || (m.sender && m.sender.toLowerCase() === "system")) {
-                    b.insertAdjacentHTML("beforeend", `<div class="screenshot-alert">${escapeHTML(m.text)}</div>`);
-                } else {
-                    const isMy = (m.sender || "").toLowerCase() === currentUser;
-                    const senderName = isMy ? "You" : `@${escapeHTML(m.sender)}`;
+                    b.insertAdjacentHTML("beforeend", `<div class="screenshot-alert">${escapeHTML(m.text)}</div>`); } else { const isMy = (m.sender \vert{}\vert{} "").toLowerCase() === currentUser; const senderName = isMy ? "You" : `@${escapeHTML(m.sender)}`;
 
                     // 3-Stage Tick Logic: ✓ Sent, ✓✓ Delivered (Grey), ✓✓ Seen (Blue)
                     let tickHtml = "";
@@ -2606,73 +2320,7 @@
                         tickHtml = `<span class="tick-icon seen">✓✓</span>`;
                     }
 
-                    // Unified Pointer Events on ⓘ button + Floating Unsend Pill above message
+                    // Reliable ⓘ Info Button & Smaller Unsend Bubble
                     const infoButtonHtml = isMy ? `
                         <button type="button" class="info-btn" title="Tap: Info | Hold: Unsend"
-                            onpointerdown="handleInfoPointerDown(event, '${m.id}')"
-                            onpointerup="handleInfoPointerUp(event, '${m.id}')"
-                            onpointercancel="handleInfoPointerCancel()">ⓘ</button>
-                    ` : "";
-
-                    const unsendFloatingHtml = isMy ? `
-                        <div class="unsend-tablet" id="unsend_tab_${m.id}">
-                            <button type="button" class="unsend-action-btn" onclick="unsendMessage(event, '${m.id}')">🗑️ Unsend</button>
-                        </div>
-                    ` : "";
-
-                    b.insertAdjacentHTML("beforeend", `
-                        <div class="msg ${isMy ? "my-msg" : "received-msg"}">
-                            ${unsendFloatingHtml}
-                            <div class="msg-sender">${senderName}</div>
-                            ${renderMediaContent(m)}
-                            <div class="msg-meta">
-                                <span>${m.time}</span>
-                                ${tickHtml}
-                                ${infoButtonHtml}
-                            </div>
-                        </div>
-                    `);
-                }
-            });
-
-            b.scrollTop = b.scrollHeight;
-        }
-
-        function logout() {
-            if (confirm("Confirm to LogOut !!!")) {
-                broadcastOfflineToAllPartners();
-                localStorage.removeItem("privateChats");
-                localStorage.removeItem("privateUsers");
-                localStorage.removeItem("privateInboxMeta");
-                localStorage.removeItem("token");
-                localStorage.removeItem("username");
-                sessionStorage.clear();
-                localStorage.clear();
-                window.location.replace("login.html");
-            }
-        }
-    </script>
-
-    <script src="js/mediaManager.js"></script>
-    <script src="js/attachments.js"></script>
-
-    <script>
-        // Right Click Block
-        document.addEventListener("contextmenu", function(e) {
-            e.preventDefault();
-        });
-
-        // Text Selection Block (Allowed inside inputs)
-        document.addEventListener("selectstart", function(e) {
-            if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
-                e.preventDefault();
-            }
-        });
-
-        // Copy / Cut / Drag Block
-        document.addEventListener("copy", e => e.preventDefault());
-        document.addEventListener("cut", e => e.preventDefault());
-        document.addEventListener("dragstart", e => e.preventDefault());
-    </script>
-</body>
-</html>
+                            onpointerdown
