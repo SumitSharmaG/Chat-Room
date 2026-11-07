@@ -1516,8 +1516,13 @@
         });
 
         // ==========================================
-        // 2. CONFLICT-FREE 3-FINGER SCREENSHOT vs SINGLE-FINGER LONG PRESS
+                // ==========================================
+        // 2. 3-FINGER 400ms + UP-TO-DOWN SWIPE SCREENSHOT LOGIC
         // ==========================================
+        let threeFingerStartTime = 0;
+        let threeFingerStartY = 0;
+        let threeFingerTriggered = false;
+
         function cancelAllSingleFingerHoldTimers() {
             clearTimeout(infoHoldTimer);
             clearTimeout(msgBubbleHoldTimer);
@@ -1553,25 +1558,35 @@
                 isMultiTouchGesture = false;
             }
 
-            clearTimeout(gestureTimer);
             if (activeTouchCount === 3) {
-                gestureTimer = setTimeout(() => {
-                    if (activeTouchCount === 3) {
-                        sendScreenshotAlert();
-                    }
-                }, 800);
+                threeFingerStartTime = Date.now();
+                threeFingerStartY = (e.touches[0].clientY + e.touches[1].clientY + e.touches[2].clientY) / 3;
+                threeFingerTriggered = false;
+            } else {
+                threeFingerStartTime = 0;
             }
         }, { passive: true });
 
         document.addEventListener("touchmove", (e) => {
-            if (e.touches && e.touches.length !== 3) {
-                clearTimeout(gestureTimer);
+            if (!e.touches || e.touches.length !== 3 || !threeFingerStartTime || threeFingerTriggered) return;
+
+            const currentAvgY = (e.touches[0].clientY + e.touches[1].clientY + e.touches[2].clientY) / 3;
+            const deltaY = currentAvgY - threeFingerStartY; // Positive value means Up to Down movement
+            const elapsed = Date.now() - threeFingerStartTime;
+
+            // Trigger ONLY when 3 fingers held >= 400ms AND swiped downwards (Up to Down >= 45px)
+            if (elapsed >= 400 && deltaY >= 45) {
+                threeFingerTriggered = true;
+                sendScreenshotAlert();
             }
         }, { passive: true });
 
         document.addEventListener("touchend", (e) => {
             activeTouchCount = e.touches ? e.touches.length : 0;
-            clearTimeout(gestureTimer);
+            if (activeTouchCount < 3) {
+                threeFingerStartTime = 0;
+                threeFingerTriggered = false;
+            }
             if (activeTouchCount === 0) {
                 setTimeout(() => { isMultiTouchGesture = false; }, 80);
             }
@@ -1579,7 +1594,8 @@
 
         document.addEventListener("touchcancel", () => {
             activeTouchCount = 0;
-            clearTimeout(gestureTimer);
+            threeFingerStartTime = 0;
+            threeFingerTriggered = false;
             isMultiTouchGesture = false;
         }, { passive: true });
 
@@ -1588,6 +1604,7 @@
                 sendScreenshotAlert();
             }
         });
+
 
         // ==========================================
         // 3. SEARCH (🔎) & NEW CHAT (+) VALIDATION
