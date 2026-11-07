@@ -454,28 +454,28 @@
             border: 1px solid var(--accent-gold);
         }
 
-        /* MESSAGES */
+        /* MESSAGES (Standard Compact Size) */
         .messages {
             flex: 1;
             overflow-y: auto;
-            padding: 28px 15px 24px 15px;
+            padding: 20px 12px 18px 12px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 9px;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
         }
 
         .msg {
-            max-width: 78%;
+            max-width: 74%;
             width: fit-content;
-            min-width: 115px;
-            padding: 7px 12px;
-            border-radius: 12px 12px 12px 2px;
+            min-width: 82px;
+            padding: 5px 10px;
+            border-radius: 10px 10px 10px 2px;
             word-wrap: break-word;
-            font-size: 0.85rem;
-            line-height: 1.38;
+            font-size: 0.78rem;
+            line-height: 1.32;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -493,15 +493,15 @@
             background: #281e15;
             color: var(--text-main);
             align-self: flex-end;
-            border-radius: 12px 12px 2px 12px;
+            border-radius: 10px 10px 2px 10px;
             border: 1px solid rgba(181, 148, 97, 0.45);
         }
 
         .msg-sender {
-            font-size: 0.72rem;
+            font-size: 0.65rem;
             font-weight: 600;
             color: var(--accent-gold);
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
 
         /* SCREENSHOT ALERT STYLE */
@@ -510,30 +510,30 @@
             background: rgba(18, 18, 18, 0.9) !important;
             border: 1px dashed rgba(181, 148, 97, 0.35) !important;
             color: var(--accent-gold) !important;
-            font-size: 0.72rem !important;
-            padding: 4px 12px !important;
+            font-size: 0.68rem !important;
+            padding: 3px 10px !important;
             border-radius: 20px !important;
             font-style: italic;
             text-align: center;
             max-width: 90%;
-            margin: 4px 0;
+            margin: 3px 0;
         }
 
         .msg-meta {
-            font-size: 0.64rem;
+            font-size: 0.58rem;
             color: #999;
             display: inline-flex;
             justify-content: flex-end;
             align-items: center;
-            margin-top: 4px;
+            margin-top: 2px;
             align-self: flex-end;
-            gap: 5px;
+            gap: 4px;
             position: relative;
             z-index: 30;
         }
 
         .tick-icon {
-            font-size: 0.76rem;
+            font-size: 0.7rem;
             font-weight: bold;
             letter-spacing: -2px;
             color: #888;
@@ -548,16 +548,16 @@
             background: rgba(181, 148, 97, 0.15);
             border: 1px solid rgba(181, 148, 97, 0.4);
             color: var(--accent-gold);
-            font-size: 0.76rem;
-            width: 22px;
-            height: 22px;
+            font-size: 0.68rem;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             padding: 0;
-            margin-left: 3px;
+            margin-left: 2px;
             position: relative;
             z-index: 50;
             pointer-events: auto !important;
@@ -572,15 +572,15 @@
         /* --- Unsend Tablet --- */
         .unsend-tablet {
             position: absolute;
-            top: -28px;
+            top: -26px;
             right: 0;
             background: #181818;
             border: 1px solid var(--accent-red);
-            border-radius: 14px;
-            padding: 3px 9px;
+            border-radius: 12px;
+            padding: 2px 8px;
             display: none;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.9);
             z-index: 9999;
             white-space: nowrap;
@@ -589,7 +589,7 @@
 
         .msg:first-child .unsend-tablet {
             top: auto;
-            bottom: -26px;
+            bottom: -24px;
             right: 0;
         }
 
@@ -606,7 +606,7 @@
             background: transparent;
             border: none;
             color: var(--accent-red);
-            font-size: 0.65rem;
+            font-size: 0.62rem;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
@@ -617,17 +617,17 @@
         /* --- Emoji Reaction Picker Bar --- */
         .reaction-picker-bar {
             position: absolute;
-            top: -42px;
+            top: -38px;
             background: #181818;
             border: 1px solid rgba(181, 148, 97, 0.5);
             border-radius: 30px;
-            padding: 4px 8px;
+            padding: 3px 7px;
             display: none;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             box-shadow: 0 6px 20px rgba(0,0,0,0.85);
             z-index: 9998;
-            max-width: 270px;
+            max-width: 250px;
             overflow-x: auto;
             scrollbar-width: none;
             animation: popUnsend 0.15s ease-out;
@@ -647,7 +647,7 @@
 
         .msg:first-child .reaction-picker-bar {
             top: auto;
-            bottom: -42px;
+            bottom: -38px;
         }
 
         .reaction-picker-bar.show {
@@ -655,7 +655,7 @@
         }
 
         .react-emoji-opt {
-            font-size: 1.1rem;
+            font-size: 1rem;
             cursor: pointer;
             padding: 2px 3px;
             transition: transform 0.15s ease;
@@ -668,12 +668,12 @@
 
         .msg-reaction-corner {
             position: absolute;
-            bottom: -11px;
+            bottom: -10px;
             background: #1f1b16;
             border: 1px solid rgba(181, 148, 97, 0.5);
-            border-radius: 12px;
-            padding: 1px 6px;
-            font-size: 0.72rem;
+            border-radius: 10px;
+            padding: 1px 5px;
+            font-size: 0.65rem;
             display: inline-flex;
             align-items: center;
             gap: 2px;
@@ -683,26 +683,26 @@
         }
 
         .my-msg .msg-reaction-corner {
-            left: 8px;
+            left: 6px;
         }
 
         .received-msg .msg-reaction-corner {
-            right: 8px;
+            right: 6px;
         }
 
         .reaction-detail-bubble {
             position: absolute;
-            bottom: -36px;
+            bottom: -32px;
             background: #141414;
             border: 1px solid var(--accent-gold);
             color: #fff;
-            padding: 3px 9px;
-            border-radius: 12px;
-            font-size: 0.66rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.62rem;
             white-space: nowrap;
             display: none;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             z-index: 9999;
             box-shadow: 0 4px 14px rgba(0,0,0,0.9);
         }
@@ -814,43 +814,43 @@
 
         /* MEDIA ITEMS & CUSTOM AUDIO PLAYER */
         .chat-media-img {
-            max-width: 230px;
-            max-height: 230px;
-            border-radius: 10px;
-            margin-top: 4px;
+            max-width: 210px;
+            max-height: 210px;
+            border-radius: 8px;
+            margin-top: 3px;
             cursor: pointer;
             object-fit: cover;
             border: 1px solid rgba(181, 148, 97, 0.3);
         }
 
         .chat-media-video {
-            max-width: 240px;
-            max-height: 230px;
-            border-radius: 10px;
-            margin-top: 4px;
+            max-width: 220px;
+            max-height: 210px;
+            border-radius: 8px;
+            margin-top: 3px;
             background: #000;
         }
 
         .custom-chat-audio {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             background: rgba(0, 0, 0, 0.35);
             border: 1px solid rgba(181, 148, 97, 0.35);
-            padding: 6px 10px;
-            border-radius: 20px;
-            margin-top: 4px;
-            min-width: 175px;
+            padding: 5px 8px;
+            border-radius: 18px;
+            margin-top: 3px;
+            min-width: 160px;
         }
 
         .custom-audio-play-btn {
-            width: 28px;
-            height: 28px;
+            width: 25px;
+            height: 25px;
             border-radius: 50%;
             border: none;
             background: var(--accent-gold);
             color: #000;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
@@ -864,12 +864,12 @@
             align-items: center;
             gap: 2px;
             flex: 1;
-            height: 16px;
+            height: 14px;
         }
 
         .audio-wave-decor span {
             display: inline-block;
-            width: 3px;
+            width: 2.5px;
             background: rgba(181, 148, 97, 0.5);
             border-radius: 2px;
             transition: background 0.2s ease;
@@ -886,25 +886,25 @@
         }
 
         .custom-audio-time {
-            font-size: 0.68rem;
+            font-size: 0.64rem;
             color: var(--accent-gold);
             font-weight: 600;
-            min-width: 28px;
+            min-width: 26px;
             text-align: right;
         }
 
         .chat-media-doc {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             background: rgba(0, 0, 0, 0.35);
-            padding: 10px 12px;
-            border-radius: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
             border: 1px solid rgba(181, 148, 97, 0.3);
-            margin-top: 4px;
+            margin-top: 3px;
             color: var(--text-main);
             text-decoration: none;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
         }
 
@@ -1423,11 +1423,16 @@
 
         let onlineUsersMap = {};
         try {
-            onlineUsersMap = JSON.parse(sessionStorage.getItem("privateOnlineUsers") || "{}");
+            onlineUsersMap = JSON.parse(localStorage.getItem("privateOnlineUsers") || "{}");
         } catch(e) { onlineUsersMap = {}; }
 
         let gestureTimer = null;
         let lastScreenshotAlert = 0;
+        let activeTouchCount = 0;
+        let isMultiTouchGesture = false;
+
+        let backReloadTimer = null;
+        let inboxIdleReloadTimer = null;
         let openDropdownUser = null;
 
         const chatBackgrounds = [
@@ -1451,7 +1456,30 @@
             applyChatBackground(currentBgIndex);
         };
 
-        function startInboxIdleReloadTimer() {}
+        // ==========================================
+        // 1. AUTO-RELOAD TIMERS (3s on Back, 15s on Idle Inbox)
+        // ==========================================
+        function startInboxIdleReloadTimer() {
+            clearTimeout(inboxIdleReloadTimer);
+            clearInterval(inboxIdleReloadTimer);
+
+            inboxIdleReloadTimer = setInterval(() => {
+                const isSearchOpen = $("searchBox").style.display === "block" || $("inboxFilterBox").style.display === "block";
+                // Reload every 15s when standing idle on Inbox (no active chat, no search, no open 3-dot dropdown)
+                if (!selectedUser && !isSearchOpen && !openDropdownUser) {
+                    window.location.reload();
+                }
+            }, 15000);
+        }
+
+        // Reset 15-sec idle timer whenever user touches or clicks anything on Inbox
+        ["touchstart", "mousedown", "keydown"].forEach(evt => {
+            document.addEventListener(evt, () => {
+                if (!selectedUser) {
+                    startInboxIdleReloadTimer();
+                }
+            }, { passive: true });
+        });
 
         window.addEventListener("DOMContentLoaded", () => {
             if ($("display-username") && currentUser) {
@@ -1462,6 +1490,8 @@
             const lastOpen = sessionStorage.getItem("activePrivateChat");
             if (lastOpen) {
                 openChat(lastOpen);
+            } else {
+                startInboxIdleReloadTimer();
             }
         });
 
@@ -1485,6 +1515,16 @@
             }
         });
 
+        // ==========================================
+        // 2. CONFLICT-FREE 3-FINGER SCREENSHOT vs SINGLE-FINGER LONG PRESS
+        // ==========================================
+        function cancelAllSingleFingerHoldTimers() {
+            clearTimeout(infoHoldTimer);
+            clearTimeout(msgBubbleHoldTimer);
+            clearTimeout(sendHoldTimer);
+            infoWasHeld = false;
+        }
+
         function sendScreenshotAlert(reason = "Took A ScreenShot Of Chat") {
             const now = Date.now();
             if (!selectedUser || now - lastScreenshotAlert < 2500) return;
@@ -1504,14 +1544,44 @@
         }
 
         document.addEventListener("touchstart", (e) => {
-            if (e.touches.length === 3) {
-                gestureTimer = setTimeout(() => sendScreenshotAlert(), 800);
-            }
-        });
+            activeTouchCount = e.touches ? e.touches.length : 0;
 
-        document.addEventListener("touchend", () => {
-            if (gestureTimer) clearTimeout(gestureTimer);
-        });
+            if (activeTouchCount > 1) {
+                isMultiTouchGesture = true;
+                cancelAllSingleFingerHoldTimers();
+            } else {
+                isMultiTouchGesture = false;
+            }
+
+            clearTimeout(gestureTimer);
+            if (activeTouchCount === 3) {
+                gestureTimer = setTimeout(() => {
+                    if (activeTouchCount === 3) {
+                        sendScreenshotAlert();
+                    }
+                }, 800);
+            }
+        }, { passive: true });
+
+        document.addEventListener("touchmove", (e) => {
+            if (e.touches && e.touches.length !== 3) {
+                clearTimeout(gestureTimer);
+            }
+        }, { passive: true });
+
+        document.addEventListener("touchend", (e) => {
+            activeTouchCount = e.touches ? e.touches.length : 0;
+            clearTimeout(gestureTimer);
+            if (activeTouchCount === 0) {
+                setTimeout(() => { isMultiTouchGesture = false; }, 80);
+            }
+        }, { passive: true });
+
+        document.addEventListener("touchcancel", () => {
+            activeTouchCount = 0;
+            clearTimeout(gestureTimer);
+            isMultiTouchGesture = false;
+        }, { passive: true });
 
         window.addEventListener("keyup", (e) => {
             if (e.key === "PrintScreen" || e.key === "PrtSc") {
@@ -1519,6 +1589,9 @@
             }
         });
 
+        // ==========================================
+        // 3. SEARCH (🔎) & NEW CHAT (+) VALIDATION
+        // ==========================================
         window.toggleInboxFilter = function() {
             const filterBox = $("inboxFilterBox");
             const searchBox = $("searchBox");
@@ -1604,18 +1677,20 @@
         });
 
         // ==========================================
-        // 4. INSTANT ONLINE / OFFLINE ENGINE
+        // 4. AUTOMATIC 3.5-SECOND ONLINE / OFFLINE ENGINE
         // ==========================================
-        const PRESENCE_TIMEOUT_MS = 8500;
+        const PRESENCE_TIMEOUT_MS = 9000;
 
         function setUserOnlineStatus(user, isOnline) {
             if (!user) return;
-            const u = String(user).replace(/^__PRESENCE_(ONLINE|OFFLINE)__:/, "").toLowerCase().trim();
+            const u = String(user).replace(/^__(PRESENCE_)?(ONLINE|OFFLINE)__:/, "").toLowerCase().trim();
             if (!u || u === currentUser || u === "system") return;
 
             const wasOnline = isPartnerOnline(u);
             onlineUsersMap[u] = isOnline ? Date.now() : 0;
-            sessionStorage.setItem("privateOnlineUsers", JSON.stringify(onlineUsersMap));
+            try {
+                localStorage.setItem("privateOnlineUsers", JSON.stringify(onlineUsersMap));
+            } catch(e) {}
 
             if (isOnline) {
                 markMyMessagesDeliveredTo(u);
@@ -1659,7 +1734,12 @@
         }
 
         function broadcastPagePresence(isOnline) {
+            if (!socket || !socket.connected) return;
             if (isOnline && document.hidden) return;
+
+            const globalTag = isOnline ? `__ONLINE__:${currentUser}` : `__OFFLINE__:${currentUser}`;
+            socket.emit("typing", globalTag);
+
             const partners = getAllKnownPartners();
             partners.forEach(u => {
                 socket.emit("private_message", {
@@ -1678,10 +1758,17 @@
             }
             updateHeaderPartnerStatus();
             if (!openDropdownUser) loadInbox();
-        }, 3000);
+        }, 3500);
 
         window.addEventListener("beforeunload", () => broadcastPagePresence(false));
         window.addEventListener("pagehide", () => broadcastPagePresence(false));
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                broadcastPagePresence(false);
+            } else {
+                broadcastPagePresence(true);
+            }
+        });
 
         socket.on("connect", () => {
             socket.emit("userJoined", currentUser);
@@ -1700,7 +1787,7 @@
                 list.forEach(u => {
                     if (u) onlineUsersMap[String(u).toLowerCase()] = Date.now();
                 });
-                sessionStorage.setItem("privateOnlineUsers", JSON.stringify(onlineUsersMap));
+                localStorage.setItem("privateOnlineUsers", JSON.stringify(onlineUsersMap));
                 updateHeaderPartnerStatus();
                 loadInbox();
             }
@@ -1717,9 +1804,19 @@
 
         socket.on("userTyping", username => {
             if (!username) return;
-            const raw = String(username);
-            if (raw.startsWith("__PRESENCE_ONLINE__:")) {
-                setUserOnlineStatus(raw.split(":")[1], true);
+            const raw = String(username).trim();
+            if (raw.startsWith("__ONLINE__:") || raw.startsWith("__PRESENCE_ONLINE__:")) {
+                const who = raw.split(":")[1];
+                const wasOnline = isPartnerOnline(who);
+                setUserOnlineStatus(who, true);
+                if (!wasOnline && !document.hidden) {
+                    socket.emit("typing", `__ONLINE__:${currentUser}`);
+                }
+                return;
+            }
+            if (raw.startsWith("__OFFLINE__:") || raw.startsWith("__PRESENCE_OFFLINE__:")) {
+                const who = raw.split(":")[1];
+                setUserOnlineStatus(who, false);
                 return;
             }
             setUserOnlineStatus(raw, true);
@@ -1729,7 +1826,10 @@
         });
 
         socket.on("userStopTyping", username => {
-            if (username) setUserOnlineStatus(username, true);
+            if (username) {
+                const raw = String(username);
+                if (!raw.startsWith("__")) setUserOnlineStatus(raw, true);
+            }
             if (!username || String(username).toLowerCase() === selectedUser.toLowerCase()) {
                 $("typing-indicator").style.display = "none";
             }
@@ -1868,6 +1968,7 @@
                     $("partner-status").style.display = "none";
                     $("messages").innerHTML = "";
                     $("appContainer").classList.remove("mobile-chat-open");
+                    startInboxIdleReloadTimer();
                 }
                 loadInbox();
             }
@@ -1935,6 +2036,10 @@
         }
 
         window.openChat = function(u) {
+            // Stop reload timers while user is inside an active chat
+            clearTimeout(backReloadTimer);
+            clearInterval(inboxIdleReloadTimer);
+
             selectedUser = u.toLowerCase();
             sessionStorage.setItem("activePrivateChat", selectedUser);
             $("chatTitle").innerText = getDisplayTitle(selectedUser);
@@ -1964,6 +2069,15 @@
             updateHeaderPartnerStatus();
             loadInbox();
             broadcastPagePresence(true);
+
+            // 1. Trigger page reload 3 seconds after pressing Back from inside a chat
+            clearTimeout(backReloadTimer);
+            backReloadTimer = setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+
+            // 2. Also keep 15-second Inbox idle reload timer active
+            startInboxIdleReloadTimer();
         };
 
         // ==========================================
@@ -2049,9 +2163,11 @@
 
         window.onInfoDown = function(e, msgId) {
             e.stopPropagation();
+            if (isMultiTouchGesture || activeTouchCount > 1) return;
             infoWasHeld = false;
             clearTimeout(infoHoldTimer);
             infoHoldTimer = setTimeout(() => {
+                if (isMultiTouchGesture || activeTouchCount > 1) return;
                 infoWasHeld = true;
                 document.querySelectorAll(".unsend-tablet.show").forEach(el => el.classList.remove("show"));
                 const tab = $(`unsend_tab_${msgId}`);
@@ -2067,6 +2183,7 @@
         window.onInfoClick = function(e, msgId) {
             e.stopPropagation();
             clearTimeout(infoHoldTimer);
+            if (isMultiTouchGesture) return;
             if (infoWasHeld) {
                 infoWasHeld = false;
                 return;
@@ -2108,11 +2225,16 @@
         let msgBubbleHoldTimer = null;
 
         window.onMsgBubbleDown = function(e, msgId) {
+            if (isMultiTouchGesture || activeTouchCount > 1) {
+                clearTimeout(msgBubbleHoldTimer);
+                return;
+            }
             if (e.target.closest(".info-btn") || e.target.closest(".unsend-tablet") || e.target.closest(".reaction-picker-bar") || e.target.closest(".msg-reaction-corner") || e.target.closest(".custom-audio-play-btn")) {
                 return;
             }
             clearTimeout(msgBubbleHoldTimer);
             msgBubbleHoldTimer = setTimeout(() => {
+                if (isMultiTouchGesture || activeTouchCount > 1) return;
                 document.querySelectorAll(".reaction-picker-bar.show").forEach(el => el.classList.remove("show"));
                 const picker = $(`react_picker_${msgId}`);
                 if (picker) picker.classList.add("show");
@@ -2185,6 +2307,7 @@
 
         window.handleSendBtnDown = function(e) {
             e.preventDefault();
+            if (isMultiTouchGesture || activeTouchCount > 1) return;
             if (!selectedUser) {
                 alert("Pehle koi chat select karein!");
                 return;
@@ -2192,6 +2315,7 @@
             isVoiceHoldActive = false;
             clearTimeout(sendHoldTimer);
             sendHoldTimer = setTimeout(() => {
+                if (isMultiTouchGesture || activeTouchCount > 1) return;
                 isVoiceHoldActive = true;
                 startVoiceNoteRecording();
             }, 300);
@@ -2203,7 +2327,7 @@
             if (isVoiceHoldActive) {
                 stopVoiceNoteRecording();
                 isVoiceHoldActive = false;
-            } else {
+            } else if (!isMultiTouchGesture) {
                 sendMessage();
             }
         };
