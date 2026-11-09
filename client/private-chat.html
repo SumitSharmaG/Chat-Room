@@ -2425,11 +2425,11 @@
             }, 430);
         };
 
-        window.onMsgBubbleMove = function(e) {
+                window.onMsgBubbleMove = function(e) {
             if (!activeSwipeEl || !activeSwipeMsgId || activeTouchCount > 1) return;
             const curX = e.clientX || 0;
             const curY = e.clientY || 0;
-            const deltaX = curX - swipeStartX; // Negative value means Right-to-Left swipe
+            const deltaX = curX - swipeStartX; // Negative = Right-to-Left | Positive = Left-to-Right
             const deltaY = Math.abs(curY - swipeStartY);
 
             // Cancel hold timer if finger moves significantly
@@ -2437,8 +2437,12 @@
                 clearTimeout(msgBubbleHoldTimer);
             }
 
-            // Right-to-Left Swipe (deltaX < -12 and horizontal)
-            if (deltaX < -12 && deltaY < 35) {
+            if (deltaY >= 35) return;
+
+            const isMyMsg = activeSwipeEl.classList.contains("my-msg");
+
+            // 1. Sender's own message (Right side) -> Swipe Right-to-Left (deltaX < 0)
+            if (isMyMsg && deltaX < -12) {
                 const shift = Math.max(deltaX, -65);
                 activeSwipeEl.style.transform = `translateX(${shift}px)`;
                 if (deltaX <= -48 && !swipeTriggered) {
@@ -2446,7 +2450,17 @@
                     triggerReplyToMessage(activeSwipeMsgId);
                 }
             }
+            // 2. Friend's received message (Left side) -> Swipe Left-to-Right (deltaX > 0)
+            else if (!isMyMsg && deltaX > 12) {
+                const shift = Math.min(deltaX, 65);
+                activeSwipeEl.style.transform = `translateX(${shift}px)`;
+                if (deltaX >= 48 && !swipeTriggered) {
+                    swipeTriggered = true;
+                    triggerReplyToMessage(activeSwipeMsgId);
+                }
+            }
         };
+
 
         window.onMsgBubbleUp = function() {
             clearTimeout(msgBubbleHoldTimer);
