@@ -27,6 +27,7 @@
         font-family: 'Poppins', sans-serif;  
         -webkit-user-select: none; user-select: none;   
         -webkit-touch-callout: none;  
+        -webkit-tap-highlight-color: transparent;
     }  
 
     @media print { body { display: none !important; } }  
@@ -43,7 +44,7 @@
         background: var(--bg-card); padding: 8px 16px;   
         display: flex; justify-content: space-between; align-items: center;   
         border-bottom: 1px solid rgba(181, 148, 97, 0.2); height: 75px;  
-        z-index: 10;  
+        z-index: 20;  
     }  
 
     .header-left {
@@ -133,9 +134,22 @@
 
     .clear-btn { border-color: var(--accent-red); color: var(--accent-red); }  
 
+    /* --- 4. Username + Compact Connection Status Emoji --- */
+    .user-conn-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    #conn-status-dot {
+        font-size: 0.52rem;
+        line-height: 1;
+        vertical-align: middle;
+    }
+
     #messages {   
-        flex: 1; overflow-y: auto; padding: 12px 15px;   
-        display: flex; flex-direction: column; gap: 8px;  
+        flex: 1; overflow-y: auto; padding: 24px 15px 20px 15px;   
+        display: flex; flex-direction: column; gap: 12px;  
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -147,13 +161,14 @@
         background: #1a1a1a;  
         border-radius: 12px 12px 12px 2px; 
         max-width: 78%;   
+        min-width: 95px;
         width: fit-content; 
         border: 1px solid rgba(255,255,255,0.08);  
         display: flex; 
         flex-direction: column;  
         word-wrap: break-word;  
-        font-size: 0.85rem; 
-        line-height: 1.38;
+        font-size: 0.82rem; 
+        line-height: 1.35;
         position: relative;
     }  
 
@@ -167,7 +182,7 @@
     #messages li strong, 
     #messages li .sender-name,
     #messages li b:first-child {
-        font-size: 0.72rem;
+        font-size: 0.68rem;
         color: var(--accent-gold);
         margin-bottom: 2px;
         font-weight: 600;
@@ -179,16 +194,17 @@
         align-items: center;
         justify-content: flex-end;
         gap: 5px;
-        font-size: 0.64rem;
+        font-size: 0.62rem;
         color: #999;
         margin-top: 3px;
         align-self: flex-end;
         line-height: 1;
-        cursor: pointer;
+        position: relative;
+        z-index: 30;
     }
 
     .tick-icon {
-        font-size: 0.76rem;
+        font-size: 0.74rem;
         font-weight: bold;
         letter-spacing: -2px;
         color: #888;
@@ -199,22 +215,241 @@
     }
 
     .msg-info-trigger, .info-btn {
-        background: transparent;
-        border: none;
+        background: rgba(181, 148, 97, 0.15);
+        border: 1px solid rgba(181, 148, 97, 0.4);
         color: var(--accent-gold);
-        font-size: 0.78rem;
+        font-size: 0.7rem;
+        width: 19px;
+        height: 19px;
+        border-radius: 50%;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 0 2px;
-        opacity: 0.85;
-        transition: transform 0.15s ease, opacity 0.15s ease;
+        padding: 0;
+        margin-left: 2px;
+        position: relative;
+        z-index: 50;
+        transition: transform 0.15s ease, background 0.15s ease;
     }
 
-    .msg-info-trigger:hover, .info-btn:hover {
-        opacity: 1;
-        transform: scale(1.15);
+    .msg-info-trigger:hover, .msg-info-trigger:active {
+        background: var(--accent-gold);
+        color: #000;
+        transform: scale(1.1);
+    }
+
+    /* --- 1. Unsend Tablet (Hold on ⓘ Button) --- */
+    .unsend-tablet {
+        position: absolute;
+        top: -28px;
+        right: 0;
+        background: #181818;
+        border: 1px solid var(--accent-red);
+        border-radius: 14px;
+        padding: 3px 9px;
+        display: none;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.9);
+        z-index: 9999;
+        white-space: nowrap;
+        animation: popUnsend 0.15s ease-out;
+    }
+
+    #messages li:first-child .unsend-tablet {
+        top: auto;
+        bottom: -26px;
+        right: 0;
+    }
+
+    .unsend-tablet.show {
+        display: inline-flex;
+    }
+
+    @keyframes popUnsend {
+        from { transform: scale(0.85); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .unsend-action-btn {
+        background: transparent;
+        border: none;
+        color: var(--accent-red);
+        font-size: 0.64rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    /* --- 2. Emoji Reaction Picker Bar (Hold on Any Message) --- */
+    .reaction-picker-bar {
+        position: absolute;
+        top: -40px;
+        background: #181818;
+        border: 1px solid rgba(181, 148, 97, 0.5);
+        border-radius: 30px;
+        padding: 3px 8px;
+        display: none;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.85);
+        z-index: 9998;
+        max-width: 260px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        animation: popUnsend 0.15s ease-out;
+    }
+
+    .reaction-picker-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    #messages li.my-message .reaction-picker-bar {
+        right: 0;
+    }
+
+    #messages li:not(.my-message) .reaction-picker-bar {
+        left: 0;
+    }
+
+    #messages li:first-child .reaction-picker-bar {
+        top: auto;
+        bottom: -40px;
+    }
+
+    .reaction-picker-bar.show {
+        display: flex;
+    }
+
+    .react-emoji-opt {
+        font-size: 1.05rem;
+        cursor: pointer;
+        padding: 2px 3px;
+        transition: transform 0.15s ease;
+        flex-shrink: 0;
+    }
+
+    .react-emoji-opt:hover, .react-emoji-opt:active {
+        transform: scale(1.3);
+    }
+
+    .msg-reaction-corner {
+        position: absolute;
+        bottom: -10px;
+        background: #1f1b16;
+        border: 1px solid rgba(181, 148, 97, 0.5);
+        border-radius: 10px;
+        padding: 1px 5px;
+        font-size: 0.68rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        cursor: pointer;
+        z-index: 40;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    }
+
+    #messages li.my-message .msg-reaction-corner {
+        left: 6px;
+    }
+
+    #messages li:not(.my-message) .msg-reaction-corner {
+        right: 6px;
+    }
+
+    .reaction-detail-bubble {
+        position: absolute;
+        bottom: -34px;
+        background: #141414;
+        border: 1px solid var(--accent-gold);
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.64rem;
+        white-space: nowrap;
+        display: none;
+        align-items: center;
+        gap: 5px;
+        z-index: 9999;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.9);
+    }
+
+    #messages li.my-message .reaction-detail-bubble {
+        left: 0;
+    }
+
+    #messages li:not(.my-message) .reaction-detail-bubble {
+        right: 0;
+    }
+
+    .reaction-detail-bubble.show {
+        display: inline-flex;
+    }
+
+    /* --- 3. Custom Gold Theme In-Chat Audio Player --- */
+    .custom-chat-audio {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(181, 148, 97, 0.35);
+        padding: 5px 8px;
+        border-radius: 18px;
+        margin-top: 3px;
+        min-width: 160px;
+    }
+
+    .custom-audio-play-btn {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        border: none;
+        background: var(--accent-gold);
+        color: #000;
+        font-size: 10px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .audio-wave-decor {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex: 1;
+        height: 14px;
+    }
+
+    .audio-wave-decor span {
+        display: inline-block;
+        width: 2.5px;
+        background: rgba(181, 148, 97, 0.5);
+        border-radius: 2px;
+        transition: background 0.2s ease;
+    }
+
+    .custom-chat-audio.playing .audio-wave-decor span {
+        background: var(--accent-gold);
+        animation: waveBounce 0.6s infinite ease-in-out alternate;
+    }
+
+    @keyframes waveBounce {
+        from { transform: scaleY(0.5); }
+        to { transform: scaleY(1.25); }
+    }
+
+    .custom-audio-time {
+        font-size: 0.64rem;
+        color: var(--accent-gold);
+        font-weight: 600;
+        min-width: 26px;
+        text-align: right;
     }
 
     /* --- Auto-Adjustable Custom Message Info Modal --- */
@@ -226,7 +461,7 @@
         display: none;
         align-items: center;
         justify-content: center;
-        padding: 20px;
+        padding: 16px;
     }
 
     .msg-info-modal-overlay.show {
@@ -236,16 +471,16 @@
     .msg-info-modal-box {
         background: #141414;
         border: 1px solid var(--accent-gold);
-        border-radius: 14px;
+        border-radius: 12px;
         width: 100%;
-        max-width: 340px;
-        max-height: 85vh;
+        max-width: 280px;
+        max-height: 78vh;
         display: flex;
         flex-direction: column;
-        padding: 20px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.85);
+        padding: 15px;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.9);
         color: var(--text-main);
-        animation: fadeInModal 0.2s ease-out;
+        animation: fadeInModal 0.18s ease-out;
     }
 
     @keyframes fadeInModal {
@@ -256,9 +491,9 @@
     .msg-info-header {
         font-family: 'Playfair Display', serif;
         color: var(--accent-gold);
-        font-size: 1.15rem;
-        margin-bottom: 10px;
-        padding-bottom: 8px;
+        font-size: 1rem;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
         border-bottom: 1px solid rgba(181, 148, 97, 0.25);
         display: flex;
         align-items: center;
@@ -273,13 +508,13 @@
     }
 
     .msg-info-row {
-        font-size: 0.82rem;
-        margin: 8px 0;
+        font-size: 0.75rem;
+        margin: 6px 0;
         display: flex;
         justify-content: space-between;
-        gap: 10px;
+        gap: 8px;
         border-bottom: 1px dashed rgba(255,255,255,0.06);
-        padding-bottom: 6px;
+        padding-bottom: 5px;
     }
 
     .msg-info-label {
@@ -296,15 +531,15 @@
     }
 
     .msg-info-close-btn {
-        margin-top: 14px;
+        margin-top: 10px;
         width: 100%;
         background: var(--accent-gold);
         color: #000;
         border: none;
-        padding: 9px;
+        padding: 7px;
         border-radius: 6px;
         font-weight: 600;
-        font-size: 0.82rem;
+        font-size: 0.76rem;
         cursor: pointer;
         text-transform: uppercase;
         flex-shrink: 0;
@@ -315,7 +550,7 @@
         background: rgba(18, 18, 18, 0.9) !important;
         border: 1px dashed rgba(181, 148, 97, 0.35) !important;
         color: var(--accent-gold) !important;
-        font-size: 0.72rem !important;
+        font-size: 0.7rem !important;
         padding: 4px 12px !important;
         border-radius: 20px !important;
         font-style: italic;
@@ -324,39 +559,176 @@
         margin: 4px 0;
     }
 
+    /* --- 3. Input Area & Hold-to-Record Voice Note UI --- */
     .input-area {  
-        background: var(--bg-card); padding: 8px 12px;   
-        display: flex; align-items: center; gap: 10px;  
+        background: var(--bg-card); padding: 8px 10px;   
+        display: flex; align-items: center; gap: 8px;  
         border-top: 1px solid rgba(181, 148, 97, 0.15);  
         padding-bottom: calc(8px + env(safe-area-inset-bottom));  
         position: relative;
-        z-index: 10;
+        z-index: 20;
     }  
 
     #msg {  
         flex: 1; min-width: 0; background: rgba(255,255,255,0.05);   
-        border: 1px solid rgba(181, 148, 97, 0.3); padding: 10px 16px;   
+        border: 1px solid rgba(181, 148, 97, 0.3); padding: 10px 14px;   
         border-radius: 25px; color: #fff; outline: none;   
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         user-select: text !important;  
         -webkit-user-select: text !important;
     }  
 
+    .recording-bar {
+        flex: 1;
+        min-width: 0;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 14px;
+        border-radius: 25px;
+        background: rgba(255, 77, 77, 0.12);
+        border: 1px solid rgba(255, 77, 77, 0.45);
+        color: #fff;
+        font-size: 0.8rem;
+    }
+
+    .recording-bar.show {
+        display: flex;
+    }
+
+    .rec-dot {
+        width: 9px;
+        height: 9px;
+        background: var(--accent-red);
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 7px;
+        animation: blinkRec 0.9s infinite alternate;
+    }
+
+    @keyframes blinkRec {
+        from { opacity: 1; transform: scale(1); }
+        to { opacity: 0.3; transform: scale(0.8); }
+    }
+
+    .audio-preview-bar {
+        flex: 1;
+        min-width: 0;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 4px 6px;
+        border-radius: 25px;
+        background: #1c1915;
+        border: 1px solid var(--accent-gold);
+    }
+
+    .audio-preview-bar.show {
+        display: flex;
+    }
+
+    .discard-audio-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 77, 77, 0.45);
+        background: rgba(255, 77, 77, 0.12);
+        color: var(--accent-red);
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .preview-center-showcase {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex: 1;
+        min-width: 0;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .preview-play-toggle {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(181, 148, 97, 0.25);
+        color: var(--accent-gold);
+        font-size: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .imaginary-wave-line {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        height: 16px;
+        overflow: hidden;
+    }
+
+    .imaginary-wave-line i {
+        display: inline-block;
+        width: 2.5px;
+        background: var(--accent-gold);
+        border-radius: 2px;
+        opacity: 0.75;
+    }
+
+    .preview-time-badge {
+        font-size: 0.74rem;
+        color: var(--accent-gold);
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .send-audio-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: none;
+        background: var(--accent-gold);
+        color: #000;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
     .send-btn {  
         background: var(--accent-gold); border: none;   
-        width: 42px; height: 42px; border-radius: 50%;   
+        width: 40px; height: 40px; border-radius: 50%;   
         cursor: pointer; display: flex; align-items: center;   
         justify-content: center; flex-shrink: 0;
+        touch-action: none;
+        transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
     }   
 
+    .send-btn.recording-active {
+        background: var(--accent-red);
+        color: #fff;
+        transform: scale(1.12);
+        box-shadow: 0 0 16px rgba(255, 77, 77, 0.6);
+    }
+
     .attach-btn {
-        width: 42px;
-        height: 42px;
+        width: 40px;
+        height: 40px;
         border: none;
         border-radius: 50%;
         background: #202020;
         color: #b59461;
-        font-size: 24px;
+        font-size: 22px;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -371,7 +743,7 @@
 
     .attach-menu {
         position: fixed;  
-        bottom: 75px;  
+        bottom: 68px;  
         left: 12px;  
         background: #141414;  
         border: 1px solid rgba(181, 148, 97, .3);  
@@ -462,7 +834,7 @@
         .home-btn { font-size: 0.72rem; padding: 3px 8px; }
         .back-btn { font-size: 0.62rem; padding: 1px 6px; }
         .chat-title-trigger { font-size: 0.95rem; }
-        #messages li { max-width: 84%; font-size: 0.84rem; }
+        #messages li { max-width: 82%; font-size: 0.8rem; }
     }
 </style>
 </head>  
@@ -491,23 +863,63 @@
                 <button class="clear-btn" onclick="window.clearChat()">Clear</button>  
                 <button class="logout-btn" onclick="window.logout()">Logout</button>  
             </div>  
-            <span id="display-username" style="color: var(--accent-gold); font-size: 0.68rem; font-weight: 600;"></span>  
+            <!-- 4. Logged-in Username + Green/Black Connection Status Dot Behind It -->
+            <div class="user-conn-wrap">
+                <span id="display-username" style="color: var(--accent-gold); font-size: 0.68rem; font-weight: 600;"></span>
+                <span id="conn-status-dot" title="Connection Status">⚫</span>
+            </div>
         </div>  
     </div>  
 </header>  
 
 <ul id="messages"></ul>  
 
+<!-- 3. Input Area with Hold-to-Record Voice Note + Preview Bar -->
 <div class="input-area">  
     <button class="attach-btn" id="attachBtn" onclick="event.stopPropagation(); document.getElementById('attachMenu').classList.toggle('show');">
         +
     </button>
-    <input id="msg" placeholder="Type a message..." autocomplete="off" />
-    <button class="send-btn" onclick="window.handleSend()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-        </svg>
+
+    <input id="msg" placeholder="Hold ➤ for Voice Note..." autocomplete="off" />
+
+    <!-- Live Recording Bar -->
+    <div class="recording-bar" id="recordingBar">
+        <div style="display:flex; align-items:center;">
+            <span class="rec-dot"></span>
+            <span>Recording...</span>
+        </div>
+        <span id="recordingTimer" style="font-weight:600; color:var(--accent-gold);">0:00</span>
+    </div>
+
+    <!-- Compact Audio Preview Bar (Left Bin, Center Wave + Time, Right Send) -->
+    <div class="audio-preview-bar" id="audioPreviewBar">
+        <button type="button" class="discard-audio-btn" onclick="discardWorldRecordedAudio()" title="Delete Audio">🗑️</button>
+        <div class="preview-center-showcase">
+            <button type="button" class="preview-play-toggle" id="previewPlayBtn" onclick="toggleWorldPreviewAudioPlay()">▶</button>
+            <div class="imaginary-wave-line">
+                <i style="height:6px"></i><i style="height:12px"></i><i style="height:8px"></i><i style="height:14px"></i><i style="height:10px"></i><i style="height:15px"></i><i style="height:7px"></i><i style="height:13px"></i><i style="height:9px"></i><i style="height:14px"></i><i style="height:6px"></i><i style="height:11px"></i><i style="height:8px"></i>
+            </div>
+            <span class="preview-time-badge" id="previewDurationText">0:00</span>
+        </div>
+        <button type="button" class="send-audio-btn" onclick="sendWorldRecordedAudio()" title="Send Audio">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Send / Hold-for-Mic Button -->
+    <button type="button" class="send-btn" id="mainSendBtn" title="Tap to Send | Hold to Record Audio"
+        onpointerdown="handleWorldSendBtnDown(event)"
+        onpointerup="handleWorldSendBtnUp(event)"
+        onpointercancel="handleWorldSendBtnCancel(event)">
+        <span id="sendBtnIconWrap" style="display:flex; align-items:center; justify-content:center; pointer-events:none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </span>
     </button>
 </div>
 
@@ -569,7 +981,7 @@
             </div>
             <div class="msg-info-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
                 <span class="msg-info-label">⏱️ Seen Time :</span>
-                <div class="msg-info-val" id="infoSeenTimeVal" style="width: 100%; text-align: left; font-weight: normal; font-size: 0.78rem; color: #ccc;">-</div>
+                <div class="msg-info-val" id="infoSeenTimeVal" style="width: 100%; text-align: left; font-weight: normal; font-size: 0.74rem; color: #ccc;">-</div>
             </div>
         </div>
         <button class="msg-info-close-btn" onclick="closeMsgInfoModal()">Close</button>
@@ -582,11 +994,23 @@
 <script src="script.js"></script>
 
 <script>
+    const ALLOWED_EMOJIS = ["👍", "👋🏻", "😁", "😅", "😃", "😄", "🤔", "🤧", "🙉", "🙈", "😭"];
+
+    // Close menus/popups on outside click
     document.addEventListener("click", function(e) {
         const menu = document.getElementById("attachMenu");
         const btn = document.getElementById("attachBtn");
         if(menu && btn && !menu.contains(e.target) && e.target !== btn) {
             menu.classList.remove("show");
+        }
+        if (!e.target.closest(".unsend-tablet") && !e.target.closest(".msg-info-trigger")) {
+            document.querySelectorAll(".unsend-tablet.show").forEach(el => el.classList.remove("show"));
+        }
+        if (!e.target.closest(".reaction-picker-bar")) {
+            document.querySelectorAll(".reaction-picker-bar.show").forEach(el => el.classList.remove("show"));
+        }
+        if (!e.target.closest(".msg-reaction-corner") && !e.target.closest(".reaction-detail-bubble")) {
+            document.querySelectorAll(".reaction-detail-bubble.show").forEach(el => el.classList.remove("show"));
         }
     });
 
@@ -600,14 +1024,39 @@
         return hours + ':' + minutes + ' ' + ampm;
     }
 
+    // =========================================================================
+    // 4. CONNECTION STATUS INDICATOR BEHIND USERNAME (🟢 Connected / ⚫ Disconnected)
+    // =========================================================================
+    const connDotEl = document.getElementById("conn-status-dot");
+
+    function updateConnIndicator() {
+        if (!connDotEl) return;
+        const isConnected = (typeof socket !== "undefined" && socket && socket.connected && navigator.onLine);
+        connDotEl.textContent = isConnected ? "🟢" : "⚫";
+        connDotEl.title = isConnected ? "Connected" : "Disconnected";
+    }
+
+    updateConnIndicator();
+    setInterval(updateConnIndicator, 2000);
+    window.addEventListener("online", updateConnIndicator);
+    window.addEventListener("offline", updateConnIndicator);
+
+    if (typeof socket !== "undefined" && socket) {
+        socket.on("connect", updateConnIndicator);
+        socket.on("disconnect", updateConnIndicator);
+        socket.on("connect_error", updateConnIndicator);
+    }
+
+    // =========================================================================
+    // BACKGROUND SWITCHER (Default 3rd Image = Index 2)
+    // =========================================================================
     const chatBackgrounds = [
         "none",
         "linear-gradient(rgba(10, 10, 10, 0.75), rgba(10, 10, 10, 0.75)), url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1000&q=75')",
-        "linear-gradient(rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.8)), url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1000&q=75')", // 3rd Image (Index 2)
+        "linear-gradient(rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.8)), url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1000&q=75')",
         "linear-gradient(rgba(12, 10, 8, 0.78), rgba(12, 10, 8, 0.78)), url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1000&q=75')"
     ];
 
-    // Default set to 3rd image (index 2)
     let currentBgIndex = parseInt(localStorage.getItem("worldChatBgIndex") !== null ? localStorage.getItem("worldChatBgIndex") : "2", 10);
     const messagesBox = document.getElementById("messages");
     const bgSwitcherBtn = document.getElementById("bgSwitcherBtn");
@@ -626,11 +1075,10 @@
     });
 
     // =========================================================================
-    // STRICT USERNAME SANITIZER (Prevents message text from mixing with username)
+    // STRICT USERNAME SANITIZER
     // =========================================================================
     function extractPureUsername(rawStr) {
         if (!rawStr) return "";
-        // Take only the part before ':' or whitespace, strip '@' and non-username chars
         let str = String(rawStr).trim().replace(/^@/, "");
         str = str.split(":")[0].trim();
         str = str.split(/\s+/)[0].trim();
@@ -646,12 +1094,11 @@
     }
 
     // =========================================================================
-    // MULTI-USER SEEN TRACKER (Clean & Per-Message)
+    // PERSISTENT STORES FOR SEEN, REACTIONS, UNSENT & VOICE AUDIO
     // =========================================================================
     let masterSeenStore = {};
     try {
         const rawStore = JSON.parse(localStorage.getItem("worldMasterSeenStore") || "{}");
-        // Sanitize any corrupted keys from previous sessions (like "admin: Hii")
         Object.keys(rawStore).forEach(msgId => {
             masterSeenStore[msgId] = {};
             const entry = rawStore[msgId] || {};
@@ -665,19 +1112,453 @@
             });
         });
         localStorage.setItem("worldMasterSeenStore", JSON.stringify(masterSeenStore));
-    } catch(e) {
-        masterSeenStore = {};
-    }
+    } catch(e) { masterSeenStore = {}; }
+
+    let worldReactionsStore = {};
+    try {
+        worldReactionsStore = JSON.parse(localStorage.getItem("worldReactionsStore") || "{}");
+    } catch(e) { worldReactionsStore = {}; }
+
+    let worldUnsentIds = [];
+    try {
+        worldUnsentIds = JSON.parse(localStorage.getItem("worldUnsentIds") || "[]");
+    } catch(e) { worldUnsentIds = []; }
+
+    let worldAudioStore = {};
+    try {
+        worldAudioStore = JSON.parse(localStorage.getItem("worldAudioStore") || "{}");
+    } catch(e) { worldAudioStore = {}; }
 
     let currentOpenInfoLi = null;
 
     function saveMasterSeen() {
-        try {
-            localStorage.setItem("worldMasterSeenStore", JSON.stringify(masterSeenStore));
-        } catch(e) {}
+        try { localStorage.setItem("worldMasterSeenStore", JSON.stringify(masterSeenStore)); } catch(e) {}
     }
 
-    // Helper: Add one or multiple users to a specific message's seen list
+    function saveWorldChatHistory() {
+        if (messagesBox && messagesBox.innerHTML.trim() !== "") {
+            localStorage.setItem("chat_history", messagesBox.innerHTML);
+        }
+    }
+
+    // =========================================================================
+    // MULTI-TOUCH TRACKER (Prevents 3-finger screenshot from clashing with holds)
+    // =========================================================================
+    let activeTouchCount = 0;
+    let isMultiTouchGesture = false;
+    let infoHoldTimer = null;
+    let infoWasHeld = false;
+    let msgBubbleHoldTimer = null;
+    let sendHoldTimer = null;
+
+    document.addEventListener("touchstart", (e) => {
+        activeTouchCount = e.touches ? e.touches.length : 0;
+        if (activeTouchCount > 1) {
+            isMultiTouchGesture = true;
+            clearTimeout(infoHoldTimer);
+            clearTimeout(msgBubbleHoldTimer);
+            clearTimeout(sendHoldTimer);
+            infoWasHeld = false;
+        } else {
+            isMultiTouchGesture = false;
+        }
+    }, { passive: true });
+
+    document.addEventListener("touchend", (e) => {
+        activeTouchCount = e.touches ? e.touches.length : 0;
+        if (activeTouchCount === 0) {
+            setTimeout(() => { isMultiTouchGesture = false; }, 80);
+        }
+    }, { passive: true });
+
+    // =========================================================================
+    // 1 & 2. UNSEND & EMOJI REACTION HANDLERS (Synced Globally via Socket)
+    // =========================================================================
+    window.onWorldInfoDown = function(e, msgId) {
+        e.stopPropagation();
+        if (isMultiTouchGesture || activeTouchCount > 1) return;
+        infoWasHeld = false;
+        clearTimeout(infoHoldTimer);
+        infoHoldTimer = setTimeout(() => {
+            if (isMultiTouchGesture || activeTouchCount > 1) return;
+            infoWasHeld = true;
+            document.querySelectorAll(".unsend-tablet.show").forEach(el => el.classList.remove("show"));
+            const tab = document.getElementById(`unsend_tab_${msgId}`);
+            if (tab) tab.classList.add("show");
+        }, 420);
+    };
+
+    window.onWorldInfoUp = function(e) {
+        e.stopPropagation();
+        clearTimeout(infoHoldTimer);
+    };
+
+    window.onWorldInfoClick = function(e, msgId) {
+        e.stopPropagation();
+        clearTimeout(infoHoldTimer);
+        if (isMultiTouchGesture) return;
+        if (infoWasHeld) {
+            infoWasHeld = false;
+            return;
+        }
+        const tab = document.getElementById(`unsend_tab_${msgId}`);
+        if (tab && tab.classList.contains("show")) {
+            tab.classList.remove("show");
+        } else {
+            const li = document.querySelector(`li[data-id="${msgId}"]`);
+            if (li) showWorldMsgInfo(li);
+        }
+    };
+
+    function performWorldUnsendDOM(msgId) {
+        if (!msgId) return;
+        if (!worldUnsentIds.includes(msgId)) {
+            worldUnsentIds.push(msgId);
+            try { localStorage.setItem("worldUnsentIds", JSON.stringify(worldUnsentIds)); } catch(e) {}
+        }
+        const li = document.querySelector(`li[data-id="${msgId}"]`);
+        if (li) {
+            li.remove();
+            saveWorldChatHistory();
+        }
+    }
+
+    window.unsendWorldMessage = function(e, msgId) {
+        e.stopPropagation();
+        const li = document.querySelector(`li[data-id="${msgId}"]`);
+        if (!li || !li.classList.contains("my-message")) return;
+
+        performWorldUnsendDOM(msgId);
+        // Broadcast unsend signal to all World Chat users via typing relay
+        if (typeof socket !== "undefined" && socket) {
+            socket.emit("typing", `__WORLD_UNSEND__:${msgId}:${getMyUsername()}`);
+        }
+    };
+
+    window.onWorldMsgBubbleDown = function(e, msgId) {
+        if (isMultiTouchGesture || activeTouchCount > 1) {
+            clearTimeout(msgBubbleHoldTimer);
+            return;
+        }
+        if (e.target.closest(".msg-info-trigger") || e.target.closest(".unsend-tablet") || e.target.closest(".reaction-picker-bar") || e.target.closest(".msg-reaction-corner") || e.target.closest(".custom-audio-play-btn")) {
+            return;
+        }
+        clearTimeout(msgBubbleHoldTimer);
+        msgBubbleHoldTimer = setTimeout(() => {
+            if (isMultiTouchGesture || activeTouchCount > 1) return;
+            document.querySelectorAll(".reaction-picker-bar.show").forEach(el => el.classList.remove("show"));
+            const picker = document.getElementById(`react_picker_${msgId}`);
+            if (picker) picker.classList.add("show");
+        }, 420);
+    };
+
+    window.onWorldMsgBubbleUp = function() {
+        clearTimeout(msgBubbleHoldTimer);
+    };
+
+    function renderReactionBadgeOnLi(li, msgId) {
+        if (!li || !msgId) return;
+        const oldCorner = li.querySelector(".msg-reaction-corner");
+        const oldDetail = li.querySelector(".reaction-detail-bubble");
+        if (oldCorner) oldCorner.remove();
+        if (oldDetail) oldDetail.remove();
+
+        const map = worldReactionsStore[msgId] || {};
+        const entries = Object.entries(map).filter(([u, em]) => u && em);
+        if (entries.length === 0) return;
+
+        const emojisDisplay = entries.map(([u, em]) => em).join("");
+        const detailsDisplay = entries.map(([u, em]) => `<span>${em} <b>@${u}</b></span>`).join(" • ");
+
+        const corner = document.createElement("div");
+        corner.className = "msg-reaction-corner";
+        corner.onclick = (ev) => window.toggleWorldReactionDetail(ev, msgId);
+        corner.innerHTML = emojisDisplay;
+
+        const detail = document.createElement("div");
+        detail.className = "reaction-detail-bubble";
+        detail.id = `react_detail_${msgId}`;
+        detail.onclick = (ev) => ev.stopPropagation();
+        detail.innerHTML = detailsDisplay;
+
+        li.appendChild(corner);
+        li.appendChild(detail);
+    }
+
+    function applyWorldReaction(msgId, user, emoji) {
+        const cleanU = extractPureUsername(user);
+        if (!msgId || !cleanU) return;
+        if (!worldReactionsStore[msgId]) worldReactionsStore[msgId] = {};
+
+        if (!emoji) {
+            delete worldReactionsStore[msgId][cleanU];
+        } else {
+            worldReactionsStore[msgId][cleanU] = emoji;
+        }
+        try { localStorage.setItem("worldReactionsStore", JSON.stringify(worldReactionsStore)); } catch(e) {}
+
+        const li = document.querySelector(`li[data-id="${msgId}"]`);
+        if (li) {
+            renderReactionBadgeOnLi(li, msgId);
+            saveWorldChatHistory();
+        }
+    }
+
+    window.selectWorldMessageReaction = function(e, msgId, emoji) {
+        e.stopPropagation();
+        document.querySelectorAll(".reaction-picker-bar.show").forEach(el => el.classList.remove("show"));
+
+        const myUser = getMyUsername();
+        if (!myUser || !msgId) return;
+        if (!worldReactionsStore[msgId]) worldReactionsStore[msgId] = {};
+
+        const newEmoji = (worldReactionsStore[msgId][myUser] === emoji) ? "" : emoji;
+        applyWorldReaction(msgId, myUser, newEmoji);
+
+        // Broadcast reaction in real-time to all connected World Chat users
+        if (typeof socket !== "undefined" && socket) {
+            socket.emit("typing", `__WORLD_REACT__:${msgId}:${myUser}:${newEmoji}`);
+        }
+    };
+
+    window.toggleWorldReactionDetail = function(e, msgId) {
+        e.stopPropagation();
+        const bubble = document.getElementById(`react_detail_${msgId}`);
+        if (!bubble) return;
+        const isShown = bubble.classList.contains("show");
+        document.querySelectorAll(".reaction-detail-bubble.show").forEach(el => el.classList.remove("show"));
+        if (!isShown) bubble.classList.add("show");
+    };
+
+    // =========================================================================
+    // 3. HOLD SEND BUTTON FOR VOICE NOTE + PREVIEW BAR & CUSTOM AUDIO PLAYER
+    // =========================================================================
+    const PAPER_PLANE_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+    const MIC_ICON_SVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`;
+
+    let isVoiceHoldActive = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let activeMicStream = null;
+    let recTimerInterval = null;
+    let recSeconds = 0;
+    let pendingAudioBase64 = null;
+    let pendingAudioDurationStr = "0:01";
+    let previewAudioObj = new Audio();
+
+    previewAudioObj.onended = () => {
+        const btn = document.getElementById("previewPlayBtn");
+        if (btn) btn.innerText = "▶";
+    };
+
+    window.handleWorldSendBtnDown = function(e) {
+        e.preventDefault();
+        if (isMultiTouchGesture || activeTouchCount > 1) return;
+        isVoiceHoldActive = false;
+        clearTimeout(sendHoldTimer);
+        sendHoldTimer = setTimeout(() => {
+            if (isMultiTouchGesture || activeTouchCount > 1) return;
+            isVoiceHoldActive = true;
+            startWorldVoiceRecording();
+        }, 300);
+    };
+
+    window.handleWorldSendBtnUp = function(e) {
+        e.preventDefault();
+        clearTimeout(sendHoldTimer);
+        if (isVoiceHoldActive) {
+            stopWorldVoiceRecording();
+            isVoiceHoldActive = false;
+        } else if (!isMultiTouchGesture) {
+            if (typeof window.handleSend === "function") window.handleSend();
+        }
+    };
+
+    window.handleWorldSendBtnCancel = function() {
+        clearTimeout(sendHoldTimer);
+        if (isVoiceHoldActive) {
+            stopWorldVoiceRecording();
+            isVoiceHoldActive = false;
+        }
+    };
+
+    async function startWorldVoiceRecording() {
+        try {
+            activeMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunks = [];
+            pendingAudioBase64 = null;
+
+            document.getElementById("mainSendBtn").classList.add("recording-active");
+            document.getElementById("sendBtnIconWrap").innerHTML = MIC_ICON_SVG;
+            document.getElementById("msg").style.display = "none";
+            document.getElementById("audioPreviewBar").classList.remove("show");
+            document.getElementById("recordingBar").classList.add("show");
+
+            recSeconds = 0;
+            pendingAudioDurationStr = "0:01";
+            document.getElementById("recordingTimer").innerText = "0:00";
+            clearInterval(recTimerInterval);
+            recTimerInterval = setInterval(() => {
+                recSeconds++;
+                const mins = Math.floor(recSeconds / 60);
+                const secs = recSeconds % 60;
+                pendingAudioDurationStr = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+                document.getElementById("recordingTimer").innerText = pendingAudioDurationStr;
+            }, 1000);
+
+            mediaRecorder = new MediaRecorder(activeMicStream);
+            mediaRecorder.ondataavailable = (evt) => {
+                if (evt.data && evt.data.size > 0) audioChunks.push(evt.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                clearInterval(recTimerInterval);
+                if (activeMicStream) {
+                    activeMicStream.getTracks().forEach(t => t.stop());
+                    activeMicStream = null;
+                }
+                document.getElementById("mainSendBtn").classList.remove("recording-active");
+                document.getElementById("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG;
+                document.getElementById("recordingBar").classList.remove("show");
+
+                if (audioChunks.length === 0) {
+                    document.getElementById("msg").style.display = "block";
+                    return;
+                }
+
+                const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    pendingAudioBase64 = evt.target.result;
+                    previewAudioObj.src = pendingAudioBase64;
+                    document.getElementById("previewPlayBtn").innerText = "▶";
+                    document.getElementById("previewDurationText").innerText = pendingAudioDurationStr;
+                    document.getElementById("msg").style.display = "none";
+                    document.getElementById("mainSendBtn").style.display = "none";
+                    document.getElementById("audioPreviewBar").classList.add("show");
+                };
+                reader.readAsDataURL(audioBlob);
+            };
+
+            mediaRecorder.start();
+        } catch (err) {
+            isVoiceHoldActive = false;
+            document.getElementById("mainSendBtn").classList.remove("recording-active");
+            document.getElementById("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG;
+            document.getElementById("recordingBar").classList.remove("show");
+            document.getElementById("msg").style.display = "block";
+            alert("Microphone permission allow karein!");
+        }
+    }
+
+    function stopWorldVoiceRecording() {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+        } else {
+            clearInterval(recTimerInterval);
+            if (activeMicStream) {
+                activeMicStream.getTracks().forEach(t => t.stop());
+                activeMicStream = null;
+            }
+            document.getElementById("mainSendBtn").classList.remove("recording-active");
+            document.getElementById("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG;
+            document.getElementById("recordingBar").classList.remove("show");
+            document.getElementById("msg").style.display = "block";
+        }
+    }
+
+    window.toggleWorldPreviewAudioPlay = function() {
+        if (!pendingAudioBase64) return;
+        const btn = document.getElementById("previewPlayBtn");
+        if (previewAudioObj.paused) {
+            previewAudioObj.play();
+            if (btn) btn.innerText = "⏸";
+        } else {
+            previewAudioObj.pause();
+            if (btn) btn.innerText = "▶";
+        }
+    };
+
+    window.discardWorldRecordedAudio = function() {
+        previewAudioObj.pause();
+        previewAudioObj.src = "";
+        pendingAudioBase64 = null;
+        audioChunks = [];
+        document.getElementById("audioPreviewBar").classList.remove("show");
+        document.getElementById("msg").style.display = "block";
+        document.getElementById("mainSendBtn").style.display = "flex";
+    };
+
+    window.sendWorldRecordedAudio = function() {
+        if (!pendingAudioBase64 || typeof socket === "undefined" || !socket) return;
+        const encodedText = `__VOICE_NOTE__::${pendingAudioDurationStr}::${pendingAudioBase64}`;
+        socket.emit("sendMessage", {
+            username: localStorage.getItem("username"),
+            text: encodedText,
+            time: typeof getCurrentTime === "function" ? getCurrentTime() : formatAMPM(new Date())
+        });
+        window.discardWorldRecordedAudio();
+    };
+
+    let activeWorldChatAudio = null;
+    let activeWorldChatAudioId = null;
+
+    window.toggleWorldCustomAudio = function(e, msgId) {
+        e.stopPropagation();
+        const li = document.querySelector(`li[data-id="${msgId}"]`);
+        const audioSrc = (li && li.dataset.audioSrc) || worldAudioStore[msgId];
+        if (!audioSrc) return;
+
+        const wrap = document.getElementById(`custom_audio_${msgId}`);
+        const btn = document.getElementById(`custom_audio_btn_${msgId}`);
+        const timeEl = document.getElementById(`custom_audio_time_${msgId}`);
+        const defaultDur = (li && li.dataset.audioDur) || "0:05";
+
+        if (activeWorldChatAudio && activeWorldChatAudioId === msgId) {
+            if (activeWorldChatAudio.paused) {
+                activeWorldChatAudio.play();
+                if (btn) btn.innerText = "⏸";
+                if (wrap) wrap.classList.add("playing");
+            } else {
+                activeWorldChatAudio.pause();
+                if (btn) btn.innerText = "▶";
+                if (wrap) wrap.classList.remove("playing");
+            }
+            return;
+        }
+
+        if (activeWorldChatAudio) {
+            activeWorldChatAudio.pause();
+            const oldBtn = document.getElementById(`custom_audio_btn_${activeWorldChatAudioId}`);
+            const oldWrap = document.getElementById(`custom_audio_${activeWorldChatAudioId}`);
+            if (oldBtn) oldBtn.innerText = "▶";
+            if (oldWrap) oldWrap.classList.remove("playing");
+        }
+
+        activeWorldChatAudio = new Audio(audioSrc);
+        activeWorldChatAudioId = msgId;
+
+        activeWorldChatAudio.ontimeupdate = () => {
+            const sec = Math.floor(activeWorldChatAudio.currentTime || 0);
+            const mins = Math.floor(sec / 60);
+            const rem = sec % 60;
+            if (timeEl) timeEl.innerText = `${mins}:${rem < 10 ? '0' + rem : rem}`;
+        };
+
+        activeWorldChatAudio.onended = () => {
+            if (btn) btn.innerText = "▶";
+            if (wrap) wrap.classList.remove("playing");
+            if (timeEl) timeEl.innerText = defaultDur;
+        };
+
+        activeWorldChatAudio.play();
+        if (btn) btn.innerText = "⏸";
+        if (wrap) wrap.classList.add("playing");
+    };
+
+    // =========================================================================
+    // MULTI-USER SEEN TRACKER & INFO MODAL
+    // =========================================================================
     function recordUserSeenForMsg(msgId, rawUsers, timeStr) {
         if (!msgId || !rawUsers) return;
         const myUser = getMyUsername();
@@ -713,7 +1594,6 @@
 
         const li = document.querySelector(`li[data-id="${msgId}"]`);
         if (li) {
-            // Clean any old corrupted dataset entries on this <li>
             let domMap = {};
             try {
                 const parsedDom = JSON.parse(li.dataset.seenTimes || "{}");
@@ -755,7 +1635,6 @@
         }
     }
 
-    // When another user sends a message or types, mark previous messages as seen by that pure username ONLY
     function markAllPreviousMyMessagesSeenBy(activeUsername) {
         const cleanUser = extractPureUsername(activeUsername);
         const myUser = getMyUsername();
@@ -788,7 +1667,6 @@
         const myUser = getMyUsername();
         const isMy = li.classList.contains("my-message");
 
-        // ONLY SENDER can view message info
         if (!isMy) return;
 
         currentOpenInfoLi = li;
@@ -826,7 +1704,7 @@
         let seenTimeHtml = "Nobody seen yet...";
 
         if (seenUsers.length > 0) {
-            seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " / ";
+            seenStatusText = seenUsers.map(u => `@${u}`).join(", ") + " ✓✓";
 
             seenTimeHtml = seenUsers.map(u => {
                 const userSeenTime = cleanCombinedMap[u] || li.dataset.seenAt || formatAMPM(new Date());
@@ -855,6 +1733,9 @@
         }
     };
 
+    // =========================================================================
+    // MESSAGE ENHANCER (Handles Voice Note Player, Reactions, Unsend, Ticks)
+    // =========================================================================
     function enhanceSingleMessage(li) {
         if (!li || li.nodeType !== 1 || li.dataset.enhanced === "true") return;
         li.dataset.enhanced = "true";
@@ -862,7 +1743,7 @@
         const rawText = (li.textContent || "").trim();
         const myUser = getMyUsername();
 
-        if (rawText.toLowerCase().includes("screenshot")) {
+        if (rawText.toLowerCase().includes("screenshot") && !rawText.includes("__VOICE_NOTE__::")) {
             li.classList.add("screenshot-alert");
             li.classList.remove("my-message");
             
@@ -888,10 +1769,26 @@
             if (idMatch && idMatch[1]) {
                 li.dataset.id = idMatch[1];
             }
+            const parentTimeSpan = existingInfoBtn.parentElement;
             existingInfoBtn.remove();
+            if (parentTimeSpan && parentTimeSpan !== li && parentTimeSpan.tagName === "SPAN" && !parentTimeSpan.querySelector("strong")) {
+                parentTimeSpan.style.display = "none";
+            }
         }
 
-        // FIXED: Only select the actual username tag (strong / b / .sender / .username), NOT span:first-child!
+        if (!li.dataset.id) {
+            li.dataset.id = "wmsg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4);
+        }
+
+        const msgId = String(li.dataset.id).replace(/[^a-zA-Z0-9._-]/g, "");
+        li.dataset.id = msgId;
+
+        // If this message was unsent earlier, remove immediately
+        if (worldUnsentIds.includes(msgId)) {
+            li.remove();
+            return;
+        }
+
         let detectedSender = "";
         const nameNode = li.querySelector("strong, b, .sender, .username");
         if (nameNode) {
@@ -906,7 +1803,6 @@
 
         li.dataset.sender = detectedSender || (isMyMsg ? myUser : "user");
 
-        // If another user sent this message, mark previous messages as seen by their pure username ONLY
         if (!isMyMsg && detectedSender && detectedSender !== myUser && detectedSender !== "system" && detectedSender !== "you") {
             markAllPreviousMyMessagesSeenBy(detectedSender);
         }
@@ -935,7 +1831,60 @@
             }
         }
 
-        const msgId = li.dataset.id;
+        // Convert __VOICE_NOTE__:: payload or cached custom audio into Custom Gold Theme Audio Player
+        const contentSpan = li.querySelector("span:first-child");
+        if (contentSpan && contentSpan.innerHTML.includes("__VOICE_NOTE__::")) {
+            const rawHtml = contentSpan.innerHTML;
+            const vnIndex = rawHtml.indexOf("__VOICE_NOTE__::");
+            const prefixHtml = rawHtml.substring(0, vnIndex);
+            const vnPayload = rawHtml.substring(vnIndex + "__VOICE_NOTE__::".length);
+            const sepIndex = vnPayload.indexOf("::");
+            if (sepIndex !== -1) {
+                const dur = vnPayload.substring(0, sepIndex).trim() || "0:05";
+                const b64 = vnPayload.substring(sepIndex + 2).trim();
+                li.dataset.audioSrc = b64;
+                li.dataset.audioDur = dur;
+                worldAudioStore[msgId] = b64;
+                try { localStorage.setItem("worldAudioStore", JSON.stringify(worldAudioStore)); } catch(e) {}
+
+                contentSpan.innerHTML = `
+                    ${prefixHtml}
+                    <div class="custom-chat-audio" id="custom_audio_${msgId}">
+                        <button type="button" class="custom-audio-play-btn" id="custom_audio_btn_${msgId}" onclick="toggleWorldCustomAudio(event, '${msgId}')">▶</button>
+                        <div class="audio-wave-decor">
+                            <span style="height:6px"></span><span style="height:12px"></span><span style="height:8px"></span><span style="height:14px"></span><span style="height:9px"></span><span style="height:15px"></span><span style="height:7px"></span><span style="height:13px"></span><span style="height:10px"></span><span style="height:6px"></span><span style="height:12px"></span><span style="height:8px"></span>
+                        </div>
+                        <span class="custom-audio-time" id="custom_audio_time_${msgId}">${dur}</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Bind Long-Press on Message Bubble for Emoji Reactions
+        li.onpointerdown = (ev) => window.onWorldMsgBubbleDown(ev, msgId);
+        li.onpointerup = () => window.onWorldMsgBubbleUp();
+        li.onpointercancel = () => window.onWorldMsgBubbleUp();
+
+        // Add Unsend Floating Tablet (Only for Sender)
+        if (isMyMsg && !li.querySelector(".unsend-tablet")) {
+            const unsendDiv = document.createElement("div");
+            unsendDiv.className = "unsend-tablet";
+            unsendDiv.id = `unsend_tab_${msgId}`;
+            unsendDiv.innerHTML = `<button type="button" class="unsend-action-btn" onclick="unsendWorldMessage(event, '${msgId}')">🗑️ Unsend</button>`;
+            li.appendChild(unsendDiv);
+        }
+
+        // Add Emoji Reaction Picker Bar
+        if (!li.querySelector(".reaction-picker-bar")) {
+            const pickerDiv = document.createElement("div");
+            pickerDiv.className = "reaction-picker-bar";
+            pickerDiv.id = `react_picker_${msgId}`;
+            pickerDiv.onclick = (ev) => ev.stopPropagation();
+            pickerDiv.innerHTML = ALLOWED_EMOJIS.map(em =>
+                `<span class="react-emoji-opt" onclick="selectWorldMessageReaction(event, '${msgId}', '${em}')">${em}</span>`
+            ).join("");
+            li.appendChild(pickerDiv);
+        }
 
         if (msgId) {
             if (typeof seenMap !== "undefined" && seenMap[msgId]) {
@@ -945,7 +1894,6 @@
                 li.dataset.seenTimes = JSON.stringify(masterSeenStore[msgId]);
                 li.dataset.seen = "true";
             } else {
-                // Clean any corrupted seenTimes from cached HTML
                 li.dataset.seenTimes = "{}";
             }
         }
@@ -956,26 +1904,71 @@
         metaWrap.className = "msg-meta-ticks";
 
         if (isMyMsg) {
-            metaWrap.title = "Click for Message Info";
-            metaWrap.onclick = (e) => {
-                e.stopPropagation();
-                showWorldMsgInfo(li);
-            };
             metaWrap.innerHTML = `
+                <span>${msgTime}</span>
                 <span class="tick-icon ${hasSeenUsers ? 'seen' : ''}">${hasSeenUsers ? '✓✓' : '✓'}</span>
-                <button type="button" class="msg-info-trigger" title="Message Info">ⓘ</button>
+                <button type="button" class="msg-info-trigger" title="Tap: Info | Hold: Unsend"
+                    onpointerdown="onWorldInfoDown(event, '${msgId}')"
+                    onpointerup="onWorldInfoUp(event)"
+                    onpointercancel="onWorldInfoUp(event)"
+                    onclick="onWorldInfoClick(event, '${msgId}')">ⓘ</button>
             `;
         } else {
             metaWrap.innerHTML = `
+                <span>${msgTime}</span>
                 <span class="tick-icon ${hasSeenUsers ? 'seen' : ''}">${hasSeenUsers ? '✓✓' : '✓'}</span>
             `;
         }
 
         li.appendChild(metaWrap);
+
+        // Render any existing reactions on this message
+        renderReactionBadgeOnLi(li, msgId);
     }
 
+    // Intercept script.js userTyping to handle real-time Unsend & Emoji Reaction signals silently
     if (typeof socket !== "undefined" && socket) {
+        const rawListeners = socket.listeners("userTyping");
+        socket.off("userTyping");
+
+        socket.on("userTyping", (payload) => {
+            if (!payload) return;
+            const str = String(payload);
+
+            // 1. Real-time Unsend Signal
+            if (str.startsWith("__WORLD_UNSEND__:")) {
+                const parts = str.split(":");
+                const targetId = parts[1];
+                if (targetId) performWorldUnsendDOM(targetId);
+                return;
+            }
+
+            // 2. Real-time Emoji Reaction Signal
+            if (str.startsWith("__WORLD_REACT__:")) {
+                const parts = str.split(":");
+                const targetId = parts[1];
+                const reactUser = parts[2];
+                const emoji = parts.slice(3).join(":");
+                if (targetId && reactUser) {
+                    applyWorldReaction(targetId, reactUser, emoji);
+                }
+                return;
+            }
+
+            // Ignore Private-Chat presence pings so they don't show as typing in World Chat
+            if (str.startsWith("__ONLINE__:") || str.startsWith("__OFFLINE__:") || str.startsWith("__PRESENCE_")) {
+                const who = str.split(":")[1];
+                if (who) markAllPreviousMyMessagesSeenBy(who);
+                return;
+            }
+
+            // Normal typing: mark previous messages seen & run original script.js typing UI
+            markAllPreviousMyMessagesSeenBy(str);
+            rawListeners.forEach(fn => fn(payload));
+        });
+
         socket.on("connect", () => {
+            updateConnIndicator();
             const myUser = getMyUsername();
             if (!myUser || !messagesBox) return;
             messagesBox.querySelectorAll("li:not(.my-message):not(.screenshot-alert)").forEach(li => {
@@ -995,24 +1988,27 @@
             }
         });
 
-        socket.on("userTyping", (typingUser) => {
-            if (typingUser) {
-                markAllPreviousMyMessagesSeenBy(typingUser);
-            }
-        });
-
         socket.on("chatCleared", () => {
             masterSeenStore = {};
+            worldReactionsStore = {};
+            worldUnsentIds = [];
+            worldAudioStore = {};
             localStorage.removeItem("worldMasterSeenStore");
+            localStorage.removeItem("worldReactionsStore");
+            localStorage.removeItem("worldUnsentIds");
+            localStorage.removeItem("worldAudioStore");
         });
     }
 
     if (messagesBox) {
-        // Clean already-rendered cached messages on load
         messagesBox.querySelectorAll("li").forEach(li => {
             li.removeAttribute("data-enhanced");
             const oldMeta = li.querySelector(".msg-meta-ticks");
             if (oldMeta) oldMeta.remove();
+            const oldUnsend = li.querySelector(".unsend-tablet");
+            if (oldUnsend) oldUnsend.remove();
+            const oldPicker = li.querySelector(".reaction-picker-bar");
+            if (oldPicker) oldPicker.remove();
             enhanceSingleMessage(li);
         });
 
@@ -1024,9 +2020,7 @@
                     }
                 }
             }
-            if (messagesBox.innerHTML.trim() !== "") {
-                localStorage.setItem("chat_history", messagesBox.innerHTML);
-            }
+            saveWorldChatHistory();
         });
 
         fastObserver.observe(messagesBox, { childList: true, subtree: false });
