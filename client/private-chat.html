@@ -430,6 +430,19 @@
             gap: 4px;
         }
 
+        /* --- 1. Username + Green/Black Connection Dot --- */
+        .user-conn-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        #conn-status-dot {
+            font-size: 0.52rem;
+            line-height: 1;
+            vertical-align: middle;
+        }
+
         .btn-group {
             display: flex;
             gap: 6px;
@@ -454,10 +467,11 @@
             border: 1px solid var(--accent-gold);
         }
 
-        /* MESSAGES (Standard Compact Size) */
+        /* MESSAGES (Standard Compact Size + Swipe Reply Support) */
         .messages {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 20px 12px 18px 12px;
             display: flex;
             flex-direction: column;
@@ -479,7 +493,12 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            transition: transform 0.1s ease;
+            transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease;
+            touch-action: pan-y;
+        }
+
+        .msg.reply-highlight {
+            box-shadow: 0 0 0 2px var(--accent-gold), 0 0 15px rgba(181, 148, 97, 0.6);
         }
 
         .received-msg {
@@ -502,6 +521,97 @@
             font-weight: 600;
             color: var(--accent-gold);
             margin-bottom: 1px;
+        }
+
+        /* --- 4. Quoted Reply Block Inside Message Bubble --- */
+        .quoted-msg-box {
+            background: rgba(0, 0, 0, 0.35);
+            border-left: 3px solid var(--accent-gold);
+            border-radius: 4px 6px 6px 4px;
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .quoted-msg-sender {
+            color: var(--accent-gold);
+            font-weight: 600;
+            font-size: 0.62rem;
+            margin-bottom: 1px;
+        }
+
+        .quoted-msg-text {
+            color: #ccc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 210px;
+        }
+
+        /* --- 4. Reply Preview Banner Above Input Box --- */
+        .reply-preview-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: #181512;
+            border-top: 1px solid rgba(181, 148, 97, 0.35);
+            border-left: 4px solid var(--accent-gold);
+            padding: 6px 12px;
+            z-index: 20;
+            animation: slideUpReply 0.15s ease-out;
+        }
+
+        .reply-preview-banner.show {
+            display: flex;
+        }
+
+        @keyframes slideUpReply {
+            from { transform: translateY(8px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .reply-banner-content {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .reply-banner-title {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+
+        .reply-banner-text {
+            font-size: 0.72rem;
+            color: #bbb;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .reply-banner-close {
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: #ccc;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .reply-banner-close:hover {
+            background: var(--accent-red);
+            color: #fff;
         }
 
         /* SCREENSHOT ALERT STYLE */
@@ -1144,7 +1254,7 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            touch-action: none;
+            touch-action: manipulation;
             transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -1288,12 +1398,25 @@
                             <button class="header-btn clear-btn" onclick="clearAllChat()">Clear</button>
                             <button class="header-btn logout-btn" onclick="logout()">Logout</button>
                         </div>
-                        <span id="display-username" style="color: var(--accent-gold); font-size: 0.68rem; font-weight: 600;"></span>
+                        <!-- 1. Logged-in Username + Green/Black Connection Status Dot -->
+                        <div class="user-conn-wrap">
+                            <span id="display-username" style="color: var(--accent-gold); font-size: 0.68rem; font-weight: 600;"></span>
+                            <span id="conn-status-dot" title="Connection Status">⚫</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="messages" id="messages"></div>
+
+            <!-- 4. Reply Preview Banner (Shows when user swipes Right-to-Left on a message) -->
+            <div class="reply-preview-banner" id="replyPreviewBanner">
+                <div class="reply-banner-content">
+                    <div class="reply-banner-title" id="replyBannerSender">Replying to @user</div>
+                    <div class="reply-banner-text" id="replyBannerText">Message text...</div>
+                </div>
+                <button type="button" class="reply-banner-close" onclick="cancelReply()" title="Cancel Reply">&times;</button>
+            </div>
 
             <div class="send-box">
                 <button class="attach-btn" id="attachBtn" onclick="event.stopPropagation(); document.getElementById('attachMenu').classList.toggle('show');">
@@ -1327,10 +1450,12 @@
                     </button>
                 </div>
 
+                <!-- 3. Fixed Reliable Send Button (Works after Screenshot & Voice Recording without Refresh) -->
                 <button type="button" class="send-btn" id="mainSendBtn" title="Tap to Send | Hold to Record Audio"
                     onpointerdown="handleSendBtnDown(event)"
                     onpointerup="handleSendBtnUp(event)"
-                    onpointercancel="handleSendBtnCancel(event)">
+                    onpointercancel="handleSendBtnCancel(event)"
+                    onclick="handleSendBtnClickFallback(event)">
                     <span id="sendBtnIconWrap" style="display:flex; align-items:center; justify-content:center; pointer-events:none;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -1429,11 +1554,30 @@
         let gestureTimer = null;
         let lastScreenshotAlert = 0;
         let activeTouchCount = 0;
-        let isMultiTouchGesture = false;
 
         let backReloadTimer = null;
         let inboxIdleReloadTimer = null;
         let openDropdownUser = null;
+
+        // Reply State
+        let activeReplyData = null;
+
+        // ==========================================
+        // 1. CONNECTION STATUS DOT BEHIND USERNAME (🟢 / ⚫)
+        // ==========================================
+        function updateConnIndicator() {
+            const dot = $("conn-status-dot");
+            if (!dot) return;
+            const isConnected = (socket && socket.connected && navigator.onLine);
+            dot.textContent = isConnected ? "🟢" : "⚫";
+            dot.title = isConnected ? "Connected" : "Disconnected";
+        }
+
+        setInterval(updateConnIndicator, 2000);
+        window.addEventListener("online", updateConnIndicator);
+        window.addEventListener("offline", updateConnIndicator);
+        socket.on("disconnect", updateConnIndicator);
+        socket.on("connect_error", updateConnIndicator);
 
         const chatBackgrounds = [
             "none",
@@ -1457,7 +1601,7 @@
         };
 
         // ==========================================
-        // 1. AUTO-RELOAD TIMERS (3s on Back, 15s on Idle Inbox)
+        // AUTO-RELOAD TIMERS (3s on Back, 15s on Idle Inbox)
         // ==========================================
         function startInboxIdleReloadTimer() {
             clearTimeout(inboxIdleReloadTimer);
@@ -1465,14 +1609,12 @@
 
             inboxIdleReloadTimer = setInterval(() => {
                 const isSearchOpen = $("searchBox").style.display === "block" || $("inboxFilterBox").style.display === "block";
-                // Reload every 15s when standing idle on Inbox (no active chat, no search, no open 3-dot dropdown)
                 if (!selectedUser && !isSearchOpen && !openDropdownUser) {
                     window.location.reload();
                 }
             }, 15000);
         }
 
-        // Reset 15-sec idle timer whenever user touches or clicks anything on Inbox
         ["touchstart", "mousedown", "keydown"].forEach(evt => {
             document.addEventListener(evt, () => {
                 if (!selectedUser) {
@@ -1485,6 +1627,7 @@
             if ($("display-username") && currentUser) {
                 $("display-username").innerText = `@${currentUser}`;
             }
+            updateConnIndicator();
             applyChatBackground(currentBgIndex);
             loadInbox();
             const lastOpen = sessionStorage.getItem("activePrivateChat");
@@ -1516,23 +1659,11 @@
         });
 
         // ==========================================
-                // ==========================================
-        // 2. 3-FINGER 400ms + UP-TO-DOWN SWIPE SCREENSHOT LOGIC
+        // 2. EXACT WORLD-CHAT SCREENSHOT LOGIC (3-Finger 800ms + PrintScreen)
         // ==========================================
-        let threeFingerStartTime = 0;
-        let threeFingerStartY = 0;
-        let threeFingerTriggered = false;
-
-        function cancelAllSingleFingerHoldTimers() {
-            clearTimeout(infoHoldTimer);
-            clearTimeout(msgBubbleHoldTimer);
-            clearTimeout(sendHoldTimer);
-            infoWasHeld = false;
-        }
-
         function sendScreenshotAlert(reason = "Took A ScreenShot Of Chat") {
             const now = Date.now();
-            if (!selectedUser || now - lastScreenshotAlert < 2500) return;
+            if (!selectedUser || now - lastScreenshotAlert < 2000) return;
             lastScreenshotAlert = now;
 
             const time = formatAMPM(new Date());
@@ -1546,65 +1677,45 @@
             };
             saveAndRender(alertData);
             socket.emit("private_message", alertData);
+
+            // Ensure send button & input states are completely unlocked after screenshot
+            resetSendButtonState();
         }
 
+        // 📱 Mobile (Exact world-chat.html 3-finger 800ms logic)
         document.addEventListener("touchstart", (e) => {
             activeTouchCount = e.touches ? e.touches.length : 0;
-
-            if (activeTouchCount > 1) {
-                isMultiTouchGesture = true;
-                cancelAllSingleFingerHoldTimers();
-            } else {
-                isMultiTouchGesture = false;
-            }
-
             if (activeTouchCount === 3) {
-                threeFingerStartTime = Date.now();
-                threeFingerStartY = (e.touches[0].clientY + e.touches[1].clientY + e.touches[2].clientY) / 3;
-                threeFingerTriggered = false;
-            } else {
-                threeFingerStartTime = 0;
-            }
-        }, { passive: true });
-
-        document.addEventListener("touchmove", (e) => {
-            if (!e.touches || e.touches.length !== 3 || !threeFingerStartTime || threeFingerTriggered) return;
-
-            const currentAvgY = (e.touches[0].clientY + e.touches[1].clientY + e.touches[2].clientY) / 3;
-            const deltaY = currentAvgY - threeFingerStartY; // Positive value means Up to Down movement
-            const elapsed = Date.now() - threeFingerStartTime;
-
-            // Trigger ONLY when 3 fingers held >= 400ms AND swiped downwards (Up to Down >= 45px)
-            if (elapsed >= 400 && deltaY >= 45) {
-                threeFingerTriggered = true;
-                sendScreenshotAlert();
+                clearTimeout(infoHoldTimer);
+                clearTimeout(msgBubbleHoldTimer);
+                clearTimeout(sendHoldTimer);
+                if (gestureTimer) clearTimeout(gestureTimer);
+                gestureTimer = setTimeout(() => sendScreenshotAlert(), 800);
             }
         }, { passive: true });
 
         document.addEventListener("touchend", (e) => {
             activeTouchCount = e.touches ? e.touches.length : 0;
-            if (activeTouchCount < 3) {
-                threeFingerStartTime = 0;
-                threeFingerTriggered = false;
-            }
-            if (activeTouchCount === 0) {
-                setTimeout(() => { isMultiTouchGesture = false; }, 80);
+            if (gestureTimer) {
+                clearTimeout(gestureTimer);
+                gestureTimer = null;
             }
         }, { passive: true });
 
         document.addEventListener("touchcancel", () => {
             activeTouchCount = 0;
-            threeFingerStartTime = 0;
-            threeFingerTriggered = false;
-            isMultiTouchGesture = false;
+            if (gestureTimer) {
+                clearTimeout(gestureTimer);
+                gestureTimer = null;
+            }
         }, { passive: true });
 
+        // 💻 PC
         window.addEventListener("keyup", (e) => {
             if (e.key === "PrintScreen" || e.key === "PrtSc") {
                 sendScreenshotAlert();
             }
         });
-
 
         // ==========================================
         // 3. SEARCH (🔎) & NEW CHAT (+) VALIDATION
@@ -1694,7 +1805,7 @@
         });
 
         // ==========================================
-        // 4. AUTOMATIC 3.5-SECOND ONLINE / OFFLINE ENGINE
+        // AUTOMATIC 3.5-SECOND ONLINE / OFFLINE ENGINE
         // ==========================================
         const PRESENCE_TIMEOUT_MS = 9000;
 
@@ -1788,6 +1899,7 @@
         });
 
         socket.on("connect", () => {
+            updateConnIndicator();
             socket.emit("userJoined", currentUser);
             broadcastPagePresence(true);
             loadInbox();
@@ -2053,7 +2165,6 @@
         }
 
         window.openChat = function(u) {
-            // Stop reload timers while user is inside an active chat
             clearTimeout(backReloadTimer);
             clearInterval(inboxIdleReloadTimer);
 
@@ -2061,6 +2172,7 @@
             sessionStorage.setItem("activePrivateChat", selectedUser);
             $("chatTitle").innerText = getDisplayTitle(selectedUser);
             $("typing-indicator").style.display = "none";
+            cancelReply();
 
             broadcastPagePresence(true);
             updateHeaderPartnerStatus();
@@ -2083,22 +2195,66 @@
             $("appContainer").classList.remove("mobile-chat-open");
             selectedUser = "";
             sessionStorage.removeItem("activePrivateChat");
+            cancelReply();
             updateHeaderPartnerStatus();
             loadInbox();
             broadcastPagePresence(true);
 
-            // 1. Trigger page reload 3 seconds after pressing Back from inside a chat
             clearTimeout(backReloadTimer);
             backReloadTimer = setTimeout(() => {
                 window.location.reload();
             }, 3000);
 
-            // 2. Also keep 15-second Inbox idle reload timer active
             startInboxIdleReloadTimer();
         };
 
         // ==========================================
-        // 6. MESSAGE INFO (ⓘ), UNSEND & REACTIONS
+        // 4. SWIPE RIGHT-TO-LEFT TO REPLY & EMOJI REACTIONS
+        // ==========================================
+        window.triggerReplyToMessage = function(msgId) {
+            const chats = JSON.parse(localStorage.getItem("privateChats")) || [];
+            const m = chats.find(c => String(c.id) === String(msgId));
+            if (!m) return;
+
+            const isMy = (m.sender || "").toLowerCase() === currentUser;
+            const senderDisplay = isMy ? "You" : `@${m.sender}`;
+            let previewText = m.text || "";
+            if (m.mediaType === "audio") previewText = "🎤 Voice Message";
+            else if (m.mediaType === "image") previewText = "📷 Photo";
+            else if (m.mediaType === "video") previewText = "🎥 Video";
+            else if (m.mediaType === "document") previewText = "📄 " + (m.fileName || "Document");
+
+            activeReplyData = {
+                id: m.id,
+                sender: m.sender,
+                text: previewText
+            };
+
+            $("replyBannerSender").innerText = `Replying to ${senderDisplay}`;
+            $("replyBannerText").innerText = previewText;
+            $("replyPreviewBanner").classList.add("show");
+            $("messageInput").focus();
+        };
+
+        window.cancelReply = function() {
+            activeReplyData = null;
+            if ($("replyPreviewBanner")) {
+                $("replyPreviewBanner").classList.remove("show");
+            }
+        };
+
+        window.scrollToOriginalMsg = function(e, targetId) {
+            e.stopPropagation();
+            const targetEl = document.getElementById(`msg_el_${targetId}`);
+            if (targetEl) {
+                targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                targetEl.classList.add("reply-highlight");
+                setTimeout(() => targetEl.classList.remove("reply-highlight"), 1400);
+            }
+        };
+
+        // ==========================================
+        // 6. MESSAGE INFO (ⓘ), UNSEND, SWIPE & REACTIONS
         // ==========================================
         function markMyMessagesDeliveredTo(partnerUser) {
             partnerUser = partnerUser.toLowerCase();
@@ -2180,11 +2336,11 @@
 
         window.onInfoDown = function(e, msgId) {
             e.stopPropagation();
-            if (isMultiTouchGesture || activeTouchCount > 1) return;
+            if (activeTouchCount > 1) return;
             infoWasHeld = false;
             clearTimeout(infoHoldTimer);
             infoHoldTimer = setTimeout(() => {
-                if (isMultiTouchGesture || activeTouchCount > 1) return;
+                if (activeTouchCount > 1) return;
                 infoWasHeld = true;
                 document.querySelectorAll(".unsend-tablet.show").forEach(el => el.classList.remove("show"));
                 const tab = $(`unsend_tab_${msgId}`);
@@ -2200,7 +2356,6 @@
         window.onInfoClick = function(e, msgId) {
             e.stopPropagation();
             clearTimeout(infoHoldTimer);
-            if (isMultiTouchGesture) return;
             if (infoWasHeld) {
                 infoWasHeld = false;
                 return;
@@ -2238,28 +2393,68 @@
             });
         };
 
-        // EMOJI REACTIONS
+        // Combined Message Bubble Gesture: Long-Press = Emoji Picker | Swipe Right-to-Left = Reply
         let msgBubbleHoldTimer = null;
+        let swipeStartX = 0;
+        let swipeStartY = 0;
+        let activeSwipeEl = null;
+        let activeSwipeMsgId = null;
+        let swipeTriggered = false;
 
-        window.onMsgBubbleDown = function(e, msgId) {
-            if (isMultiTouchGesture || activeTouchCount > 1) {
+        window.onMsgBubbleDown = function(e, msgId, el) {
+            if (activeTouchCount > 1) {
                 clearTimeout(msgBubbleHoldTimer);
                 return;
             }
-            if (e.target.closest(".info-btn") || e.target.closest(".unsend-tablet") || e.target.closest(".reaction-picker-bar") || e.target.closest(".msg-reaction-corner") || e.target.closest(".custom-audio-play-btn")) {
+            if (e.target.closest(".info-btn") || e.target.closest(".unsend-tablet") || e.target.closest(".reaction-picker-bar") || e.target.closest(".msg-reaction-corner") || e.target.closest(".custom-audio-play-btn") || e.target.closest(".quoted-msg-box")) {
                 return;
             }
+
+            swipeStartX = e.clientX || 0;
+            swipeStartY = e.clientY || 0;
+            activeSwipeEl = el;
+            activeSwipeMsgId = msgId;
+            swipeTriggered = false;
+
             clearTimeout(msgBubbleHoldTimer);
             msgBubbleHoldTimer = setTimeout(() => {
-                if (isMultiTouchGesture || activeTouchCount > 1) return;
-                document.querySelectorAll(".reaction-picker-bar.show").forEach(el => el.classList.remove("show"));
+                if (activeTouchCount > 1 || swipeTriggered) return;
+                document.querySelectorAll(".reaction-picker-bar.show").forEach(p => p.classList.remove("show"));
                 const picker = $(`react_picker_${msgId}`);
                 if (picker) picker.classList.add("show");
-            }, 420);
+            }, 430);
+        };
+
+        window.onMsgBubbleMove = function(e) {
+            if (!activeSwipeEl || !activeSwipeMsgId || activeTouchCount > 1) return;
+            const curX = e.clientX || 0;
+            const curY = e.clientY || 0;
+            const deltaX = curX - swipeStartX; // Negative value means Right-to-Left swipe
+            const deltaY = Math.abs(curY - swipeStartY);
+
+            // Cancel hold timer if finger moves significantly
+            if (Math.abs(deltaX) > 12 || deltaY > 12) {
+                clearTimeout(msgBubbleHoldTimer);
+            }
+
+            // Right-to-Left Swipe (deltaX < -12 and horizontal)
+            if (deltaX < -12 && deltaY < 35) {
+                const shift = Math.max(deltaX, -65);
+                activeSwipeEl.style.transform = `translateX(${shift}px)`;
+                if (deltaX <= -48 && !swipeTriggered) {
+                    swipeTriggered = true;
+                    triggerReplyToMessage(activeSwipeMsgId);
+                }
+            }
         };
 
         window.onMsgBubbleUp = function() {
             clearTimeout(msgBubbleHoldTimer);
+            if (activeSwipeEl) {
+                activeSwipeEl.style.transform = "translateX(0)";
+            }
+            activeSwipeEl = null;
+            activeSwipeMsgId = null;
         };
 
         window.selectMessageReaction = function(e, msgId, emoji) {
@@ -2302,7 +2497,7 @@
         };
 
         // ==========================================
-        // 7. VOICE RECORDING & AUDIO PLAYER
+        // 3 & 7. FIXED RELIABLE SEND BUTTON + VOICE RECORDING
         // ==========================================
         const PAPER_PLANE_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
         const MIC_ICON_SVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`;
@@ -2317,34 +2512,62 @@
         let pendingAudioBase64 = null;
         let pendingAudioDurationStr = "0:01";
         let previewAudioObj = new Audio();
+        let lastSendActionTime = 0;
 
         previewAudioObj.onended = () => {
             if ($("previewPlayBtn")) $("previewPlayBtn").innerText = "▶";
         };
 
+        // Guaranteed state reset so Send button NEVER gets stuck after Screenshot or Audio Recording
+        function resetSendButtonState() {
+            clearTimeout(sendHoldTimer);
+            isVoiceHoldActive = false;
+            if ($("mainSendBtn")) {
+                $("mainSendBtn").classList.remove("recording-active");
+                if (!$("audioPreviewBar")?.classList.contains("show")) {
+                    $("mainSendBtn").style.display = "flex";
+                    $("messageInput").style.display = "block";
+                }
+            }
+            if ($("sendBtnIconWrap")) {
+                $("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG;
+            }
+            if ($("recordingBar")) {
+                $("recordingBar").classList.remove("show");
+            }
+        }
+
         window.handleSendBtnDown = function(e) {
-            e.preventDefault();
-            if (isMultiTouchGesture || activeTouchCount > 1) return;
+            if (activeTouchCount > 1) return;
             if (!selectedUser) {
                 alert("Pehle koi chat select karein!");
                 return;
             }
+
+            // If user already typed text in the box, clicking Send should immediately prepare to send text (no mic hold needed)
+            const currentTxt = ($("messageInput")?.value || "").trim();
+            if (currentTxt.length > 0) {
+                isVoiceHoldActive = false;
+                clearTimeout(sendHoldTimer);
+                return;
+            }
+
             isVoiceHoldActive = false;
             clearTimeout(sendHoldTimer);
             sendHoldTimer = setTimeout(() => {
-                if (isMultiTouchGesture || activeTouchCount > 1) return;
+                if (activeTouchCount > 1) return;
                 isVoiceHoldActive = true;
                 startVoiceNoteRecording();
-            }, 300);
+            }, 320);
         };
 
         window.handleSendBtnUp = function(e) {
-            e.preventDefault();
             clearTimeout(sendHoldTimer);
             if (isVoiceHoldActive) {
                 stopVoiceNoteRecording();
                 isVoiceHoldActive = false;
-            } else if (!isMultiTouchGesture) {
+            } else {
+                lastSendActionTime = Date.now();
                 sendMessage();
             }
         };
@@ -2354,6 +2577,14 @@
             if (isVoiceHoldActive) {
                 stopVoiceNoteRecording();
                 isVoiceHoldActive = false;
+            }
+        };
+
+        // Fallback click handler so if pointer events are interrupted on mobile, tap still sends message 100%
+        window.handleSendBtnClickFallback = function(e) {
+            if (Date.now() - lastSendActionTime < 350) return;
+            if (!isVoiceHoldActive) {
+                sendMessage();
             }
         };
 
@@ -2397,7 +2628,7 @@
                     $("recordingBar").classList.remove("show");
 
                     if (audioChunks.length === 0) {
-                        $("messageInput").style.display = "block";
+                        resetSendButtonState();
                         return;
                     }
 
@@ -2417,11 +2648,7 @@
 
                 mediaRecorder.start();
             } catch (err) {
-                isVoiceHoldActive = false;
-                $("mainSendBtn").classList.remove("recording-active");
-                $("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG;
-                $("recordingBar").classList.remove("show");
-                $("messageInput").style.display = "block";
+                resetSendButtonState();
                 alert("Microphone permission allow karein!");
             }
         }
@@ -2435,10 +2662,7 @@
                     activeMicStream.getTracks().forEach(t => t.stop());
                     activeMicStream = null;
                 }
-                $("mainSendBtn").classList.remove("recording-active");
-                $("sendBtnIconWrap").innerHTML = PAPER_PLANE_SVG;
-                $("recordingBar").classList.remove("show");
-                $("messageInput").style.display = "block";
+                resetSendButtonState();
             }
         }
 
@@ -2459,8 +2683,7 @@
             pendingAudioBase64 = null;
             audioChunks = [];
             $("audioPreviewBar").classList.remove("show");
-            $("messageInput").style.display = "block";
-            $("mainSendBtn").style.display = "flex";
+            resetSendButtonState();
         };
 
         window.sendRecordedAudio = function() {
@@ -2474,12 +2697,14 @@
                 mediaType: "audio",
                 audioDuration: pendingAudioDurationStr,
                 fileName: "voice_note.webm",
+                replyTo: activeReplyData ? Object.assign({}, activeReplyData) : null,
                 time: formatAMPM(new Date()),
                 delivered: isPartnerOnline(selectedUser),
                 seen: false
             };
             saveAndRender(msgData);
             socket.emit("private_message", msgData);
+            cancelReply();
             discardRecordedAudio();
         };
 
@@ -2586,12 +2811,14 @@
                             mediaUrl: base64Data,
                             mediaType: detectedType,
                             fileName: file.name,
+                            replyTo: activeReplyData ? Object.assign({}, activeReplyData) : null,
                             time: formatAMPM(new Date()),
                             delivered: isPartnerOnline(selectedUser),
                             seen: false
                         };
                         saveAndRender(msgData);
                         socket.emit("private_message", msgData);
+                        cancelReply();
                     };
                     reader.readAsDataURL(file);
                     e.target.value = "";
@@ -2620,7 +2847,9 @@
         // 9. SEND, RECEIVE & CORE LOGIC
         // ==========================================
         window.sendMessage = function() {
+            resetSendButtonState();
             const input = $("messageInput");
+            if (!input) return;
             const txt = input.value.trim();
             if (!txt || !selectedUser) return;
 
@@ -2629,6 +2858,7 @@
                 sender: currentUser,
                 receiver: selectedUser,
                 text: txt,
+                replyTo: activeReplyData ? Object.assign({}, activeReplyData) : null,
                 time: formatAMPM(new Date()),
                 delivered: isPartnerOnline(selectedUser),
                 seen: false
@@ -2637,6 +2867,7 @@
             saveAndRender(data);
             socket.emit("private_message", data);
             socket.emit("stopTyping", currentUser);
+            cancelReply();
             input.value = "";
             input.focus();
         };
@@ -2923,6 +3154,19 @@
                         </div>
                     `;
 
+                    // 4. Render Quoted Reply Box if message is a reply
+                    let quotedReplyHtml = "";
+                    if (m.replyTo && m.replyTo.text) {
+                        const rSenderIsMe = (m.replyTo.sender || "").toLowerCase() === currentUser;
+                        const rSenderLabel = rSenderIsMe ? "You" : `@${escapeHTML(m.replyTo.sender || "user")}`;
+                        quotedReplyHtml = `
+                            <div class="quoted-msg-box" onclick="scrollToOriginalMsg(event, '${m.replyTo.id || ""}')">
+                                <div class="quoted-msg-sender">${rSenderLabel}</div>
+                                <div class="quoted-msg-text">${escapeHTML(m.replyTo.text)}</div>
+                            </div>
+                        `;
+                    }
+
                     let reactionBadgeHtml = "";
                     if (m.reactions && Object.keys(m.reactions).length > 0) {
                         const reactEntries = Object.entries(m.reactions);
@@ -2940,13 +3184,15 @@
                     }
 
                     b.insertAdjacentHTML("beforeend", `
-                        <div class="msg ${isMy ? "my-msg" : "received-msg"}"
-                            onpointerdown="onMsgBubbleDown(event, '${m.id}')"
+                        <div class="msg ${isMy ? "my-msg" : "received-msg"}" id="msg_el_${m.id}"
+                            onpointerdown="onMsgBubbleDown(event, '${m.id}', this)"
+                            onpointermove="onMsgBubbleMove(event)"
                             onpointerup="onMsgBubbleUp()"
                             onpointercancel="onMsgBubbleUp()">
                             ${unsendFloatingHtml}
                             ${reactionPickerHtml}
                             <div class="msg-sender">${senderName}</div>
+                            ${quotedReplyHtml}
                             ${renderMediaContent(m)}
                             <div class="msg-meta">
                                 <span>${m.time}</span>
