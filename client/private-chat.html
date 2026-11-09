@@ -1690,7 +1690,7 @@
                 clearTimeout(msgBubbleHoldTimer);
                 clearTimeout(sendHoldTimer);
                 if (gestureTimer) clearTimeout(gestureTimer);
-                gestureTimer = setTimeout(() => sendScreenshotAlert(), 800);
+                gestureTimer = setTimeout(() => sendScreenshotAlert(), 250);
             }
         }, { passive: true });
 
